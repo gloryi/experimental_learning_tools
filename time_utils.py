@@ -30,15 +30,14 @@ class Progression():
                  value_constraint,
                  time_to_see,
                  time_to_update,
-                 update_counter):
+                 update_counter,
+                 ui_ref):
 
-        self.correct = 24
-        self.missed  = 6
+        self.correct = 18
+        self.missed  = 2
         self.offset  = 30 
-        self.amortization_margin = 1
-        self.amortization = 0
-        self.is_amortization =  False
         self.new_event = False
+        self.correct_event = False
 
         self.value_constraint = value_constraint
         self.time_to_see = time_to_see
@@ -47,16 +46,30 @@ class Progression():
 
         self.speed = value_constraint / time_to_see
 
+        self.ui_ref = ui_ref
+
     def get_percent(self):
-        return self.correct / (self.correct + self.missed)
+        percent = self.correct / (self.correct + self.missed)
+        self.ui_ref.percent = percent
+        return percent
 
     def register_correct(self):
-        self.correct += 1
+        if self.correct <= 20:
+            self.correct += 1
+        else:
+            if self.missed > 0:
+                self.missed -= 1
         self.new_event = True
+        self.correct_event = True
 
     def register_miss(self):
-        self.missed += 1
+        if self.missed <= 20:
+            self.missed += 1
+        else:
+            if self.correct >0:
+                self.correct -= 1
         self.new_event = True
+        self.correct_event = False
 
     def register_event(self, value):
         if value > 0:
@@ -64,27 +77,9 @@ class Progression():
         elif value < 0:
             self.register_miss()
 
-
-    def set_amortization(self):
-        self.amortization = self.amortization_margin
-        self.is_amortization = True
-
-    def cehck_amortization(self):
-        if self.is_amortization and self.amortization <= 0:
-            self.amortization = 0
-            self.is_amortization = False
-            return False
-
-        if self.is_amortization:
-            self.amortization -= 1
-            return True
-        else:
-            return False
-
     def is_more_intense_required(self):
 
-        if self.get_percent() > 0.95:
-            self.set_amortization()
+        if self.get_percent() > 0.90:
             return True
 
         return False
@@ -92,7 +87,6 @@ class Progression():
     def is_less_intense_required(self):
 
         if self.get_percent() < 0.75:
-            self.set_amortization()
             return True
 
         return False
@@ -101,16 +95,29 @@ class Progression():
         if self.new_event:
             self.new_event = False
 
-            if not self.cehck_amortization():
-                if self.is_more_intense_required():
-                    self.time_to_see -= 250 
-                    self.time_to_update -= 250 
+            if self.is_more_intense_required() and self.correct_event:
+                self.time_to_see -= 1000 
+                self.time_to_update -= 500 
 
-                elif self.is_less_intense_required():
-                    self.time_to_see += 250
-                    self.time_to_update += 250
+                if self.time_to_see < 3000:
+                    self.time_to_see = 3000
 
-                self.speed = self.value_constraint / self.time_to_see    
-                self.update_counter.update_drop(self.time_to_update)
+                if self.time_to_update < 500:
+                    self.time_to_update = 500
+
+            elif self.is_less_intense_required() and not self.correct_event:
+                self.time_to_see += 1000
+                self.time_to_update += 500
+                
+                if self.time_to_see > 15000:
+                    self.time_to_see = 15000
+
+                if self.time_to_update > 3000:
+                    self.time_to_update = 3000
+
+            self.speed = self.value_constraint / self.time_to_see    
+            self.ui_ref.speed_index = self.time_to_see
+            self.update_counter.update_drop(self.time_to_update)
+
         return self.speed
 
