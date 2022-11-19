@@ -11,15 +11,29 @@ THREE_PAIRS = 4
 ######################################
 
 class SixtletsProducer():
-    def __init__(self, label, csv_path):
+    def __init__(self, label, csv_path, ui_ref = None):
         self.csv_path = csv_path
         self.label = label 
         self.semantic_units = self.prepare_data()
+        self.ui_ref = ui_ref
 
     def prepare_data(self):
         return [SemanticUnit(bijection) for bijection in extract_bijection_csv(self.csv_path)]
 
+    def update_progress(self):
+        if not self.ui_ref is None:
+            target_min_score = 101
+            all_units = len(self.semantic_units)
+            units_before_score  = len([_ for _ in self.semantic_units if _.learning_score >= target_min_score])
+            ratio = units_before_score / all_units
+
+            self.ui_ref.progress_ratio = ratio
+            self.ui_ref.mastered = units_before_score
+            self.ui_ref.to_master = all_units
+
+
     def produce_three_pairs(self):
+        self.update_progress()
         #selected = random.sample(self.semantic_units, THREE_PAIRS)
         average = sum(_.learning_score for _ in self.semantic_units)/len(self.semantic_units)
         worst_perfomance = list(filter(lambda _ : _.learning_score < average, self.semantic_units))
@@ -42,6 +56,8 @@ class SixtletsProducer():
         if best_picks != 0:
             selected += random.sample(best_perfomance, best_picks)
 
+        for unit in selected:
+            unit.activated = False
 
         active = random.choice(selected)
         active.activate()
@@ -83,7 +99,7 @@ class SemanticsLine():
     def produce_geometries(self):
         graphical_objects = []
         for unit, position_x in zip(self.semantic_units, self.x_positions):
-            if unit.active:
+            if unit.active and self.active:
                 color = (255,0,0) 
             else:
                 color = (0,0,255)
@@ -96,9 +112,13 @@ class SemanticsLine():
     def activate(self):
         self.active = True
 
+    def deactivate_units(self):
+        for unit in self.semantic_units:
+            unit.deactivate()
+
     def deactivate(self):
         self.register_error()
-
+        self.deactivate_units()
 
     def register_keys(self, key_codes):
         self.keys_assotiated = [a or b for (a,b) in zip(key_codes, self.keys_assotiated)]
@@ -139,12 +159,14 @@ class SemanticsLine():
         self.error = True
         self.register_event()
         self.feedback_negative()
+        self.deactivate_units()
         
     def register_correct(self):
         self.correct = True
         self.error = False
         self.register_event()
         self.feedback_positive()
+        self.deactivate_units()
 
     def validate_keys(self):
 
@@ -295,15 +317,15 @@ class KeyboardSixModel():
                 
 
 class SixtletsProcessor():
-    def __init__(self, W, H, pygame_instance, display_instance, data_label, data_path):
+    def __init__(self, W, H, pygame_instance, display_instance, ui_ref, data_label, data_path):
         self.W = W
         self.H = H
         self.cast_point = 0 - self.H//8
         self.despawn_point = self.H + self.H//8
         self.exit_trigger = self.H - self.H//4
-        self.entry_trigger  = self.H - self.H//4 - self.H//8
+        self.entry_trigger  = self.H - self.H//4 - self.H//4
         self.action_trigger = (self.entry_trigger + self.exit_trigger)//2
-        self.producer = SixtletsProducer(data_label, data_path)
+        self.producer = SixtletsProducer(data_label, data_path, ui_ref)
         self.drawer = SixtletDrawer(pygame_instance, display_instance, W, H)
         self.control = KeyboardSixModel(pygame_instance)
         self.stack = []
@@ -326,7 +348,7 @@ class SixtletsProcessor():
     def select_active_line(self, key_states):
 
         if not "down" in key_states and len(self.stack):
-            halfway = list(filter(lambda _ : _.position_y > self.H//2, self.stack))
+            halfway = list(filter(lambda _ : _.position_y > self.entry_trigger, self.stack))
             active = min(list(filter(lambda _ : not _.triggered,
                                 halfway)),
                          key = lambda _ : sqrt((self.action_trigger - _.position_y)**2),

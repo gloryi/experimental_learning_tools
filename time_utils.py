@@ -38,6 +38,7 @@ class Progression():
         self.offset  = 30 
         self.new_event = False
         self.correct_event = False
+        self.combo = 0
 
         self.value_constraint = value_constraint
         self.time_to_see = time_to_see
@@ -54,28 +55,38 @@ class Progression():
         return percent
 
     def register_correct(self):
-        if self.correct <= 20:
+        if self.correct <= 25:
             self.correct += 1
         else:
             if self.missed > 0:
                 self.missed -= 1
         self.new_event = True
         self.correct_event = True
+        self.combo += 1
+        self.ui_ref.combo = self.combo
 
     def register_miss(self):
-        if self.missed <= 20:
+        if self.missed <= 25:
             self.missed += 1
         else:
             if self.correct >0:
                 self.correct -= 1
         self.new_event = True
         self.correct_event = False
+        self.combo = 0
+        self.ui_ref.combo = self.combo
 
     def register_event(self, value):
         if value > 0:
             self.register_correct()
         elif value < 0:
             self.register_miss()
+
+
+        if self.get_percent() == 0:
+            return False
+
+        return True
 
     def is_more_intense_required(self):
 
@@ -109,11 +120,11 @@ class Progression():
                 self.time_to_see += 1000
                 self.time_to_update += 500
                 
-                if self.time_to_see > 15000:
-                    self.time_to_see = 15000
+                if self.time_to_see > 25000:
+                    self.time_to_see = 25000
 
-                if self.time_to_update > 3000:
-                    self.time_to_update = 3000
+                if self.time_to_update > 7000:
+                    self.time_to_update = 7000
 
             self.speed = self.value_constraint / self.time_to_see    
             self.ui_ref.speed_index = self.time_to_see

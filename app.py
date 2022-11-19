@@ -19,14 +19,15 @@ display_surface = pygame.display.set_mode((X, Y))
 pygame.display.set_caption('Experimental')
 
 time_to_cross_screen = 5000
-time_to_appear = 2000
+time_to_appear = 2500
 pixels_per_ms = Y/time_to_cross_screen
 
 delta_timer = global_timer(pygame)
 new_line_counter = Counter(time_to_appear)
-sixtlets = SixtletsProcessor(X, Y, pygame, display_surface, "latvian_words", TEST_LANG_DATA)
-
 upper_stats = UpperLayout(pygame, display_surface, X, Y)
+
+sixtlets = SixtletsProcessor(X, Y, pygame, display_surface, upper_stats, "latvian_words", TEST_LANG_DATA)
+
 
 progression = Progression(Y,
                           time_to_cross_screen,
@@ -41,7 +42,11 @@ for time_delta in delta_timer:
         sixtlets.add_line()
 
     feedback = sixtlets.tick(pixels_per_ms * time_delta)
-    progression.register_event(feedback)
+
+    resume_game = progression.register_event(feedback)
+    if not resume_game:
+        break
+
     pixels_per_ms = progression.synchronize_speed()
 
     upper_stats.redraw()
@@ -54,4 +59,4 @@ for time_delta in delta_timer:
             pygame.quit()
  
             quit()
- 
+pygame.quit() 
