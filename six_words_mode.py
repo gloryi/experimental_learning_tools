@@ -1,5 +1,7 @@
 from utils import extract_bijection_csv
 from learning_model import SemanticUnit
+from collections import OrderedDict
+from math import sqrt
 import random
 
 THREE_PAIRS = 3
@@ -43,6 +45,13 @@ class SemanticsLine():
         self.semantic_units = semantic_units
         self.pygame_instance = pygame_instance
 
+        self.active = False
+        self.correct = False
+        self.error = False
+        self.triggered = False
+        
+        self.keys_assotiated = [False for i in range(6)]
+
     def move_vertically(self, delta_y):
         self.position_y += delta_y
 
@@ -58,6 +67,37 @@ class SemanticsLine():
                                                    self.position_y,
                                                    color))
         return graphical_objects
+
+    def activate(self):
+        self.active = True
+
+    def deactivate(self):
+        self.active = False
+        self.triggered = False
+
+    def register_keys(self, key_codes):
+        self.keys_assotiated = [a or b for (a,b) in zip(key_codes, self.keys_assotiated)]
+        self.validate_keys()
+
+    def validate_keys(self):
+
+        if self.keys_assotiated.count(True) == 2:
+            self.correct = True
+            self.error = False
+            self.triggered = True
+            self.active = False
+
+        elif self.keys_assotiated.count(True) >= 3:
+            self.correct = False
+            self.error = True
+            self.triggered = True
+            self.active = False
+
+    def check(self):
+        self.correct = True
+        self.active = False
+        self.triggered = True
+
 
 ######################################
 ### LINES HANDLER GRAPHICS
@@ -76,23 +116,103 @@ class SixtletDrawer():
         self.display_instance = display_instance
         self.W = W
         self.H = H
-        self.font = pygame_instance.font.Font('freesansbold.ttf', 32)
+        #self.font = pygame_instance.font.Font('freesansbold.ttf', 32)
+        font_file = pygame_instance.font.match_font("setofont")  # Select and 
+        self.font = pygame_instance.font.Font(font_file, 30)
+
+    def draw_static_ui_elements(self, horisontals):
+        for i in range(1,6):
+            self.pygame_instance.draw.line(self.display_instance,
+                                  (10,10,10),
+                                  (self.W//6*i,0),
+                                  (self.W//6*i,self.H))
+        for line_y in horisontals:
+            self.pygame_instance.draw.line(self.display_instance,
+                                  (10,10,10),
+                                  (0,line_y),
+                                  (self.W,line_y))
+
 
     def draw_line(self, line):
         geometries = line.produce_geometries()
+        color = (128,128,128)
+        if line.active and not line.triggered:
+            color = (0,128,128)
+        elif line.correct:
+            color = (0,200,0)
+        elif line.error:
+            color = (200,0,0)
 
         for geometry in geometries:
-            text = self.font.render(geometry.text, True, geometry.color, (128,128,100))
+            text = self.font.render(geometry.text, True, geometry.color, color)
             textRect = text.get_rect()
             textRect.center = (geometry.x, geometry.y)
 
             self.display_instance.blit(text, textRect)
 
+    def display_keys(self, keys):
+        for i, key_state in enumerate(keys):
+            color = (255,255,255)
+            if key_state == "up":
+                color = (200,200,200)
+            elif key_state == "down":
+                color = (150, 0, 150)
+            else:
+                color = (0,150,100)
+            
+            self.pygame_instance.draw.rect(self.display_instance,
+                                  color,
+                                  (self.W//6*i,0,self.W//6*(i+1),self.H))
+
+
 ######################################
 ### SIX MODE CONTROLLER
 ######################################
 
+class KeyboardSixModel():
+    def __init__(self, pygame_instance):
+        self.pygame_instance = pygame_instance
+        self.up = 'up'
+        self.down = 'down'
+        self.pressed = 'pressed'
+        self.mapping = OrderedDict()
+        self.mapping[self.pygame_instance.K_s] = self.up
+        self.mapping[self.pygame_instance.K_d] = self.up
+        self.mapping[self.pygame_instance.K_f] = self.up
+        self.mapping[self.pygame_instance.K_j] = self.up
+        self.mapping[self.pygame_instance.K_k] = self.up
+        self.mapping[self.pygame_instance.K_l] = self.up
 
+        self.keys = [self.up for _ in range(6)]
+
+    def process_button(self, current_state, new_state):
+        if current_state == self.up and new_state == self.down:
+            return self.down
+        elif current_state == self.down and new_state == self.down:
+            return self.down
+        elif current_state == self.down and new_state == self.up:
+            return self.pressed
+        elif current_state == self.pressed and new_state == self.up:
+            return self.up
+        else:
+            return self.up
+
+    def prepare_inputs(self):
+        self.keys = list(self.mapping.values())
+
+    def get_inputs(self):
+        keys = self.pygame_instance.key.get_pressed()
+        for control_key in self.mapping:
+            if keys[control_key]:
+                self.mapping[control_key] = self.process_button(self.mapping[control_key], self.down)
+            else:
+                self.mapping[control_key] = self.process_button(self.mapping[control_key], self.up)
+    
+    def get_keys(self):
+        self.get_inputs()
+        self.prepare_inputs()
+        return self.keys
+                
 
 class SixtletsProcessor():
     def __init__(self, W, H, pygame_instance, display_instance, data_label, data_path):
@@ -100,9 +220,14 @@ class SixtletsProcessor():
         self.H = H
         self.cast_point = 0 - self.H//8
         self.despawn_point = self.H + self.H//8
+        self.exit_trigger = self.H - self.H//4
+        self.entry_trigger  = self.H - self.H//4 - self.H//8
+        self.action_trigger = (self.entry_trigger + self.exit_trigger)//2
         self.producer = SixtletsProducer(data_label, data_path)
         self.drawer = SixtletDrawer(pygame_instance, display_instance, W, H)
+        self.control = KeyboardSixModel(pygame_instance)
         self.stack = []
+        self.active_line = None
         self.pygame_instance = pygame_instance
         self.display_instance = display_instance
 
@@ -118,16 +243,51 @@ class SixtletsProcessor():
         for line in self.stack:
             line.move_vertically(delta_y)
 
+    def select_active_line(self, key_states):
+
+        if not "down" in key_states and len(self.stack):
+            active = min(list(filter(lambda _ : not _.triggered,
+                                self.stack)),
+                         key = lambda _ : sqrt((self.action_trigger - _.position_y)**2),
+                         default = None)
+
+            if not active is None:
+                active.activate()
+                self.active_line = active
+
+        for passed in filter(lambda _ : _.position_y > self.exit_trigger and not _.triggered,
+                             self.stack):
+            passed.deactivate()
+            if self.active_line == passed:
+                self.active_line = None
+
     def redraw(self):
         for line in self.stack:
             self.drawer.draw_line(line)
+        self.drawer.draw_static_ui_elements([self.entry_trigger,
+                                             self.exit_trigger,
+                                             self.action_trigger])
     
     def clean(self):
         self.stack = list(filter(lambda _ : _.position_y < self.despawn_point,
                                  self.stack))
 
+    def get_pressed(self, key_states):
+        mark_pressed = lambda _ : True if _ == "pressed" else False
+        return [mark_pressed(_) for _ in key_states]
+
+    def process_inputs(self):
+        key_states = self.control.get_keys()
+        self.drawer.display_keys(key_states)
+        self.select_active_line(key_states)
+
+        pressed_keys = self.get_pressed(key_states)
+
+        if not self.active_line is None and any(pressed_keys):
+            self.active_line.register_keys(pressed_keys)
+
     def tick(self, delta_y):
         self.update_positions(delta_y)
         self.clean()
+        self.process_inputs()
         self.redraw()
-

@@ -19,7 +19,7 @@ pygame.display.set_caption('Experimental')
 
 
 delta_timer = global_timer(pygame)
-new_line_counter = Counter(500)
+new_line_counter = Counter(1000)
 sixtlets = SixtletsProcessor(X, Y, pygame, display_surface, "latvian_words", TEST_LANG_DATA)
 
 # TODO: move into time
