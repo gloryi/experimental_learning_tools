@@ -2,6 +2,7 @@ import pygame
 from time_utils import global_timer, Counter, Progression
 from six_words_mode import SixtletsProcessor
 from config import TEST_LANG_DATA
+from ui_elements import UpperLayout
  
 pygame.init()
  
@@ -25,11 +26,11 @@ delta_timer = global_timer(pygame)
 new_line_counter = Counter(time_to_appear)
 sixtlets = SixtletsProcessor(X, Y, pygame, display_surface, "latvian_words", TEST_LANG_DATA)
 
-# TODO: move into time
 progression = Progression(Y,
                           time_to_cross_screen,
                           time_to_appear,
                           new_line_counter)
+upper_stats = UpperLayout(pygame, display_surface, X, Y)
  
 for time_delta in delta_timer:
     display_surface.fill(white)
@@ -40,6 +41,8 @@ for time_delta in delta_timer:
     feedback = sixtlets.tick(pixels_per_ms * time_delta)
     progression.register_event(feedback)
     pixels_per_ms = progression.synchronize_speed()
+
+    upper_stats.redraw()
 
     pygame.display.update()
  

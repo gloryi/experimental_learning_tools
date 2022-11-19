@@ -226,9 +226,15 @@ class SixtletDrawer():
         for i, key_state in enumerate(keys):
             color = (255,255,255)
             if key_state == "up":
-                color = (200,200,200)
+                if i in [0,2,5,7]:
+                    color = (200,170,200)
+                else:
+                    color = (170,200,200)
             elif key_state == "down":
-                color = (150, 0, 150)
+                if i in [0,2,5,7]:
+                    color = (150, 0, 150)
+                else:
+                    color = (0, 150, 150)
             else:
                 color = (0,150,100)
             
