@@ -2,9 +2,10 @@ from utils import extract_bijection_csv
 from learning_model import SemanticUnit
 from collections import OrderedDict
 from math import sqrt
+from itertools import compress
 import random
 
-THREE_PAIRS = 3
+THREE_PAIRS = 4
 ######################################
 ### DATA PRODUCER
 ######################################
@@ -19,7 +20,29 @@ class SixtletsProducer():
         return [SemanticUnit(bijection) for bijection in extract_bijection_csv(self.csv_path)]
 
     def produce_three_pairs(self):
-        selected = random.sample(self.semantic_units, THREE_PAIRS)
+        #selected = random.sample(self.semantic_units, THREE_PAIRS)
+        average = sum(_.learning_score for _ in self.semantic_units)/len(self.semantic_units)
+        worst_perfomance = list(filter(lambda _ : _.learning_score < average, self.semantic_units))
+        best_perfomance = list(filter(lambda _ : _.learning_score >= average, self.semantic_units))
+
+        worst_picks = 0
+        best_picks = 0
+
+        if len(worst_perfomance) < 4:
+            worst_picks = len(worst_perfomance)
+            best_picks = 4 - worst_picks
+        else:
+            worst_picks = 4
+            best_picks = 0
+
+        selected = []
+
+        if worst_picks != 0:
+            selected += random.sample(worst_perfomance, worst_picks)
+        if best_picks != 0:
+            selected += random.sample(best_perfomance, best_picks)
+
+
         active = random.choice(selected)
         active.activate()
         three_pairs = []
@@ -40,7 +63,7 @@ class SemanticsLine():
         self.W, self.H = W, H
         self.position_y = init_y
 
-        self.x_positions = [self.W//6*(i+1) - self.W//12 for i in range(6)]
+        self.x_positions = [self.W//8*(i+1) - self.W//16 for i in range(8)]
 
         self.semantic_units = semantic_units
         self.pygame_instance = pygame_instance
@@ -50,7 +73,9 @@ class SemanticsLine():
         self.error = False
         self.triggered = False
         
-        self.keys_assotiated = [False for i in range(6)]
+        self.keys_assotiated = [False for i in range(8)]
+
+        self.feedback = None
 
     def move_vertically(self, delta_y):
         self.position_y += delta_y
@@ -72,31 +97,70 @@ class SemanticsLine():
         self.active = True
 
     def deactivate(self):
-        self.active = False
-        self.triggered = False
+        self.register_error()
+
 
     def register_keys(self, key_codes):
         self.keys_assotiated = [a or b for (a,b) in zip(key_codes, self.keys_assotiated)]
         self.validate_keys()
 
+    def check_answers(self):
+        selected_units = list(compress(self.semantic_units, self.keys_assotiated))
+        if len(selected_units) != 2:
+            return False
+        first_unit, second_unit = selected_units
+        if not any([first_unit.active, second_unit.active]):
+            return False
+        if not first_unit.key == second_unit.key:
+            return False
+        return True
+
+    def register_event(self):
+        self.triggered = True
+        self.active = False
+
+    def feedback_positive(self):
+        for unit in self.semantic_units:
+            if unit.active:
+                unit.deactivate()
+                unit.register_match()
+                break
+        self.feedback = 1
+
+    def feedback_negative(self):
+        for unit in self.semantic_units:
+            if unit.active:
+                unit.deactivate()
+                unit.register_error()
+        self.feedback = -1
+        
+    def register_error(self):
+        self.correct = False
+        self.error = True
+        self.register_event()
+        self.feedback_negative()
+        
+    def register_correct(self):
+        self.correct = True
+        self.error = False
+        self.register_event()
+        self.feedback_positive()
+
     def validate_keys(self):
 
         if self.keys_assotiated.count(True) == 2:
-            self.correct = True
-            self.error = False
-            self.triggered = True
-            self.active = False
+            if(self.check_answers()):
+                self.register_correct()
+            else:
+                self.register_error()
 
         elif self.keys_assotiated.count(True) >= 3:
-            self.correct = False
-            self.error = True
-            self.triggered = True
-            self.active = False
+            self.register_error()
 
-    def check(self):
-        self.correct = True
-        self.active = False
-        self.triggered = True
+    def fetch_feedback(self):
+        to_return = self.feedback
+        self.feedback = None
+        return to_return
 
 
 ######################################
@@ -116,16 +180,24 @@ class SixtletDrawer():
         self.display_instance = display_instance
         self.W = W
         self.H = H
-        #self.font = pygame_instance.font.Font('freesansbold.ttf', 32)
         font_file = pygame_instance.font.match_font("setofont")  # Select and 
         self.font = pygame_instance.font.Font(font_file, 30)
 
     def draw_static_ui_elements(self, horisontals):
-        for i in range(1,6):
+        for i in range(1,8):
             self.pygame_instance.draw.line(self.display_instance,
                                   (10,10,10),
-                                  (self.W//6*i,0),
-                                  (self.W//6*i,self.H))
+                                  (self.W//8*i,0),
+                                  (self.W//8*i,self.H))
+
+        self.pygame_instance.draw.line(self.display_instance,
+                                  (20,20,20),
+                                  (self.W//8*4-5,0),
+                                  (self.W//8*4-5,self.H))
+        self.pygame_instance.draw.line(self.display_instance,
+                                  (20,20,20),
+                                  (self.W//8*4+5,0),
+                                  (self.W//8*4+5,self.H))
         for line_y in horisontals:
             self.pygame_instance.draw.line(self.display_instance,
                                   (10,10,10),
@@ -162,7 +234,7 @@ class SixtletDrawer():
             
             self.pygame_instance.draw.rect(self.display_instance,
                                   color,
-                                  (self.W//6*i,0,self.W//6*(i+1),self.H))
+                                  (self.W//8*i,0,self.W//8*(i+1),self.H))
 
 
 ######################################
@@ -176,14 +248,16 @@ class KeyboardSixModel():
         self.down = 'down'
         self.pressed = 'pressed'
         self.mapping = OrderedDict()
+        self.mapping[self.pygame_instance.K_a] = self.up
         self.mapping[self.pygame_instance.K_s] = self.up
         self.mapping[self.pygame_instance.K_d] = self.up
         self.mapping[self.pygame_instance.K_f] = self.up
         self.mapping[self.pygame_instance.K_j] = self.up
         self.mapping[self.pygame_instance.K_k] = self.up
         self.mapping[self.pygame_instance.K_l] = self.up
+        self.mapping[self.pygame_instance.K_SEMICOLON] = self.up
 
-        self.keys = [self.up for _ in range(6)]
+        self.keys = [self.up for _ in range(8)]
 
     def process_button(self, current_state, new_state):
         if current_state == self.up and new_state == self.down:
@@ -246,8 +320,9 @@ class SixtletsProcessor():
     def select_active_line(self, key_states):
 
         if not "down" in key_states and len(self.stack):
+            halfway = list(filter(lambda _ : _.position_y > self.H//2, self.stack))
             active = min(list(filter(lambda _ : not _.triggered,
-                                self.stack)),
+                                halfway)),
                          key = lambda _ : sqrt((self.action_trigger - _.position_y)**2),
                          default = None)
 
@@ -276,6 +351,10 @@ class SixtletsProcessor():
         mark_pressed = lambda _ : True if _ == "pressed" else False
         return [mark_pressed(_) for _ in key_states]
 
+    def get_feedback(self):
+        feedback = sum(_.fetch_feedback() for _ in self.stack if not _.feedback is None)
+        return feedback
+
     def process_inputs(self):
         key_states = self.control.get_keys()
         self.drawer.display_keys(key_states)
@@ -291,3 +370,6 @@ class SixtletsProcessor():
         self.clean()
         self.process_inputs()
         self.redraw()
+
+        feedback = self.get_feedback()
+        return feedback
