@@ -2,7 +2,7 @@
 class Counter():
     def __init__(self, drop_time):
         self.drop_time = drop_time
-        self.time_elapsed = 0
+        self.time_elapsed = drop_time*0.8
 
     def is_tick(self, time_delta):
         self.time_elapsed += time_delta
@@ -55,7 +55,7 @@ class Progression():
         return percent
 
     def register_correct(self):
-        if self.correct <= 25:
+        if self.correct <= 20:
             self.correct += 1
         else:
             if self.missed > 0:
@@ -66,7 +66,7 @@ class Progression():
         self.ui_ref.combo = self.combo
 
     def register_miss(self):
-        if self.missed <= 25:
+        if self.missed <= 20:
             self.missed += 1
         else:
             if self.correct >0:
@@ -90,14 +90,14 @@ class Progression():
 
     def is_more_intense_required(self):
 
-        if self.get_percent() > 0.90:
+        if self.get_percent() > 0.75:
             return True
 
         return False
 
     def is_less_intense_required(self):
 
-        if self.get_percent() < 0.75:
+        if self.get_percent() < 0.70:
             return True
 
         return False
@@ -108,27 +108,25 @@ class Progression():
 
             if self.is_more_intense_required() and self.correct_event:
                 self.time_to_see -= 1000 
-                self.time_to_update -= 500 
+                self.time_to_update -= 250 
 
-                if self.time_to_see < 3000:
-                    self.time_to_see = 3000
+                if self.time_to_see < 4000:
+                    self.time_to_see = 4000
 
-                if self.time_to_update < 500:
-                    self.time_to_update = 500
+                if self.time_to_update < 2000:
+                    self.time_to_update = 2000
 
             elif self.is_less_intense_required() and not self.correct_event:
                 self.time_to_see += 1000
-                self.time_to_update += 500
+                self.time_to_update += 250
                 
-                if self.time_to_see > 25000:
-                    self.time_to_see = 25000
+                if self.time_to_see > 15000:
+                    self.time_to_see = 15000
 
-                if self.time_to_update > 7000:
-                    self.time_to_update = 7000
+                if self.time_to_update > 5000:
+                    self.time_to_update = 5000
 
             self.speed = self.value_constraint / self.time_to_see    
             self.ui_ref.speed_index = self.time_to_see
             self.update_counter.update_drop(self.time_to_update)
-
         return self.speed
-

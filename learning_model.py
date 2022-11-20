@@ -35,8 +35,8 @@ class SemanticUnit():
 
     def __decrement(self):
         self.learning_score -= 1 
-        if self.learning_score <= 95:
-            self.learning_score = 95
+        if self.learning_score <= 98:
+            self.learning_score = 98
 
     def activate(self):
         self.activated = True
@@ -60,6 +60,4 @@ class SemanticUnit():
                 self.__decrement()
 
         self.activated = False
-
-
 

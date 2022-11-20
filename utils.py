@@ -5,6 +5,6 @@ def extract_bijection_csv(path_to_file):
     with open(path_to_file) as datafile:
         reader = csv.reader(datafile)
         for line in reader:
-            A, B = line
-            yield [A,B]
+            if not any(len(_) > 6 for _ in line):
+                yield line 
 

@@ -5,7 +5,8 @@ from math import sqrt
 from itertools import compress
 import random
 
-THREE_PAIRS = 4
+THREE_PAIRS = 3
+LAST_EVENT = "POSITIVE"
 ######################################
 ### DATA PRODUCER
 ######################################
@@ -15,6 +16,8 @@ class SixtletsProducer():
         self.csv_path = csv_path
         self.label = label 
         self.semantic_units = self.prepare_data()
+        self.batch = random.sample(self.semantic_units, 20)
+
         self.ui_ref = ui_ref
 
     def prepare_data(self):
@@ -23,30 +26,42 @@ class SixtletsProducer():
     def update_progress(self):
         if not self.ui_ref is None:
             target_min_score = 101
-            all_units = len(self.semantic_units)
-            units_before_score  = len([_ for _ in self.semantic_units if _.learning_score >= target_min_score])
+            all_units = len(self.batch)
+            units_before_score  = len([_ for _ in self.batch if _.learning_score >= target_min_score])
+
+            if units_before_score + 3 >= all_units:
+                self.ui_ref.progress_ratio = 0.0
+                self.ui_ref.mastered = 0
+                self.ui_ref.all_units = all_units
+                self.resample()
+
             ratio = units_before_score / all_units
 
             self.ui_ref.progress_ratio = ratio
             self.ui_ref.mastered = units_before_score
             self.ui_ref.to_master = all_units
 
+    def resample(self):
+        self.semantic_units.sort(key = lambda _ : _.learning_score)
+        self.batch = random.sample(self.semantic_units[:len(self.semantic_units)//3], 20)
+
+
 
     def produce_three_pairs(self):
         self.update_progress()
         #selected = random.sample(self.semantic_units, THREE_PAIRS)
-        average = sum(_.learning_score for _ in self.semantic_units)/len(self.semantic_units)
-        worst_perfomance = list(filter(lambda _ : _.learning_score < average, self.semantic_units))
-        best_perfomance = list(filter(lambda _ : _.learning_score >= average, self.semantic_units))
+        average = sum(_.learning_score for _ in self.batch)/len(self.batch)
+        worst_perfomance = list(filter(lambda _ : _.learning_score < average, self.batch))
+        best_perfomance = list(filter(lambda _ : _.learning_score >= average, self.batch))
 
         worst_picks = 0
         best_picks = 0
 
         if len(worst_perfomance) < 4:
             worst_picks = len(worst_perfomance)
-            best_picks = 4 - worst_picks
+            best_picks = 3 - worst_picks
         else:
-            worst_picks = 4
+            worst_picks = 3
             best_picks = 0
 
         selected = []
@@ -79,7 +94,7 @@ class SemanticsLine():
         self.W, self.H = W, H
         self.position_y = init_y
 
-        self.x_positions = [self.W//8*(i+1) - self.W//16 for i in range(8)]
+        self.x_positions = [self.W//6*(i+1) - self.W//12 for i in range(6)]
 
         self.semantic_units = semantic_units
         self.pygame_instance = pygame_instance
@@ -89,7 +104,7 @@ class SemanticsLine():
         self.error = False
         self.triggered = False
         
-        self.keys_assotiated = [False for i in range(8)]
+        self.keys_assotiated = [False for i in range(6)]
 
         self.feedback = None
 
@@ -98,27 +113,35 @@ class SemanticsLine():
 
     def produce_geometries(self):
         graphical_objects = []
-        for unit, position_x in zip(self.semantic_units, self.x_positions):
-            if unit.active and self.active:
-                color = (255,0,0) 
-            else:
-                color = (0,0,255)
-            graphical_objects.append(WordGraphical(unit.content,
-                                                   position_x,
-                                                   self.position_y,
-                                                   color))
+        if not self.triggered:
+            for unit, position_x in zip(self.semantic_units, self.x_positions):
+                if unit.active:
+                    color = (255,0,0) 
+                else:
+                    color = (0,0,255)
+                graphical_objects.append(WordGraphical(unit.content,
+                                                       position_x,
+                                                       self.position_y,
+                                                       color))
+        else:
+            active_unit = None
+            for unit in self.semantic_units:
+                if unit.active:
+                    active_unit = unit
+            color = (0,0,255)
+            for unit, position_x in zip(self.semantic_units, self.x_positions):
+                if unit.key == active_unit.key:
+                    graphical_objects.append(WordGraphical(unit.content,
+                                                           position_x,
+                                                           self.position_y,
+                                                           color))
         return graphical_objects
 
     def activate(self):
         self.active = True
 
-    def deactivate_units(self):
-        for unit in self.semantic_units:
-            unit.deactivate()
-
     def deactivate(self):
         self.register_error()
-        self.deactivate_units()
 
     def register_keys(self, key_codes):
         self.keys_assotiated = [a or b for (a,b) in zip(key_codes, self.keys_assotiated)]
@@ -142,7 +165,6 @@ class SemanticsLine():
     def feedback_positive(self):
         for unit in self.semantic_units:
             if unit.active:
-                unit.deactivate()
                 unit.register_match()
                 break
         self.feedback = 1
@@ -150,7 +172,6 @@ class SemanticsLine():
     def feedback_negative(self):
         for unit in self.semantic_units:
             if unit.active:
-                unit.deactivate()
                 unit.register_error()
         self.feedback = -1
         
@@ -159,14 +180,12 @@ class SemanticsLine():
         self.error = True
         self.register_event()
         self.feedback_negative()
-        self.deactivate_units()
         
     def register_correct(self):
         self.correct = True
         self.error = False
         self.register_event()
         self.feedback_positive()
-        self.deactivate_units()
 
     def validate_keys(self):
 
@@ -202,35 +221,40 @@ class SixtletDrawer():
         self.display_instance = display_instance
         self.W = W
         self.H = H
-        font_file = pygame_instance.font.match_font("setofont")  # Select and 
-        self.font = pygame_instance.font.Font(font_file, 30)
+        #self.pygame_instance.font.init()
+        #self.font = self.pygame_instance.font.SysFont("malgungothic", 50)
+        #self.font = self.pygame_instance.font.SysFont("Ms_Song.ttf", 50)
 
     def draw_static_ui_elements(self, horisontals):
         for i in range(1,8):
             self.pygame_instance.draw.line(self.display_instance,
                                   (10,10,10),
-                                  (self.W//8*i,0),
-                                  (self.W//8*i,self.H))
+                                  (self.W//6*i,0),
+                                  (self.W//6*i,self.H),
+                                           width = 3)
 
         self.pygame_instance.draw.line(self.display_instance,
                                   (20,20,20),
-                                  (self.W//8*4-5,0),
-                                  (self.W//8*4-5,self.H))
+                                  (self.W//6*3-5,0),
+                                  (self.W//6*3-5,self.H),
+                                       width=2)
         self.pygame_instance.draw.line(self.display_instance,
                                   (20,20,20),
-                                  (self.W//8*4+5,0),
-                                  (self.W//8*4+5,self.H))
+                                  (self.W//6*3+5,0),
+                                  (self.W//6*3+5,self.H),
+                                       width=2)
         for line_y in horisontals:
             self.pygame_instance.draw.line(self.display_instance,
                                   (10,10,10),
                                   (0,line_y),
-                                  (self.W,line_y))
+                                  (self.W,line_y),
+                                           width=3)
 
 
     def draw_line(self, line):
         geometries = line.produce_geometries()
         color = (128,128,128)
-        if line.active and not line.triggered:
+        if line.active and  line.triggered:
             color = (0,128,128)
         elif line.correct:
             color = (0,200,0)
@@ -238,7 +262,12 @@ class SixtletDrawer():
             color = (200,0,0)
 
         for geometry in geometries:
-            text = self.font.render(geometry.text, True, geometry.color, color)
+            message = geometry.text
+            font_size = 60 if len(message) == 1 else 30 if len(message) < 6 else 25
+            font_file = self.pygame_instance.font.match_font("setofont")
+            self.pygame_instance.font.Font(font_file, font_size)
+            self.font = self.pygame_instance.font.Font("simhei.ttf", font_size)
+            text = self.font.render(message, True, geometry.color, color)
             textRect = text.get_rect()
             textRect.center = (geometry.x, geometry.y)
 
@@ -248,21 +277,21 @@ class SixtletDrawer():
         for i, key_state in enumerate(keys):
             color = (255,255,255)
             if key_state == "up":
-                if i in [0,2,5,7]:
-                    color = (200,170,200)
+                if i in [0,2,3,5]:
+                    color = (200,170,200) if LAST_EVENT == "POSITIVE" else (200,170,170)
                 else:
-                    color = (170,200,200)
+                    color = (170,200,200) if LAST_EVENT == "POSITIVE" else (170, 150, 150)
             elif key_state == "down":
-                if i in [0,2,5,7]:
-                    color = (150, 0, 150)
+                if i in [0,2,3,5]:
+                    color = (150, 0, 150) if LAST_EVENT == "POSITIVE" else (150, 0, 100)
                 else:
-                    color = (0, 150, 150)
+                    color = (0, 150, 150) if LAST_EVENT == "POSITIVE" else (50, 100, 100)
             else:
                 color = (0,150,100)
             
             self.pygame_instance.draw.rect(self.display_instance,
                                   color,
-                                  (self.W//8*i,0,self.W//8*(i+1),self.H))
+                                  (self.W//6*i,0,self.W//6*(i+1),self.H))
 
 
 ######################################
@@ -276,16 +305,14 @@ class KeyboardSixModel():
         self.down = 'down'
         self.pressed = 'pressed'
         self.mapping = OrderedDict()
-        self.mapping[self.pygame_instance.K_a] = self.up
         self.mapping[self.pygame_instance.K_s] = self.up
         self.mapping[self.pygame_instance.K_d] = self.up
         self.mapping[self.pygame_instance.K_f] = self.up
         self.mapping[self.pygame_instance.K_j] = self.up
         self.mapping[self.pygame_instance.K_k] = self.up
         self.mapping[self.pygame_instance.K_l] = self.up
-        self.mapping[self.pygame_instance.K_SEMICOLON] = self.up
 
-        self.keys = [self.up for _ in range(8)]
+        self.keys = [self.up for _ in range(6)]
 
     def process_button(self, current_state, new_state):
         if current_state == self.up and new_state == self.down:
@@ -322,8 +349,8 @@ class SixtletsProcessor():
         self.H = H
         self.cast_point = 0 - self.H//8
         self.despawn_point = self.H + self.H//8
-        self.exit_trigger = self.H - self.H//4
-        self.entry_trigger  = self.H - self.H//4 - self.H//4
+        self.exit_trigger = self.H - self.H//4 - self.H//8 - self.H//16 + self.H//8
+        self.entry_trigger  = self.H - self.H//4 - self.H//4 + self.H//8
         self.action_trigger = (self.entry_trigger + self.exit_trigger)//2
         self.producer = SixtletsProducer(data_label, data_path, ui_ref)
         self.drawer = SixtletDrawer(pygame_instance, display_instance, W, H)
@@ -381,6 +408,11 @@ class SixtletsProcessor():
 
     def get_feedback(self):
         feedback = sum(_.fetch_feedback() for _ in self.stack if not _.feedback is None)
+        global LAST_EVENT
+        if feedback > 0:
+            LAST_EVENT = "POSITIVE"
+        elif feedback <0:
+            LAST_EVENT = "NEGATIVE"
         return feedback
 
     def process_inputs(self):

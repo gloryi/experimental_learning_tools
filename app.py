@@ -12,14 +12,14 @@ white = (255, 255, 255)
 green = (0, 255, 0)
 blue = (0, 0, 128)
  
-X = 1400
-Y = 900 
+X = 700 
+Y = 1000 
  
 display_surface = pygame.display.set_mode((X, Y))
 pygame.display.set_caption('Experimental')
 
-time_to_cross_screen = 5000
-time_to_appear = 2500
+time_to_cross_screen = 16000
+time_to_appear = 4000
 pixels_per_ms = Y/time_to_cross_screen
 
 delta_timer = global_timer(pygame)

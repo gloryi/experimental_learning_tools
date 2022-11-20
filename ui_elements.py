@@ -10,7 +10,7 @@ class UpperLayout():
         self.display_instance = display_instance
         self.backgroudn_color = (60, 60, 60)
         font_file = pygame_instance.font.match_font("setofont")
-        self.font = pygame_instance.font.Font(font_file, 40)
+        self.font = pygame_instance.font.Font(font_file, 50)
         self.large_font = pygame_instance.font.Font(font_file, 80)
         self.combo = 1
 
@@ -20,8 +20,13 @@ class UpperLayout():
         self.mastered = 0
         self.to_master = 0
 
-    def place_text(self, text, x, y):
-        text = self.font.render(text, True, (80,80,80), (150,150,151))
+    def place_text(self, text, x, y, transparent = False, renderer = None, base_col = (80,80,80)):
+        if renderer is None:
+            renderer = self.font
+        if not transparent:
+            text = renderer.render(text, True, base_col, (150,150,151))
+        else:
+            text = renderer.render(text, True, base_col)
         textRect = text.get_rect()
         textRect.center = (x, y)
         self.display_instance.blit(text, textRect)
@@ -44,7 +49,7 @@ class UpperLayout():
                                    self.y3,
                                    self.W*self.percent,
                                    self.H))
-        self.place_text(str(self.combo)+"x", self.W//2, (self.H + self.y3)/2)
+        self.place_text(str(self.combo)+"x", self.W//2, self.H//4-self.H//16, transparent = True, renderer = self.large_font, base_col = (10,10,10))
 
         line_color = (int(255*(1-self.progress_ratio)),int(255*(self.progress_ratio)),0)
         self.pygame_instance.draw.rect(self.display_instance,
