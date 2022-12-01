@@ -1,53 +1,45 @@
 import pygame
 from time_utils import global_timer, Counter, Progression
 from six_words_mode import SixtletsProcessor
-from config import TEST_LANG_DATA
+from feature_chain_mode import ChainedProcessor
+from config import TEST_LANG_DATA, W, H
+from colors import white
 from ui_elements import UpperLayout
  
 pygame.init()
  
-# define the RGB value for white,
-#  green, blue colour .
-white = (255, 255, 255)
-green = (0, 255, 0)
-blue = (0, 0, 128)
- 
-X = 700 
-Y = 1000 
- 
-display_surface = pygame.display.set_mode((X, Y))
-pygame.display.set_caption('Experimental')
+display_surface = pygame.display.set_mode((W, H))
 
 time_to_cross_screen = 16000
 time_to_appear = 4000
-pixels_per_ms = Y/time_to_cross_screen
+beat_time = 0 
 
 delta_timer = global_timer(pygame)
-new_line_counter = Counter(time_to_appear)
-upper_stats = UpperLayout(pygame, display_surface, X, Y)
+upper_stats = UpperLayout(pygame, display_surface)
+new_line_counter = Counter(upper_stats)
 
-sixtlets = SixtletsProcessor(X, Y, pygame, display_surface, upper_stats, "latvian_words", TEST_LANG_DATA)
+game = ChainedProcessor(pygame, display_surface, upper_stats, "hanzi chineese", TEST_LANG_DATA)
 
 
-progression = Progression(Y,
-                          time_to_cross_screen,
-                          time_to_appear,
-                          new_line_counter,
+progression = Progression(new_line_counter,
                           upper_stats)
+
+beat_time = new_line_counter.drop_time 
  
 for time_delta in delta_timer:
     display_surface.fill(white)
 
     if new_line_counter.is_tick(time_delta):
-        sixtlets.add_line()
+        next_tick_time = game.add_line()
+        new_line_counter.modify_bpm(next_tick_time)
 
-    feedback = sixtlets.tick(pixels_per_ms * time_delta)
+    feedback = game.tick(beat_time, time_delta)
 
     resume_game = progression.register_event(feedback)
     if not resume_game:
         break
 
-    pixels_per_ms = progression.synchronize_speed()
+    beat_time = progression.synchronize_tick()
 
     upper_stats.redraw()
 

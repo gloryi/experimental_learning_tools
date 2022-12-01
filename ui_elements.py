@@ -1,8 +1,10 @@
+from config import W, H
+
 class UpperLayout():
-    def __init__(self, pygame_instance, display_instance, W, H):
+    def __init__(self, pygame_instance, display_instance):
         self.W = W
         self.H = H
-        self.y1 = 0
+        self.y1 = 0 
         self.y2 = self.H//8
         self.y3 = self.H - self.H//16
         self.higher_center = (self.y1 + self.y2)/2
@@ -17,6 +19,7 @@ class UpperLayout():
         self.speed_index = 5000
         self.percent = 0.8
         self.progress_ratio = 0.0
+        self.timing_ratio = 1.0
         self.mastered = 0
         self.to_master = 0
 
@@ -33,23 +36,18 @@ class UpperLayout():
 
 
     def redraw(self):
-        self.pygame_instance.draw.rect(self.display_instance,
-                                  self.backgroudn_color,
-                                  (0,self.y1,self.W,self.y2))
-
-        self.pygame_instance.draw.rect(self.display_instance,
-                                  self.backgroudn_color,
-                                  (0,self.y3,self.W,self.H))
-
-        #self.place_text(str(int(self.percent*100))+"%", self.W//10*2, self.higher_center)
         line_color = (int(255*(1-self.percent)),int(255*(self.percent)),0)
         self.pygame_instance.draw.rect(self.display_instance,
                                   line_color,
-                                  (0,
-                                   self.y3,
-                                   self.W*self.percent,
-                                   self.H))
-        self.place_text(str(self.combo)+"x", self.W//2, self.H//4-self.H//16, transparent = True, renderer = self.large_font, base_col = (10,10,10))
+                                  (320,
+                                   475,
+                                   250*3*self.percent,
+                                   25))
+        self.place_text(str(self.combo)+"x", 400,
+                        40,
+                        transparent = True,
+                        renderer = self.large_font,
+                        base_col = (10,10,10))
 
         line_color = (int(255*(1-self.progress_ratio)),int(255*(self.progress_ratio)),0)
         self.pygame_instance.draw.rect(self.display_instance,
@@ -59,5 +57,14 @@ class UpperLayout():
                                    self.W*self.progress_ratio,
                                    self.y2))
         
+        clip_color = lambda _ : 0 if _ <=0 else 255 if _ >=255 else int(_)
+        line_color = (clip_color(255*(1-self.timing_ratio)),clip_color(255*(self.timing_ratio)),0)
+        self.pygame_instance.draw.rect(self.display_instance,
+                                  line_color,
+                                  (320,
+                                   300,
+                                   250*3*self.timing_ratio,
+                                   25))
+
         self.place_text(str(self.mastered)+"/"+str(self.to_master), self.W/2, (self.y1 + self.y2)/2)
-        self.place_text(str(self.speed_index//1000)+"s", self.W - self.W//10, self.higher_center)
+        self.place_text(str(self.speed_index)+"x", self.W - self.W//10, self.higher_center)

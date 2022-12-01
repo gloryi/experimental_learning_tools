@@ -1,9 +1,15 @@
-from utils import extract_bijection_csv
+from utils import extract_bijection_csv, get_lines_with_context
 from learning_model import SemanticUnit
 from collections import OrderedDict
 from math import sqrt
 from itertools import compress
 import random
+from config import W, H
+from colors import col_bg_darker, col_wicked_darker
+from colors import col_active_darker, col_bg_lighter
+from colors import col_wicked_lighter, col_active_lighter
+from colors import col_correct, col_error
+from config import TEST_CONTEXT_FILE
 
 THREE_PAIRS = 3
 LAST_EVENT = "POSITIVE"
@@ -21,7 +27,9 @@ class SixtletsProducer():
         self.ui_ref = ui_ref
 
     def prepare_data(self):
-        return [SemanticUnit(bijection) for bijection in extract_bijection_csv(self.csv_path)]
+        context_based_extractor = get_lines_with_context(TEST_CONTEXT_FILE, extract_bijection_csv(self.csv_path))
+        #return [SemanticUnit(bijection) for bijection in extract_bijection_csv(self.csv_path)]
+        return [SemanticUnit(bijection) for bijection in context_based_extractor]
 
     def update_progress(self):
         if not self.ui_ref is None:
@@ -90,7 +98,14 @@ class SixtletsProducer():
 
 
 class SemanticsLine():
-    def __init__(self, semantic_units, pygame_instance, W, H, init_y):
+    def __init__(self,
+                 semantic_units,
+                 pygame_instance,
+                 W,
+                 H,
+                 init_y,
+                 velocity):
+
         self.W, self.H = W, H
         self.position_y = init_y
 
@@ -107,9 +122,10 @@ class SemanticsLine():
         self.keys_assotiated = [False for i in range(6)]
 
         self.feedback = None
+        self.velocity = velocity
 
-    def move_vertically(self, delta_y):
-        self.position_y += delta_y
+    def move_vertically(self, time_elapsed):
+        self.position_y += self.velocity * time_elapsed
 
     def produce_geometries(self):
         graphical_objects = []
@@ -267,7 +283,14 @@ class SixtletDrawer():
             font_file = self.pygame_instance.font.match_font("setofont")
             self.pygame_instance.font.Font(font_file, font_size)
             self.font = self.pygame_instance.font.Font("simhei.ttf", font_size)
-            text = self.font.render(message, True, geometry.color, color)
+            if len(message) >1:
+                text = self.font.render(message, True, geometry.color, color)
+            else:
+                is_inner_color = False if line.triggered else True
+                if is_inner_color:
+                    text = self.font.render(message, True, geometry.color)
+                else:
+                    text = self.font.render(message, True, color)
             textRect = text.get_rect()
             textRect.center = (geometry.x, geometry.y)
 
@@ -278,14 +301,14 @@ class SixtletDrawer():
             color = (255,255,255)
             if key_state == "up":
                 if i in [0,2,3,5]:
-                    color = (200,170,200) if LAST_EVENT == "POSITIVE" else (200,170,170)
+                    color = col_bg_darker if LAST_EVENT == "POSITIVE" else col_wicked_darker 
                 else:
-                    color = (170,200,200) if LAST_EVENT == "POSITIVE" else (170, 150, 150)
+                    color = col_bg_lighter if LAST_EVENT == "POSITIVE" else col_wicked_lighter
             elif key_state == "down":
                 if i in [0,2,3,5]:
-                    color = (150, 0, 150) if LAST_EVENT == "POSITIVE" else (150, 0, 100)
+                    color = col_active_darker if LAST_EVENT == "POSITIVE" else col_active_darker 
                 else:
-                    color = (0, 150, 150) if LAST_EVENT == "POSITIVE" else (50, 100, 100)
+                    color = col_active_lighter if LAST_EVENT == "POSITIVE" else col_active_lighter
             else:
                 color = (0,150,100)
             
@@ -344,7 +367,7 @@ class KeyboardSixModel():
                 
 
 class SixtletsProcessor():
-    def __init__(self, W, H, pygame_instance, display_instance, ui_ref, data_label, data_path):
+    def __init__(self, pygame_instance, display_instance, ui_ref, data_label, data_path):
         self.W = W
         self.H = H
         self.cast_point = 0 - self.H//8
@@ -359,18 +382,21 @@ class SixtletsProcessor():
         self.active_line = None
         self.pygame_instance = pygame_instance
         self.display_instance = display_instance
+        self.active_beat_time = 1
 
     def add_line(self):
         line_units = self.producer.produce_three_pairs()
+        speed_px_ms = (self.action_trigger - self.cast_point)/self.active_beat_time
         self.stack.append(SemanticsLine(line_units,
                                         self.pygame_instance,
                                         self.W,
                                         self.H,
-                                        self.cast_point))
+                                        self.cast_point,
+                                        speed_px_ms))
 
-    def update_positions(self, delta_y):
+    def update_positions(self, time_elapsed):
         for line in self.stack:
-            line.move_vertically(delta_y)
+            line.move_vertically(time_elapsed)
 
     def select_active_line(self, key_states):
 
@@ -425,8 +451,11 @@ class SixtletsProcessor():
         if not self.active_line is None and any(pressed_keys):
             self.active_line.register_keys(pressed_keys)
 
-    def tick(self, delta_y):
-        self.update_positions(delta_y)
+    def tick(self, beat_time, time_elapsed):
+
+        self.active_beat_time = beat_time
+
+        self.update_positions(time_elapsed)
         self.clean()
         self.process_inputs()
         self.redraw()
