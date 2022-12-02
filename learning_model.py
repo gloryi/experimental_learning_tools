@@ -1,4 +1,7 @@
 import random
+import json
+import os
+from config import PROGRESSION_FILE
 
 class MarkedAlias():
     def __init__(self, content, key, attached_unit, active = False):
@@ -200,8 +203,14 @@ class FeaturesChain():
         self.chain_no = chain_no
         self.features = features
         self.progression_level = 0
+        self.recall_level = 0
         self.active_position = -1
         self.ascended = False
+
+    def ascend(self):
+        for feature in self.features:
+            feature.progression_level = 4
+            feature.deselect()
 
     def get_next_feature(self):
         # 0 level - card readed.
@@ -229,6 +238,7 @@ class FeaturesChain():
         if self.active_position >= len(self.features):
             self.active_position = 0
             self.progression_level += 1
+            return None
         self.features[self.active_position].select()
         return self.features[self.active_position]
 
@@ -256,22 +266,64 @@ class FeaturesChain():
         return units_list
 
 
-
 class ChainedModel():
     def __init__(self, chains):
         self.chains = chains
         self.active_chain_index = 0
-        self.active_chain = self.set_active_chain() 
+
+        is_restored = self.restore_results(PROGRESSION_FILE)
+
+        if not is_restored:
+            self.active_chain = self.get_active_chain()
+            self.dump_results(PROGRESSION_FILE)
+        else:
+            self.change_active_chain()
 
     def resample(self):
-        pass
-        self.chains.sort(key = lambda _ : _.progression_level)
+        for chain in self.chains:
+            if chain.progression_level > 0:
+                chain.recall_level -= 1 if chain.recall_level > -4 else -4
+        self.chains.sort(key = lambda _ : _.progression_level + _.recall_level * 0.25)
+        self.dump_results(PROGRESSION_FILE)
+
+    def change_active_chain(self):
+        self.resample()
+        self.active_chain_index = 0
+        self.active_chain = self.chains[0]
+        self.active_chain.recall_level = 0
 
     def get_next_feature(self):
-        return self.active_chain.get_next_feature()
+        next_chain = self.active_chain.get_next_feature()
+        if not next_chain:
+            self.change_active_chain()
+            next_chain = self.active_chain.get_next_feature()
+
+        return next_chain
+
+    def dump_results(self, progression_file):
+        backup = {}
+        for chain in self.chains:
+            backup[chain.chain_no] = [chain.progression_level, chain.recall_level]
+        with open(progression_file, "w") as current_progress:
+            json.dump(backup, current_progress)
+
+    def restore_results(self, progression_file):
+        if os.path.exists(progression_file):
+            progress = {}
+            with open(progression_file) as saved_prgress:
+                progress = json.load(saved_prgress)
+            if progress:
+                for chain in self.chains:
+                    chain.progression_level = progress[chain.chain_no][0]
+                    chain.recall_level = progress[chain.chain_no][1]
+                    if chain.progression_level > 0:
+                        chain.ascend()
+            return True
+        else:
+            return False
 
     def get_chains_list(self):
-        units_list = [ChainUnit(_.features[0].entity + "..." + _.features[-1].entity + f" {_.progression_level}", font = ChainUnitType.font_utf) for _ in self.chains]
+        units_list = [ChainUnit(_.features[0].entity + "..." + _.features[-1].entity + f" {_.progression_level} | {_.recall_level}", font = ChainUnitType.font_utf) for _ in sorted(self.chains, key = lambda _ : _.progression_level + _.recall_level*0.25, reverse = True)]
         # TODO specify in config
         if len(units_list) < 12:
             delta_len = 12 - len(units_list)
@@ -280,13 +332,5 @@ class ChainedModel():
             units_list = units_list[:12]
         return units_list
 
-    def set_active_chain(self):
-        if self.chains[self.active_chain_index].ascended:
-            self.chains[self.active_chain_index].ascended = False
-            self.active_chain_index += 1
-            if self.active_chain_index >= len(self.chains):
-                self.active_chain_index = 0
-        return self.chains[self.active_chain_index]
-
     def get_active_chain(self):
-        return self.active_chain
+        return self.chains[self.active_chain_index]

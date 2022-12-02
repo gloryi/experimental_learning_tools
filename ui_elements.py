@@ -43,19 +43,26 @@ class UpperLayout():
                                    475,
                                    250*3*self.percent,
                                    25))
-        self.place_text(str(self.combo)+"x", 400,
+
+        self.place_text(str(self.combo)+"x", 420,
                         40,
                         transparent = True,
                         renderer = self.large_font,
                         base_col = (10,10,10))
 
-        line_color = (int(255*(1-self.progress_ratio)),int(255*(self.progress_ratio)),0)
-        self.pygame_instance.draw.rect(self.display_instance,
-                                  line_color,
-                                  (0,
-                                   self.y1,
-                                   self.W*self.progress_ratio,
-                                   self.y2))
+        self.place_text(str(self.combo)+"x", 920,
+                        40,
+                        transparent = True,
+                        renderer = self.large_font,
+                        base_col = (10,10,10))
+
+        #line_color = (int(255*(1-self.progress_ratio)),int(255*(self.progress_ratio)),0)
+        #self.pygame_instance.draw.rect(self.display_instance,
+                                  #line_color,
+                                  #(0,
+                                   #self.y1,
+                                   #self.W*self.progress_ratio,
+                                   #self.y2))
         
         clip_color = lambda _ : 0 if _ <=0 else 255 if _ >=255 else int(_)
         line_color = (clip_color(255*(1-self.timing_ratio)),clip_color(255*(self.timing_ratio)),0)
@@ -66,5 +73,5 @@ class UpperLayout():
                                    (250-50)*self.timing_ratio,
                                    50))
 
-        self.place_text(str(self.mastered)+"/"+str(self.to_master), self.W/2, (self.y1 + self.y2)/2)
-        self.place_text(str(self.speed_index)+"x", self.W - self.W//10, self.higher_center)
+        #self.place_text(str(self.mastered)+"/"+str(self.to_master), self.W/2, (self.y1 + self.y2)/2)
+        #self.place_text(str(self.speed_index)+"x", self.W - self.W//10, self.higher_center)

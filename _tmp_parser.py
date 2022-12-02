@@ -12,7 +12,7 @@ def prepare_rus_keys(keysfile):
         most_common = 7000
         for i, line in enumerate(nounfile):
             words.append(line[:-1])
-            if i>= most_common:
+            if i >= most_common:
                 break
 
     epi = epitran.Epitran('rus-Cyrl')
@@ -95,7 +95,7 @@ chinese_units = extract_hanzi("hanziDB.csv")
 
 random.shuffle(chinese_units)
 
-BATCH_SIZE = 4
+BATCH_SIZE = 5
 batches = []
 
 for I in range(0, len(chinese_units), BATCH_SIZE):
@@ -125,7 +125,7 @@ for I in range(0, len(chinese_units), BATCH_SIZE):
 
     batches[-1][3] = original_in
 
-    if batch_counter > 12:
+    if batch_counter > 500:
         break
 
 with open("hanzi_prepared.csv", "w") as hanzi_prepared:

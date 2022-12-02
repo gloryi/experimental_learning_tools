@@ -65,12 +65,17 @@ for time_delta in delta_timer:
 
     resume_game = progression.register_event(feedback)
     if not resume_game:
-        break
+        pause_counter.drop_elapsed()
+        paused = True
 
     beat_time = progression.synchronize_tick()
 
 
     pygame.display.update()
+
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_v]:
+        paused = True
  
     for event in pygame.event.get():
  

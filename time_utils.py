@@ -45,13 +45,16 @@ class Counter():
         self.basic_tick_ms = (60 * 1000) / self.bpm
         self.drop_time = self.basic_tick_ms
 
+    def drop_elapsed(self):
+        self.time_elapsed = 0
+
 class Progression():
     def __init__(self,
                  update_counter,
                  ui_ref):
 
-        self.correct = 18
-        self.missed  = 2
+        self.correct = 3
+        self.missed  = 1
 
         self.new_event = False
         self.correct_event = False
@@ -70,7 +73,7 @@ class Progression():
         return percent
 
     def register_correct(self):
-        if self.correct <= 20:
+        if self.correct <= 3:
             self.correct += 1
         else:
             if self.missed > 0:
@@ -83,7 +86,7 @@ class Progression():
         self.ui_ref.combo = self.combo
 
     def register_miss(self):
-        if self.missed <= 20:
+        if self.missed <= 3:
             self.missed += 1
         else:
             if self.correct > 0:
@@ -101,6 +104,9 @@ class Progression():
             self.register_miss()
 
         if self.get_percent() == 0:
+            self.correct = 3 
+            self.missed  = 1
+            self.get_percent()
             return False
 
         return True
@@ -123,22 +129,22 @@ class Progression():
         self.bpm = 30 if self.bpm < 30 else 200 if self.bpm > 200 else self.bpm
 
     def synchronize_tick(self):
-        if self.new_event:
-            self.new_event = False
+        #if self.new_event:
+            #self.new_event = False
 
-            if self.correct_event and self.speed_combo >= 3:
-                self.bpm += self.bpm//32 
-                self.speed_combo = 0
+            #if self.correct_event and self.speed_combo >= 3:
+                #self.bpm += self.bpm//32 
+                #self.speed_combo = 0
 
-            elif not self.correct_event and self.speed_combo <= -2:
-                self.bpm -= self.bpm//8 
-                self.speed_combo = 0
+            #elif not self.correct_event and self.speed_combo <= -2:
+                #self.bpm -= self.bpm//8 
+                #self.speed_combo = 0
 
-            self.normalize_bpm()
+            #self.normalize_bpm()
 
-            self.ui_ref.speed_index = self.bpm 
-            self.update_basic_tick()
+            #self.ui_ref.speed_index = self.bpm 
+            #self.update_basic_tick()
 
-            self.update_counter.modify_bpm(self.bpm)
+            #self.update_counter.modify_bpm(self.bpm)
             
         return self.basic_tick_ms

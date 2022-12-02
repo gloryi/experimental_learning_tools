@@ -12,6 +12,7 @@ from colors import col_correct, col_error
 import colors
 
 LAST_EVENT = "POSITIVE"
+NEW_EVENT = False
 ######################################
 ### DATA PRODUCER
 ######################################
@@ -21,7 +22,7 @@ class ChainedsProducer():
         self.csv_path = csv_path
         self.label = label 
         self.chains = self.prepare_data()
-        self.active_chain = self.set_active_chain()
+        self.active_chain = self.chains.get_active_chain()
         self.ui_ref = ui_ref
 
     def prepare_data(self):
@@ -33,21 +34,11 @@ class ChainedsProducer():
                 entity, in_key, out_key, main_feature, *key_feature_pairs = item[1:]
                 features.append(ChainedFeature(entity, in_key, out_key, main_feature, key_feature_pairs))
             chains.append(FeaturesChain(key, features))
-        random.shuffle(chains)
         return ChainedModel(chains)
 
-    def update_progress(self):
-        pass
-
-    def set_active_chain(self):
-        return self.chains.set_active_chain()
-
-    def resample(self):
-        self.chains.resample()
-
     def produce_chain(self):
-        self.set_active_chain()
-        return self.chains.get_active_chain()
+        self.active_chain = self.chains.get_active_chain()
+        return self.active_chain
 
     def produce_next_feature(self):
         return self.chains.get_next_feature()
@@ -119,7 +110,9 @@ class ChainedEntity():
 
     def match_correct(self):
         global LAST_EVENT
+        global NEW_EVENT
         LAST_EVENT = "POSITIVE"
+        NEW_EVENT = True
         self.order_in_work += 1
         if self.questions_queue:
             self.questions_queue.pop(0)
@@ -137,7 +130,10 @@ class ChainedEntity():
 
     def match_error(self):
         global LAST_EVENT
+        global NEW_EVENT
         LAST_EVENT = "ERROR"
+        NEW_EVENT = True
+
         self.generate_options()
 
     def register_keys(self, key_states, time_percent, time_based = False):
@@ -456,18 +452,17 @@ class ChainedProcessor():
         self.active_beat_time = beat_time 
         self.time_elapsed_cummulative = 0
         self.active_entity = ChainedEntity(self.producer.produce_next_feature(),
-                                           self.producer.active_chain,
+                                           self.producer.produce_chain(),
                                            self.producer.chains,
                                            self.pygame_instance, self.W, self.H)
 
     def add_line(self):
-        #self.active_chain = self.initialize_stack()
 
         if self.active_entity:
             is_solved = self.active_entity.register_answers()
             
         self.active_entity = ChainedEntity(self.producer.produce_next_feature(),
-                                           self.producer.active_chain, self.producer.chains,
+                                           self.producer.produce_chain(), self.producer.chains,
                                            self.pygame_instance, self.W, self.H)
         self.time_elapsed_cummulative = 0
         self.active_beat_time = (60*1000)/self.active_entity.time_estemated
@@ -483,13 +478,16 @@ class ChainedProcessor():
         return [mark_pressed(_) for _ in key_states]
 
     def get_feedback(self):
-        feedback = 0
-        global LAST_EVENT
-        if feedback > 0:
-            LAST_EVENT = "POSITIVE"
-        elif feedback <0:
-            LAST_EVENT = "NEGATIVE"
-        return feedback
+        global NEW_EVENT
+        if LAST_EVENT == "POSITIVE" and NEW_EVENT:
+            NEW_EVENT = False
+            return 1
+        elif LAST_EVENT == "ERROR" and NEW_EVENT:
+            NEW_EVENT = False
+            return -1
+        else:
+            return 0
+
 
     def process_inputs(self, time_elapsed = 0):
         key_states = self.control.get_keys()
