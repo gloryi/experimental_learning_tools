@@ -9,9 +9,11 @@ from copy import deepcopy
 def prepare_rus_keys(keysfile):
     words = []
     with open(keysfile) as nounfile:
-        for line in nounfile:
-            if(len(line) >= 6 and len(line)<12):
-                words.append(line[:-1])
+        most_common = 7000
+        for i, line in enumerate(nounfile):
+            words.append(line[:-1])
+            if i>= most_common:
+                break
 
     epi = epitran.Epitran('rus-Cyrl')
 
@@ -55,24 +57,34 @@ def extract_hanzi(hanzifile):
 def chain_two_features(f1, f2, mnemonic_dict):
     ft1, ft2 = ipa.convert(f1), ipa.convert(f2)
     ft1s, ft2s = set(ft1), set(ft2)
-    cross_1 = lambda _ : len(ft1s.intersection(set(_[:len(_)//2])))
-    cross_2 = lambda _ : len(ft2s.intersection(set(_[len(_)//2:])))
+    cross_1 = lambda _ : len(ft1s.difference(set(_[:len(_)//2])))+ abs(len(_)-len(f1))
+    cross_2 = lambda _ : len(ft2s.difference(set(_[len(_)//2:])))+ abs(len(_)-len(f2))
     cross = lambda _ : cross_1(_) + cross_2(_)
-    closest_key = max(mnemonic_dict, key = cross)
+    closest_key = min(mnemonic_dict, key = cross)
+    target_key = mnemonic_dict[closest_key]
+    del mnemonic_dict[closest_key]
+    return target_key
+
+def chain_single(f1, mnemonic_dict):
+    ft1 = ipa.convert(f1)
+    ft1s = set(ft1)
+    cross_1 = lambda _ : len(ft1s.difference(set(_))) + abs(len(_)-len(f1))
+    cross = lambda _ : cross_1(_)
+    closest_key = min(mnemonic_dict, key = cross)
     target_key = mnemonic_dict[closest_key]
     del mnemonic_dict[closest_key]
     return target_key
 
 def create_chain(f_in, f_out, f_key, f_tail, mnemonic_dict, ready_in = ""):
     if not ready_in:
-        in_key = chain_two_features(f_in, f_key, mnemonic_dict)
+        in_key = chain_single(f_key, mnemonic_dict)
     else:
         in_key = ready_in
-    out_key = chain_two_features(f_key, f_out, mnemonic_dict)
+    out_key = chain_single(f_key, mnemonic_dict)
     features_tail = [f_key] + f_tail
     keys_tail = []
-    for f1, f2 in zip(features_tail[:-1], features_tail[1:]):
-        keys_tail.append(chain_two_features(f1, f2, mnemonic_dict))
+    for f2 in features_tail[1:]:
+        keys_tail.append(chain_single(f2, mnemonic_dict))
 
 
     return [in_key, out_key] + keys_tail
@@ -83,7 +95,7 @@ chinese_units = extract_hanzi("hanziDB.csv")
 
 random.shuffle(chinese_units)
 
-BATCH_SIZE = 10
+BATCH_SIZE = 4
 batches = []
 
 for I in range(0, len(chinese_units), BATCH_SIZE):
@@ -113,7 +125,7 @@ for I in range(0, len(chinese_units), BATCH_SIZE):
 
     batches[-1][3] = original_in
 
-    if batch_counter > 8:
+    if batch_counter > 12:
         break
 
 with open("hanzi_prepared.csv", "w") as hanzi_prepared:

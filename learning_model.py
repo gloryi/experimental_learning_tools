@@ -69,11 +69,13 @@ class ChainUnitType():
     mode_active_question = "mode_active_question"
     mode_hidden = "mode_hidden"
     mode_highligted = "mode_highligted"
+    extra_focus = "extra_focus"
     position_subtitle = "position_subtitle"
     position_features = "position_features"
     position_keys = "position_keys"
     font_cyrillic = "font_cyrillic"
     font_utf = "font_utf"
+    font_short_utf = "font_short_utf"
 
 class ChainUnit():
     def __init__(self,
@@ -82,6 +84,7 @@ class ChainUnit():
                  mode = None,
                  position = None,
                  order_no = None,
+                 extra = None,
                  font = ChainUnitType.font_utf):
 
         self.text = text
@@ -90,6 +93,7 @@ class ChainUnit():
         self.position = position
         self.order_no = order_no
         self.font = font
+        self.extra = extra
 
 class ChainedFeature():
     def __init__(self, entity, in_key, out_key, main_feature, key_feature_pairs): 
@@ -102,12 +106,12 @@ class ChainedFeature():
         self.progression_level = 0
         self.decreased = False
         self.rised = False
-        self.basic_timing_per_level = {0:20,
-                                       1:40,
-                                       2:40,
-                                       3:40,
-                                       4:40,
-                                       5:40}
+        self.basic_timing_per_level = {0:30,
+                                       1:30,
+                                       2:30,
+                                       3:30,
+                                       4:30,
+                                       5:30}
 
     def set_mode(self, unit_type):
         if self.progression_level == 0:
@@ -116,12 +120,24 @@ class ChainedFeature():
             return ChainUnitType.mode_question 
         elif self.progression_level == 2 and unit_type == ChainUnitType.type_feature:
             return ChainUnitType.mode_question
-        elif self.progression_level == 3 and unit_type == ChainUnitType.type_feature:
+        elif self.progression_level >= 3 and unit_type == ChainUnitType.type_feature:
             return ChainUnitType.mode_question
-        elif self.progression_level == 3 and unit_type == ChainUnitType.type_key:
+        elif self.progression_level >= 3 and unit_type == ChainUnitType.type_key:
             return ChainUnitType.mode_hidden
         else:
             return ChainUnitType.mode_open
+
+    def set_extra(self, unit_type):
+        if self.progression_level == 0 and unit_type == ChainUnitType.type_key:
+            return ChainUnitType.extra_focus
+        if self.progression_level == 1 and unit_type == ChainUnitType.type_key:
+            return ChainUnitType.extra_focus 
+        elif self.progression_level == 2 and unit_type == ChainUnitType.type_feature:
+            return ChainUnitType.extra_focus
+        elif self.progression_level >= 3 and unit_type == ChainUnitType.type_feature:
+            return ChainUnitType.extra_focus
+        else:
+            return None
 
     def get_timing(self):
         return self.basic_timing_per_level[self.progression_level]
@@ -131,17 +147,21 @@ class ChainedFeature():
        keys = [ChainUnit(_, ChainUnitType.type_key,
                          self.set_mode(ChainUnitType.type_key),
                          ChainUnitType.position_keys, i+1,
-                         font=ChainUnitType.font_cyrillic) for (i,_) in enumerate(self.keys)] 
+                         font=ChainUnitType.font_cyrillic,
+                         extra = self.set_extra(ChainUnitType.type_key)) for (i,_) in enumerate(self.keys)] 
        features = [ChainUnit(_, ChainUnitType.type_feature,
                                  self.set_mode(ChainUnitType.type_feature),
-                                 ChainUnitType.position_features, i+1) for (i,_) in enumerate(self.features)]
+                                 ChainUnitType.position_features, i+1,
+                             extra = self.set_extra(ChainUnitType.type_feature)) for (i,_) in enumerate(self.features)]
        subtitle = [ChainUnit(self.in_key, ChainUnitType.type_key,
                                  self.set_mode(ChainUnitType.type_key),
                                  ChainUnitType.position_keys, 0,
-                                 font = ChainUnitType.font_cyrillic)]
+                                 font = ChainUnitType.font_cyrillic,
+                             extra = self.set_extra(ChainUnitType.type_key))]
        subtitle += [ChainUnit(self.main_feature, ChainUnitType.type_feature,
                                  self.set_mode(ChainUnitType.type_feature),
-                                 ChainUnitType.position_keys, 0)]
+                                 ChainUnitType.position_keys, 0,
+                              extra = self.set_extra(ChainUnitType.type_feature))]
        return keys + features + subtitle
 
 
@@ -152,12 +172,13 @@ class ChainedFeature():
         timing = self.basic_timing_per_level[self.progression_level]
         level = self.progression_level
         if is_solved:
-            self.basic_timing_per_level[self.progression_level] = timing +5 if timing < 50 else 50 
+            if not self.progression_level == 1:
+                self.basic_timing_per_level[self.progression_level] = timing +4 if timing < 40 else 40 
             self.progression_level = level + 1 if level < 4 else 4 
             self.rised = True
             self.decreased = False
         else:
-            self.basic_timing_per_level[self.progression_level] = timing -5 if timing > 20 else 20 
+            self.basic_timing_per_level[self.progression_level] = timing -4 if timing > 20 else 20 
             self.progression_level = level -1 if level > 0 else 0 
             self.decreased = True
             self.rised = False
@@ -180,6 +201,7 @@ class FeaturesChain():
         self.features = features
         self.progression_level = 0
         self.active_position = -1
+        self.ascended = False
 
     def get_next_feature(self):
         # 0 level - card readed.
@@ -206,12 +228,13 @@ class FeaturesChain():
         self.active_position += 1
         if self.active_position >= len(self.features):
             self.active_position = 0
+            self.progression_level += 1
         self.features[self.active_position].select()
         return self.features[self.active_position]
 
     def get_options_list(self, sample):
         options = [sample.text]
-        for i in range(5):
+        for i in range(3):
             random_chain = random.choice(self.features)
             if sample.type == ChainUnitType.type_key:
                 selected = random.choice(random_chain.keys)
@@ -237,10 +260,15 @@ class FeaturesChain():
 class ChainedModel():
     def __init__(self, chains):
         self.chains = chains
+        self.active_chain_index = 0
         self.active_chain = self.set_active_chain() 
 
     def resample(self):
+        pass
         self.chains.sort(key = lambda _ : _.progression_level)
+
+    def get_next_feature(self):
+        return self.active_chain.get_next_feature()
 
     def get_chains_list(self):
         units_list = [ChainUnit(_.features[0].entity + "..." + _.features[-1].entity + f" {_.progression_level}", font = ChainUnitType.font_utf) for _ in self.chains]
@@ -253,7 +281,12 @@ class ChainedModel():
         return units_list
 
     def set_active_chain(self):
-        return self.chains[0]
+        if self.chains[self.active_chain_index].ascended:
+            self.chains[self.active_chain_index].ascended = False
+            self.active_chain_index += 1
+            if self.active_chain_index >= len(self.chains):
+                self.active_chain_index = 0
+        return self.chains[self.active_chain_index]
 
     def get_active_chain(self):
         return self.active_chain

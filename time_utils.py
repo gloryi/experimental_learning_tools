@@ -14,9 +14,13 @@ def global_timer(pygame_instance):
 
 class Counter():
     def __init__(self,
-                 ui_ref = None):
+                 ui_ref = None,
+                 bpm = None):
 
-        self.bpm = BPM
+        if not bpm:
+            self.bpm = BPM
+        else:
+            self.bpm = bpm
 
         self.basic_tick_ms = (60 * 1000) / self.bpm
         self.drop_time = self.basic_tick_ms

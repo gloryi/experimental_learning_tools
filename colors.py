@@ -23,3 +23,7 @@ option_fg = hex_to_rgb("#68A834")
 option_bg = hex_to_rgb("#F48F6C")
 
 col_black = hex_to_rgb("#000030")
+
+col_bt_pressed = hex_to_rgb("#4E52AF")
+col_bt_down    = hex_to_rgb("#1D1313")
+col_bt_text = hex_to_rgb("#FFFFFF")

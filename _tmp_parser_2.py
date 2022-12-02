@@ -13,12 +13,13 @@ with open("freqrnc2011.csv") as csvfile:
     for line in reader:
         if line[pos_header] != "s":
             continue
-        if float(line[freq_header]) < 8.0:
-            continue
-        words_selected.append(line[lemma_header])
-#print(len(words_selected))
-#for word in words_selected:
-    #print(word)
+        #if float(line[freq_header]) < 8.0:
+            #continue
+        words_selected.append([line[lemma_header], float(line[freq_header])])
+
+words_selected.sort(key = lambda _ : _[1], reverse = True)
+words_selected = [_[0] for _ in words_selected]
+
 with open("rus_semantics.csv", "w") as lexical_file:
    csvwriter = writer(lexical_file)
    for line in words_selected:

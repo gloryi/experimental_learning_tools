@@ -40,8 +40,7 @@ class ChainedsProducer():
         pass
 
     def set_active_chain(self):
-        self.chains.resample()
-        self.chains.set_active_chain()
+        return self.chains.set_active_chain()
 
     def resample(self):
         self.chains.resample()
@@ -49,6 +48,9 @@ class ChainedsProducer():
     def produce_chain(self):
         self.set_active_chain()
         return self.chains.get_active_chain()
+
+    def produce_next_feature(self):
+        return self.chains.get_next_feature()
 
 
 ######################################
@@ -82,17 +84,22 @@ class ChainedEntity():
         self.error = False
         
         self.feedback = None
+        self.done = True
+        self.time_perce_reserved = 0.0
 
         self.options = None
         self.active_question = None
         self.questions_queue = self.extract_questions()
-        self.time_estemated = self.chained_feature.get_timing() / (len(self.questions_queue)+1) 
+        if self.questions_queue:
+            self.time_estemated = self.chained_feature.get_timing() / (len(self.questions_queue)+1) 
+            self.done = False
+        else:
+            self.time_estemated = self.chained_feature.get_timing() / (len(self.context)//2 +1) 
+
 
     def extract_questions(self):
         questions = list(filter(lambda _ : _.mode == ChainUnitType.mode_question, self.context))
         if questions:
-            # HARDCODE
-            #questions = [questions[-1]] + questions[:-2]
             self.active_question = questions[0]
             self.active_question.mode = ChainUnitType.mode_active_question
             self.generate_options()
@@ -102,63 +109,82 @@ class ChainedEntity():
         if self.active_question:
             self.options = self.features_chain.get_options_list(self.active_question)
 
+    def delete_options(self):
+        self.options = [random.choice(["nice", "correct", "good", "great", "super", "bang", "cute"]) for _ in range(4)]
+
     def register_answers(self):
         is_solved = len(self.questions_queue) == 0
         self.chained_feature.register_progress(is_solved = is_solved)
         return is_solved 
 
     def match_correct(self):
+        global LAST_EVENT
+        LAST_EVENT = "POSITIVE"
         self.order_in_work += 1
         if self.questions_queue:
             self.questions_queue.pop(0)
-        else:
-            if self.active_question:
-                self.active_question.mode = ChainUnitType.mode_open
+            self.active_question.mode = ChainUnitType.mode_open
 
         if self.questions_queue:
             self.active_question.mode = ChainUnitType.mode_open
             self.active_question = self.questions_queue[0]
             self.generate_options()
+        else:
+            self.delete_options()
+            self.active_question = None
+            self.done = True
+            self.order_in_work = 0
 
     def match_error(self):
+        global LAST_EVENT
+        LAST_EVENT = "ERROR"
         self.generate_options()
 
-    def register_keys(self, key_states, time_percent=0, time_based = False):
+    def register_keys(self, key_states, time_percent, time_based = False):
         if self.active_question and not time_based:
+            self.time_perce_reserved = time_percent
             for i, key in enumerate(key_states):
                 if key:
                     if self.options[i] == self.active_question.text:
                         self.match_correct()
                     else:
                         self.match_error()
+
         elif time_based and not self.active_question:
+            time_p = time_percent
+
+            if not self.done:
+                self.time_perce_reserved = time_percent
+
+            if self.done:
+                time_p = (time_p - self.time_perce_reserved)/(1.0 - self.time_perce_reserved)
+
             n_pairs = len(self.context)/2
             pair_perce = 1/n_pairs
 
-            pair_to_show = int(time_percent/pair_perce)
+            pair_to_show = int(time_p/pair_perce)
             self.order_in_work = pair_to_show
 
 
 
     def produce_geometries(self):
         graphical_objects = []
-        set_color = lambda _ : col_wicked_darker if _.type == ChainUnitType.type_key else colors.feature_text_col if _.type == ChainUnitType.type_feature  else colors.col_correct if _.mode == ChainUnitType.mode_highligted else colors.col_black 
-        set_bg_color = lambda _ : col_active_darker if _.type == ChainUnitType.type_key else colors.feature_bg 
-        get_text  = lambda _ : _.text if _.mode == ChainUnitType.mode_open else "???"  if _.mode == ChainUnitType.mode_question else "XXX"
+        set_color = lambda _ : colors.col_active_lighter if _.extra else col_wicked_darker if _.type == ChainUnitType.type_key else colors.feature_text_col if _.type == ChainUnitType.type_feature  else colors.col_correct if _.mode == ChainUnitType.mode_highligted else colors.col_black 
+        set_bg_color = lambda _ : colors.col_bt_down if _.extra else col_active_darker if _.type == ChainUnitType.type_key else colors.feature_bg 
+        get_text  = lambda _ : _.text if self.done or _.mode == ChainUnitType.mode_open else "???"  if _.mode == ChainUnitType.mode_question else ""
         get_position_x = lambda _ : self.x_positions[_.order_no+1]  
         get_y_position = lambda _ : self.H//2 - self.H//4 + self.H//16 if _.position == ChainUnitType.position_subtitle else self.H//2 - self.H//16 if _.position == ChainUnitType.position_keys else self.H//2 + self.H//16
         set_font = lambda _ : ChainUnitType.font_cyrillic if _.font == ChainUnitType.font_cyrillic else ChainUnitType.font_utf
 
         ctx_len = len(self.context)//2
-        ctx_x = 570 
-        ctx_h = 50
-        ctx_w = 250
         ctx_y_origin = 300 + 25 
-        order_y_origin = ctx_y_origin
         for ctx in self.context:
+            order_y_origin = ctx_y_origin
+            ctx_x = 570 
+            ctx_h = 50
+            ctx_w = 250
             ctx_order = ctx.order_no
             ctx_type = ctx.type
-            order_y_origin = ctx_y_origin
 
             order_delta = self.order_in_work - ctx_order 
 
@@ -169,10 +195,16 @@ class ChainedEntity():
 
             if ctx_type == ChainUnitType.type_feature:
                 ctx_y = order_y_origin + order_delta * 100
+                if ctx_order == self.order_in_work:
+                    ctx_x += 25
+                    ctx_w -= 50
+
             else:
                 ctx_y = order_y_origin + 50 + order_delta * 100
                 if ctx_order == self.order_in_work:
                     ctx_y += 50
+                    ctx_x += 25
+                    ctx_w -= 50
 
 
             #ctx_y = ctx_y_origin
@@ -184,30 +216,29 @@ class ChainedEntity():
                                                    cy,
                                                    set_color(ctx),
                                                    set_bg_color(ctx),
-                                                   font = set_font(ctx),
+                                                   font = ChainUnitType.font_short_utf,
                                                    rect = [ctx_x, ctx_y, ctx_w, ctx_h]))
 
         # Static holder for main entity feature
-        center_x = 570
+        center_x = 570+25
         center_y = 375
-        square_w = 250
+        square_w = 250-50
         square_h = 50
         xc = center_x + square_w/2
         yc = center_y + square_h/2
         graphical_objects.append(WordGraphical(self.main_title,
                                                xc, yc,
-                                               (100,150,150),
+                                               colors.col_bt_down,
+                                               transparent = True,
+                                               font_size = 40,
+                                               font = ChainUnitType.font_utf,
                                                rect = [center_x, center_y, square_w, square_h]))
 
-        graphical_objects.append(WordGraphical(str(self.features_chain.progression_level),
-                                               self.x_positions[0],
-                                               self.H//2 - self.H//4,
-                                               (100,150,150)))
         options_x1 = 320
         options_y1 = 325
-        options_x_corners = [320, 320, 320, 320+250*2, 320+250*2, 320+250*2]
-        options_y_corners = [325, 325+50, 325+50*2, 325, 325+50, 325+50*2]
-        options_w = 250
+        options_x_corners = [320+50+25, 320+50+25, 320+50+25+200*2, 320+50+25+200*2]
+        options_y_corners = [325+25, 325+25+50, 325+25, 325+25+50]
+        options_w = 200
         options_h = 50
         if self.options:
             for i, (x1, y1) in enumerate(zip(options_x_corners, options_y_corners)):
@@ -216,7 +247,8 @@ class ChainedEntity():
                 graphical_objects.append(WordGraphical(self.options[i],
                                                        xc,
                                                        yc,
-                                                       colors.option_fg, colors.option_bg,
+                                                       colors.col_bt_text, transparent = True,
+                                                       font = ChainUnitType.font_short_utf,
                                                         rect = [x1, y1, options_w, options_h]))
 
         # Produce chain progression visual
@@ -232,8 +264,8 @@ class ChainedEntity():
                                      xc, yc,
                                      set_color(feature_notion),
                                      bg_color = None,
-                                     rect = [notions_x1, y1, notions_w, notions_h],
-                                     font = set_font(feature_notion)))
+                                                   font = ChainUnitType.font_utf,
+                                     rect = [notions_x1, y1, notions_w, notions_h]))
 
         # Produce chains progression visual
         notions_x1 = 1070
@@ -248,8 +280,8 @@ class ChainedEntity():
                                      xc, yc,
                                      set_color(feature_notion),
                                      bg_color = None,
-                                     rect = [notions_x1, y1, notions_w, notions_h],
-                                     font = set_font(feature_notion)))
+                                   font = ChainUnitType.font_utf,
+                                     rect = [notions_x1, y1, notions_w, notions_h]))
 
         # Produce large view of main feature of learning entity
         large_notions_x_corners = [320, 320+250*2,  320,      320+250*2]
@@ -262,9 +294,10 @@ class ChainedEntity():
             graphical_objects.append(WordGraphical(self.chained_feature.entity,
                                      xc, yc,
                                      colors.col_black,
-                                     bg_color = None,
-                                     rect = [x1, y1, large_notion_w, large_notion_h],
-                                     font = ChainUnitType.font_utf))
+                                     bg_color = col_correct if LAST_EVENT == "POSITIVE" else col_error,
+                                    font_size = 120,
+                                   font = ChainUnitType.font_utf,
+                                     rect = [x1, y1, large_notion_w, large_notion_h]))
         
 
         return graphical_objects
@@ -280,8 +313,9 @@ class ChainedEntity():
 
 class WordGraphical():
     def __init__(self, text, x, y, color, bg_color = (150,150,150),
-                 font = ChainUnitType.font_utf,
-                 rect = []):
+                 font = ChainUnitType.font_short_utf,
+                 font_size = None,
+                 rect = [], transparent = False):
         self.rect = rect
         self.text = text
         self.x = x
@@ -289,6 +323,8 @@ class WordGraphical():
         self.color = color
         self.bg_color = bg_color
         self.font = font
+        self.font_size = font_size
+        self.transparent = transparent
 
 class ChainedDrawer():
     def __init__(self, pygame_instance, display_instance, W, H):
@@ -302,13 +338,17 @@ class ChainedDrawer():
         color = (128,128,128)
         for geometry in geometries:
             message = geometry.text
-            font_size = 60 if len(message) == 1 else 25 if len(message) < 6 else 20
-            if geometry.font == ChainUnitType.font_cyrillic:
-                font_file = self.pygame_instance.font.match_font("setofont")
-                self.font = self.pygame_instance.font.Font(font_file, 35)
+            if not geometry.font_size:
+                font_size = 60 if len(message) == 1 else 25 if len(message) < 6 else 20
+            else:
+                font_size = geometry.font_size
+            if geometry.font == ChainUnitType.font_cyrillic or geometry.font == ChainUnitType.font_short_utf:
+                self.font = self.pygame_instance.font.Font("Inter_font.ttf", font_size, bold = True)
+                #font_file = self.pygame_instance.font.match_font("setofont")
+                #self.font = self.pygame_instance.font.Font(font_file, 35)
             else:
                 self.font = self.pygame_instance.font.Font("simhei.ttf", font_size, bold = True)
-            if len(message) >1:
+            if not geometry.transparent:
                 text = self.font.render(message, True, geometry.color, geometry.bg_color)
             else:
                 text = self.font.render(message, True, geometry.color)
@@ -328,9 +368,12 @@ class ChainedDrawer():
     def display_keys(self, keys):
         options_x1 = 320
         options_y1 = 325
-        options_x_corners = [320, 320, 320, 320+250*2, 320+250*2, 320+250*2]
-        options_y_corners = [325, 325+50, 325+50*2, 325, 325+50, 325+50*2]
-        options_w = 250
+        #options_x_corners = [320, 320, 320, 320+250*2, 320+250*2, 320+250*2]
+        #options_y_corners = [325, 325+50, 325+50*2, 325, 325+50, 325+50*2]
+        options_x_corners = [320+25+50, 320+25+50, 320+25+50+200*2, 320+25+50+200*2]
+        options_y_corners = [325+25, 325+25+50, 325+25, 325+25+50]
+        #options_w = 250
+        options_w = 200
         options_h = 50
 
         for i, (x1, y1) in enumerate(zip(options_x_corners, options_y_corners)):
@@ -339,15 +382,9 @@ class ChainedDrawer():
 
             color = (255,255,255)
             if key_state == "up":
-                if i in [0,2,3,5]:
-                    color = col_bg_darker if LAST_EVENT == "POSITIVE" else col_wicked_darker 
-                else:
-                    color = col_bg_lighter if LAST_EVENT == "POSITIVE" else col_wicked_lighter
+                color = colors.col_bt_down if LAST_EVENT == "POSITIVE" else colors.col_error 
             elif key_state == "down":
-                if i in [0,2,3,5]:
-                    color = col_active_darker if LAST_EVENT == "POSITIVE" else col_active_darker 
-                else:
-                    color = col_active_lighter if LAST_EVENT == "POSITIVE" else col_active_lighter
+                color = colors.col_bt_pressed if LAST_EVENT == "POSITIVE" else colors.col_active_lighter
             else:
                 color = (0,150,100)
 
@@ -368,10 +405,10 @@ class KeyboardChainModel():
         self.down = 'down'
         self.pressed = 'pressed'
         self.mapping = OrderedDict()
-        self.mapping[self.pygame_instance.K_e]         = self.up
+        #self.mapping[self.pygame_instance.K_e]         = self.up
         self.mapping[self.pygame_instance.K_d]         = self.up
         self.mapping[self.pygame_instance.K_c]         = self.up
-        self.mapping[self.pygame_instance.K_i]         = self.up
+        #self.mapping[self.pygame_instance.K_i]         = self.up
         self.mapping[self.pygame_instance.K_k]         = self.up
         self.mapping[self.pygame_instance.K_COMMA]     = self.up
 
@@ -407,7 +444,7 @@ class KeyboardChainModel():
                 
 
 class ChainedProcessor():
-    def __init__(self, pygame_instance, display_instance, ui_ref, data_label, data_path):
+    def __init__(self, pygame_instance, display_instance, ui_ref, data_label, data_path, beat_time = 1):
         self.W = W
         self.H = H
         self.producer = ChainedsProducer(data_label, data_path, ui_ref)
@@ -416,28 +453,24 @@ class ChainedProcessor():
         self.active_line = None
         self.pygame_instance = pygame_instance
         self.display_instance = display_instance
-        self.active_beat_time = 1
+        self.active_beat_time = beat_time 
         self.time_elapsed_cummulative = 0
-        self.active_chain = self.initialize_stack()
-        self.active_entity = ChainedEntity(self.active_chain.get_next_feature(),
-                                           self.active_chain,
+        self.active_entity = ChainedEntity(self.producer.produce_next_feature(),
+                                           self.producer.active_chain,
                                            self.producer.chains,
                                            self.pygame_instance, self.W, self.H)
 
-    def initialize_stack(self):
-        chained_unit = self.producer.produce_chain()
-        return chained_unit
-
     def add_line(self):
+        #self.active_chain = self.initialize_stack()
+
         if self.active_entity:
             is_solved = self.active_entity.register_answers()
             
-        self.active_entity = ChainedEntity(self.active_chain.get_next_feature(),
-                                           self.active_chain, self.producer.chains,
+        self.active_entity = ChainedEntity(self.producer.produce_next_feature(),
+                                           self.producer.active_chain, self.producer.chains,
                                            self.pygame_instance, self.W, self.H)
         self.time_elapsed_cummulative = 0
         self.active_beat_time = (60*1000)/self.active_entity.time_estemated
-        print(self.active_beat_time)
 
         return self.active_entity.time_estemated
 
@@ -465,10 +498,10 @@ class ChainedProcessor():
         pressed_keys = self.get_pressed(key_states)
 
         if self.active_entity and any(pressed_keys):
-            self.active_entity.register_keys(pressed_keys)
+            self.active_entity.register_keys(pressed_keys, self.time_elapsed_cummulative / self.active_beat_time)
         elif self.active_entity:
             self.active_entity.register_keys(pressed_keys,
-                                             self.time_elapsed_cummulative / self.active_beat_time,
+                                             self.time_elapsed_cummulative / self.active_beat_time, 
                                              time_based = True)
 
 
