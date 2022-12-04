@@ -14,7 +14,10 @@ class UpperLayout():
         font_file = pygame_instance.font.match_font("setofont")
         self.font = pygame_instance.font.Font(font_file, 50)
         self.large_font = pygame_instance.font.Font(font_file, 80)
+        self.utf_font = self.pygame_instance.font.Font("simhei.ttf", 150, bold = True)
         self.combo = 1
+        self.tiling = ""
+        self.tiling_utf = True
 
         self.speed_index = 5000
         self.percent = 0.8
@@ -36,11 +39,28 @@ class UpperLayout():
 
 
     def redraw(self):
+
+        for x in range(100,1400,200):
+            for y in range(100,800,200):
+                self.place_text(self.tiling,
+                                x,
+                                y,
+                                transparent=True,
+                                renderer = self.utf_font,
+                                base_col = (225,225,225))
+
         line_color = (int(255*(1-self.percent)),int(255*(self.percent)),0)
         self.pygame_instance.draw.rect(self.display_instance,
                                   line_color,
                                   ((320 + (250*3*(1-self.percent))/2),
                                    475,
+                                   250*3*self.percent,
+                                   25))
+
+        self.pygame_instance.draw.rect(self.display_instance,
+                                  line_color,
+                                  ((320 + (250*3*(1-self.percent))/2),
+                                   200,
                                    250*3*self.percent,
                                    25))
 
@@ -65,13 +85,37 @@ class UpperLayout():
                                    #self.y2))
         
         clip_color = lambda _ : 0 if _ <=0 else 255 if _ >=255 else int(_)
-        line_color = (clip_color(255*(1-self.timing_ratio)),clip_color(255*(self.timing_ratio)),0)
+        line_color = (clip_color(178*(1-self.timing_ratio)),
+                      clip_color(150*(self.timing_ratio)),
+                      clip_color(150*(1-self.timing_ratio)))
         self.pygame_instance.draw.rect(self.display_instance,
                                   line_color,
-                                  ((570+25 + ((250-50)*(1-self.timing_ratio))/2),
-                                   375,
-                                   (250-50)*self.timing_ratio,
-                                   50))
+                                  ((575+25 - 200 + ((200+400)*(1-self.timing_ratio))/2),
+                                   275+25+25,
+                                   (200+400)*self.timing_ratio,
+                                   200-50-50))
+
+        self.pygame_instance.draw.rect(self.display_instance,
+                                  line_color,
+                                  (575+50+25,
+                                   (275-200 + ((200+400)*(1-self.timing_ratio))/2),
+                                   200-50-50,
+                                   (200+400)*self.timing_ratio))
+
+        line_color = (int(255*(1-self.percent)),int(255*(self.percent)),0)
+        self.pygame_instance.draw.rect(self.display_instance,
+                                  line_color,
+                                  ((320 + (250*3*(1-self.percent))/2),
+                                   475,
+                                   250*3*self.percent,
+                                   25))
+
+        self.pygame_instance.draw.rect(self.display_instance,
+                                  line_color,
+                                  ((320 + (250*3*(1-self.percent))/2),
+                                   200,
+                                   250*3*self.percent,
+                                   25))
 
         #self.place_text(str(self.mastered)+"/"+str(self.to_master), self.W/2, (self.y1 + self.y2)/2)
         #self.place_text(str(self.speed_index)+"x", self.W - self.W//10, self.higher_center)

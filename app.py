@@ -31,12 +31,13 @@ progression = Progression(new_line_counter,
                           upper_stats)
 
 beat_time = new_line_counter.drop_time 
+
+font = pygame.font.Font("Inter_font.ttf", 200, bold = True)
  
 for time_delta in delta_timer:
     display_surface.fill(white)
 
     if paused:
-        font = pygame.font.Font("Inter_font.ttf", 200, bold = True)
         text = font.render("PAUSED", True, colors.col_bg_darker)
         textRect = text.get_rect()
         textRect.center = (W//2, H//2)

@@ -129,22 +129,5 @@ class Progression():
         self.bpm = 30 if self.bpm < 30 else 200 if self.bpm > 200 else self.bpm
 
     def synchronize_tick(self):
-        #if self.new_event:
-            #self.new_event = False
-
-            #if self.correct_event and self.speed_combo >= 3:
-                #self.bpm += self.bpm//32 
-                #self.speed_combo = 0
-
-            #elif not self.correct_event and self.speed_combo <= -2:
-                #self.bpm -= self.bpm//8 
-                #self.speed_combo = 0
-
-            #self.normalize_bpm()
-
-            #self.ui_ref.speed_index = self.bpm 
-            #self.update_basic_tick()
-
-            #self.update_counter.modify_bpm(self.bpm)
             
         return self.basic_tick_ms

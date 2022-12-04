@@ -88,6 +88,7 @@ class ChainUnit():
                  position = None,
                  order_no = None,
                  extra = None,
+                 preferred_position = None,
                  font = ChainUnitType.font_utf):
 
         self.text = text
@@ -96,6 +97,7 @@ class ChainUnit():
         self.position = position
         self.order_no = order_no
         self.font = font
+        self.preferred_position = preferred_position
         self.extra = extra
 
 class ChainedFeature():
@@ -151,19 +153,23 @@ class ChainedFeature():
                          self.set_mode(ChainUnitType.type_key),
                          ChainUnitType.position_keys, i+1,
                          font=ChainUnitType.font_cyrillic,
+                         preferred_position = i,
                          extra = self.set_extra(ChainUnitType.type_key)) for (i,_) in enumerate(self.keys)] 
        features = [ChainUnit(_, ChainUnitType.type_feature,
                                  self.set_mode(ChainUnitType.type_feature),
                                  ChainUnitType.position_features, i+1,
+                              preferred_position = i,
                              extra = self.set_extra(ChainUnitType.type_feature)) for (i,_) in enumerate(self.features)]
        subtitle = [ChainUnit(self.in_key, ChainUnitType.type_key,
                                  self.set_mode(ChainUnitType.type_key),
                                  ChainUnitType.position_keys, 0,
                                  font = ChainUnitType.font_cyrillic,
+                             preferred_position = "IN_KEY",
                              extra = self.set_extra(ChainUnitType.type_key))]
        subtitle += [ChainUnit(self.main_feature, ChainUnitType.type_feature,
                                  self.set_mode(ChainUnitType.type_feature),
                                  ChainUnitType.position_keys, 0,
+                              preferred_position = "MAIN_FEATURE",
                               extra = self.set_extra(ChainUnitType.type_feature))]
        return keys + features + subtitle
 
@@ -202,10 +208,22 @@ class FeaturesChain():
     def __init__(self, chain_no, features):
         self.chain_no = chain_no
         self.features = features
+        self.features.append(self.create_review_chain(self.features))
         self.progression_level = 0
         self.recall_level = 0
         self.active_position = -1
         self.ascended = False
+
+    def create_review_chain(self, features):
+        in_key = features[0].main_feature
+        out_key = features[-1].main_feature
+        entity = "rev"
+        main_feature = features[0].entity
+        key_feature_pairs = []
+        for feature in features[1:]:
+            key_feature_pairs.append(feature.main_feature)
+            key_feature_pairs.append(feature.entity)
+        return ChainedFeature(entity, in_key, out_key, main_feature, key_feature_pairs)
 
     def ascend(self):
         for feature in self.features:
@@ -242,18 +260,18 @@ class FeaturesChain():
         self.features[self.active_position].select()
         return self.features[self.active_position]
 
-    def get_options_list(self, sample):
-        options = [sample.text]
-        for i in range(3):
-            random_chain = random.choice(self.features)
-            if sample.type == ChainUnitType.type_key:
-                selected = random.choice(random_chain.keys)
-                options.append(selected)
-            if sample.type == ChainUnitType.type_feature:
-                selected = random.choice(random_chain.features)
-                options.append(selected)
-        random.shuffle(options)
-        return options
+    # def get_options_list(self, sample):
+    #     options = [sample.text]
+    #     for i in range(5):
+    #         random_chain = random.choice(self.features)
+    #         if sample.type == ChainUnitType.type_key:
+    #             selected = random.choice(random_chain.keys)
+    #             options.append(selected)
+    #         if sample.type == ChainUnitType.type_feature:
+    #             selected = random.choice(random_chain.features)
+    #             options.append(selected)
+    #     random.shuffle(options)
+    #     return options
 
     def get_features_list(self):
         units_list = [ChainUnit(_.entity + f" {_.progression_level}", font = ChainUnitType.font_utf) for _ in self.features]
@@ -270,6 +288,7 @@ class ChainedModel():
     def __init__(self, chains):
         self.chains = chains
         self.active_chain_index = 0
+        self.old_limit = 2
 
         is_restored = self.restore_results(PROGRESSION_FILE)
 
@@ -280,17 +299,49 @@ class ChainedModel():
             self.change_active_chain()
 
     def resample(self):
+        # TODO - pick old fresh ones if old_counter > 4
         for chain in self.chains:
             if chain.progression_level > 0:
-                chain.recall_level -= 1 if chain.recall_level > -4 else -4
-        self.chains.sort(key = lambda _ : _.progression_level + _.recall_level * 0.25)
+                chain.recall_level = chain.recall_level - 1
+        if self.old_limit:
+            self.chains.sort(key = lambda _ : _.progression_level + _.recall_level * 0.25)
+        else:
+            self.chains.sort(key = lambda _ : _.progression_level)
+            self.old_limit = 2
         self.dump_results(PROGRESSION_FILE)
 
     def change_active_chain(self):
         self.resample()
         self.active_chain_index = 0
         self.active_chain = self.chains[0]
+        if self.active_chain.recall_level < 0:
+            self.old_limit -= 1
         self.active_chain.recall_level = 0
+
+    def get_options_list(self, sample):
+        options = [sample.text]
+        for i in range(5):
+            random_chain = random.choice(random.choice(self.chains).features)
+            preferred_position = sample.preferred_position
+            if sample.type == ChainUnitType.type_key:
+                if preferred_position == "IN_KEY":
+                    selected = random_chain.in_key
+                elif preferred_position is None or preferred_position >= len(random_chain.keys):
+                    #print("random picked key")
+                    selected = random.choice(random_chain.keys)
+                else:
+                    selected = random_chain.keys[preferred_position]
+                options.append(selected)
+            elif sample.type == ChainUnitType.type_feature:
+                if preferred_position == "MAIN_FEATURE":
+                    selected = random_chain.main_feature
+                elif preferred_position is None or preferred_position >= len(random_chain.features):
+                    selected = random.choice(random_chain.features)
+                else:
+                    selected = random_chain.features[preferred_position]
+                options.append(selected)
+        random.shuffle(options)
+        return options
 
     def get_next_feature(self):
         next_chain = self.active_chain.get_next_feature()

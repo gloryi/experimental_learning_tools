@@ -4,6 +4,7 @@ from collections import OrderedDict
 from math import sqrt
 from itertools import compress, groupby
 import random
+import re
 from config import W, H
 from colors import col_bg_darker, col_wicked_darker
 from colors import col_active_darker, col_bg_lighter
@@ -32,6 +33,8 @@ class ChainedsProducer():
             features = []
             for item in group:
                 entity, in_key, out_key, main_feature, *key_feature_pairs = item[1:]
+                # HARDCODE
+                key_feature_pairs = key_feature_pairs[:4]
                 features.append(ChainedFeature(entity, in_key, out_key, main_feature, key_feature_pairs))
             chains.append(FeaturesChain(key, features))
         return ChainedModel(chains)
@@ -98,10 +101,10 @@ class ChainedEntity():
 
     def generate_options(self):
         if self.active_question:
-            self.options = self.features_chain.get_options_list(self.active_question)
+            self.options = self.chains.get_options_list(self.active_question)
 
     def delete_options(self):
-        self.options = [random.choice(["nice", "correct", "good", "great", "super", "bang", "cute"]) for _ in range(4)]
+        self.options = [random.choice(["nice", "correct", "good", "great", "super", "bang", "cute"]) for _ in range(6)]
 
     def register_answers(self):
         is_solved = len(self.questions_queue) == 0
@@ -170,13 +173,15 @@ class ChainedEntity():
         get_text  = lambda _ : _.text if self.done or _.mode == ChainUnitType.mode_open else "???"  if _.mode == ChainUnitType.mode_question else ""
         get_position_x = lambda _ : self.x_positions[_.order_no+1]  
         get_y_position = lambda _ : self.H//2 - self.H//4 + self.H//16 if _.position == ChainUnitType.position_subtitle else self.H//2 - self.H//16 if _.position == ChainUnitType.position_keys else self.H//2 + self.H//16
-        set_font = lambda _ : ChainUnitType.font_cyrillic if _.font == ChainUnitType.font_cyrillic else ChainUnitType.font_utf
+        set_font = lambda _ : ChainUnitType.font_cyrillic if not re.search(u'[\u4e00-\u9fff]', _.text) else ChainUnitType.font_utf
+        set_size = lambda _ : 30 if not re.search(u'[\u4e00-\u9fff]', _.text) else 40
 
         ctx_len = len(self.context)//2
-        ctx_y_origin = 300 + 25 
+        ctx_y_origin = 275 - 50 
+        ctx_x_origin = 500 - 50 
         for ctx in self.context:
             order_y_origin = ctx_y_origin
-            ctx_x = 570 
+            ctx_x = ctx_x_origin 
             ctx_h = 50
             ctx_w = 250
             ctx_order = ctx.order_no
@@ -187,20 +192,25 @@ class ChainedEntity():
             if order_delta < 0:
                 order_y_origin -= 25
             elif order_delta > 0:
-                order_y_origin += 50 + 25
+                order_y_origin += 200 + 25 
+                if ctx_type == ChainUnitType.type_key:
+                    ctx_x -= 250/2
+                else:
+                    ctx_x += 250/2
 
-            if ctx_type == ChainUnitType.type_feature:
-                ctx_y = order_y_origin + order_delta * 100
-                if ctx_order == self.order_in_work:
-                    ctx_x += 25
-                    ctx_w -= 50
+            if ctx_type == ChainUnitType.type_key:
+                ctx_y = order_y_origin + order_delta * 50 
+                #if ctx_order == self.order_in_work:
+                    #ctx_x += 25
+                    #ctx_w -= 50
 
             else:
-                ctx_y = order_y_origin + 50 + order_delta * 100
-                if ctx_order == self.order_in_work:
-                    ctx_y += 50
-                    ctx_x += 25
-                    ctx_w -= 50
+                ctx_y = order_y_origin + order_delta * 50 
+                ctx_x += 250
+                #if ctx_order == self.order_in_work:
+                    #ctx_y += 50
+                    #ctx_x += 25
+                    #ctx_w -= 50
 
 
             #ctx_y = ctx_y_origin
@@ -212,30 +222,37 @@ class ChainedEntity():
                                                    cy,
                                                    set_color(ctx),
                                                    set_bg_color(ctx),
-                                                   font = ChainUnitType.font_short_utf,
+                                                   font = set_font(ctx),
+                                                   font_size = set_size(ctx),
                                                    rect = [ctx_x, ctx_y, ctx_w, ctx_h]))
 
         # Static holder for main entity feature
-        center_x = 570+25
-        center_y = 375
-        square_w = 250-50
-        square_h = 50
-        xc = center_x + square_w/2
-        yc = center_y + square_h/2
-        graphical_objects.append(WordGraphical(self.main_title,
-                                               xc, yc,
-                                               colors.col_bt_down,
-                                               transparent = True,
-                                               font_size = 40,
-                                               font = ChainUnitType.font_utf,
-                                               rect = [center_x, center_y, square_w, square_h]))
+        #center_x = 570+25
+        #center_y = 375
+        #square_w = 250-50
+        #square_h = 50
+        #xc = center_x + square_w/2
+        #yc = center_y + square_h/2
+        #graphical_objects.append(WordGraphical(self.main_title,
+                                               #xc, yc,
+                                               #colors.col_bt_down,
+                                               #transparent = True,
+                                               #font_size = 40,
+                                               #font = ChainUnitType.font_utf,
+                                               #rect = [center_x, center_y, square_w, square_h]))
 
         options_x1 = 320
         options_y1 = 325
-        options_x_corners = [320+50+25, 320+50+25, 320+50+25+200*2, 320+50+25+200*2]
-        options_y_corners = [325+25, 325+25+50, 325+25, 325+25+50]
+        #options_x_corners = [320, 320, 320, 320+250*2, 320+250*2, 320+250*2]
+        options_x_corners = [320+55, 320+55, 320+55, 320+250*2+5, 320+250*2+5, 320+250*2+5]
+        #options_y_corners = [275, 275+100, 275+150, 325, 325+50, 325+50*2]
+        options_y_corners = [275, 275+75, 275+150, 275, 275+75, 275+150]
+        #options_x_corners = [320+50+25, 320+50+25, 320+50+25+200*2, 320+50+25+200*2]
+        #options_y_corners = [325+25, 325+25+50, 325+25, 325+25+50]
         options_w = 200
         options_h = 50
+        set_font = lambda _ : ChainUnitType.font_cyrillic if not re.search(u'[\u4e00-\u9fff]', _) else ChainUnitType.font_utf
+        set_size = lambda _ : 30 if not re.search(u'[\u4e00-\u9fff]', _) else 40
         if self.options:
             for i, (x1, y1) in enumerate(zip(options_x_corners, options_y_corners)):
                 xc, yc = x1 + options_w / 2, y1 + options_h / 2
@@ -244,7 +261,8 @@ class ChainedEntity():
                                                        xc,
                                                        yc,
                                                        colors.col_bt_text, transparent = True,
-                                                       font = ChainUnitType.font_short_utf,
+                                                       font = set_font(self.options[i]),
+                                                       font_size = set_size(self.options[i]),
                                                         rect = [x1, y1, options_w, options_h]))
 
         # Produce chain progression visual
@@ -264,7 +282,7 @@ class ChainedEntity():
                                      rect = [notions_x1, y1, notions_w, notions_h]))
 
         # Produce chains progression visual
-        notions_x1 = 1070
+        notions_x1 = 1080
         notions_y1 = 100
         notions_w = 250
         notions_h = 50
@@ -280,10 +298,27 @@ class ChainedEntity():
                                      rect = [notions_x1, y1, notions_w, notions_h]))
 
         # Produce large view of main feature of learning entity
-        large_notions_x_corners = [320, 320+250*2,  320,      320+250*2]
-        large_notions_y_corners = [100, 100,      100+50*8,       100+50*8]
+        #large_notions_x_corners = [320, 320+250*2,  320,      320+250*2]
+        #large_notions_y_corners = [100, 100,      100+50*8,       100+50*8]
+        large_notions_x_corners = [575, 575]
+        large_notions_y_corners = [275, 500]
         large_notion_w = 250
         large_notion_h = 200
+        for i, (x1,y1) in enumerate(zip(large_notions_x_corners, large_notions_y_corners)):
+            xc, yc = x1 + large_notion_w/2, y1 + large_notion_h/2
+
+            graphical_objects.append(WordGraphical(self.chained_feature.entity,
+                                     xc, yc,
+                                     colors.col_black,
+                                     bg_color = None if i == 0 else col_correct if LAST_EVENT == "POSITIVE" else col_error,
+                                    font_size = 120,
+                                   font = ChainUnitType.font_utf,
+                                     rect = [x1, y1, large_notion_w, large_notion_h]))
+
+        large_notions_x_corners = [320,  320+130+250*2]
+        large_notions_y_corners = [100, 100] 
+        large_notion_w = 130 
+        large_notion_h = 100 
         for (x1,y1) in zip(large_notions_x_corners, large_notions_y_corners):
             xc, yc = x1 + large_notion_w/2, y1 + large_notion_h/2
 
@@ -291,7 +326,7 @@ class ChainedEntity():
                                      xc, yc,
                                      colors.col_black,
                                      bg_color = col_correct if LAST_EVENT == "POSITIVE" else col_error,
-                                    font_size = 120,
+                                    font_size = 60,
                                    font = ChainUnitType.font_utf,
                                      rect = [x1, y1, large_notion_w, large_notion_h]))
         
@@ -309,7 +344,7 @@ class ChainedEntity():
 
 class WordGraphical():
     def __init__(self, text, x, y, color, bg_color = (150,150,150),
-                 font = ChainUnitType.font_short_utf,
+                 font = ChainUnitType.font_utf,
                  font_size = None,
                  rect = [], transparent = False):
         self.rect = rect
@@ -328,26 +363,52 @@ class ChainedDrawer():
         self.display_instance = display_instance
         self.W = W
         self.H = H
+        self.cyrillic_30 = self.pygame_instance.font.Font("Inter_font.ttf", 30, bold = True)
+        self.cyrillic_40 = self.pygame_instance.font.Font("Inter_font.ttf", 40, bold = True)
+        self.cyrillic_60 = self.pygame_instance.font.Font("Inter_font.ttf", 60, bold = True)
+        self.cyrillic_120 = self.pygame_instance.font.Font("Inter_font.ttf", 120, bold = True)
+
+        self.utf_30 = self.pygame_instance.font.Font("simhei.ttf", 30, bold = True)
+        self.utf_40 = self.pygame_instance.font.Font("simhei.ttf", 40, bold = True)
+        self.utf_60 = self.pygame_instance.font.Font("simhei.ttf", 60, bold = True)
+        self.utf_120 = self.pygame_instance.font.Font("simhei.ttf", 120, bold = True)
+
+    def pick_font(self, font_type = ChainUnitType.font_utf, size = 40):
+        if font_type == ChainUnitType.font_utf:
+            if not size:
+                return self.utf_30
+            elif size <= 30:
+                return self.utf_30
+            elif size <= 40:
+                return self.utf_40
+            elif size <= 60:
+                return self.utf_60
+            else:
+                return self.utf_120
+        else:
+            if not size:
+                return self.cyrillic_30 
+            elif size <= 30:
+                return self.cyrillic_30
+            elif size <= 40:
+                return self.cyrillic_40
+            elif size <= 60:
+                return self.cyrillic_60
+            else:
+                return self.cyrillic_120
 
     def draw_line(self, line):
         geometries = line.produce_geometries()
         color = (128,128,128)
         for geometry in geometries:
             message = geometry.text
-            if not geometry.font_size:
-                font_size = 60 if len(message) == 1 else 25 if len(message) < 6 else 20
-            else:
-                font_size = geometry.font_size
-            if geometry.font == ChainUnitType.font_cyrillic or geometry.font == ChainUnitType.font_short_utf:
-                self.font = self.pygame_instance.font.Font("Inter_font.ttf", font_size, bold = True)
-                #font_file = self.pygame_instance.font.match_font("setofont")
-                #self.font = self.pygame_instance.font.Font(font_file, 35)
-            else:
-                self.font = self.pygame_instance.font.Font("simhei.ttf", font_size, bold = True)
+            font = self.pick_font(geometry.font, geometry.font_size)
+
             if not geometry.transparent:
-                text = self.font.render(message, True, geometry.color, geometry.bg_color)
+                text = font.render(message, True, geometry.color, geometry.bg_color)
             else:
-                text = self.font.render(message, True, geometry.color)
+                text = font.render(message, True, geometry.color)
+
             textRect = text.get_rect()
             textRect.center = (geometry.x, geometry.y)
 
@@ -364,10 +425,11 @@ class ChainedDrawer():
     def display_keys(self, keys):
         options_x1 = 320
         options_y1 = 325
-        #options_x_corners = [320, 320, 320, 320+250*2, 320+250*2, 320+250*2]
+        options_x_corners = [320+55, 320+55, 320+55, 320+250*2+5, 320+250*2+5, 320+250*2+5]
         #options_y_corners = [325, 325+50, 325+50*2, 325, 325+50, 325+50*2]
-        options_x_corners = [320+25+50, 320+25+50, 320+25+50+200*2, 320+25+50+200*2]
-        options_y_corners = [325+25, 325+25+50, 325+25, 325+25+50]
+        options_y_corners = [275, 275+75, 275+150, 275, 275+75, 275+150]
+        #options_x_corners = [320+25+50, 320+25+50, 320+25+50+200*2, 320+25+50+200*2]
+        #options_y_corners = [325+25, 325+25+50, 325+25, 325+25+50]
         #options_w = 250
         options_w = 200
         options_h = 50
@@ -401,10 +463,10 @@ class KeyboardChainModel():
         self.down = 'down'
         self.pressed = 'pressed'
         self.mapping = OrderedDict()
-        #self.mapping[self.pygame_instance.K_e]         = self.up
+        self.mapping[self.pygame_instance.K_e]         = self.up
         self.mapping[self.pygame_instance.K_d]         = self.up
         self.mapping[self.pygame_instance.K_c]         = self.up
-        #self.mapping[self.pygame_instance.K_i]         = self.up
+        self.mapping[self.pygame_instance.K_i]         = self.up
         self.mapping[self.pygame_instance.K_k]         = self.up
         self.mapping[self.pygame_instance.K_COMMA]     = self.up
 
@@ -451,10 +513,12 @@ class ChainedProcessor():
         self.display_instance = display_instance
         self.active_beat_time = beat_time 
         self.time_elapsed_cummulative = 0
+        self.ui_ref = ui_ref
         self.active_entity = ChainedEntity(self.producer.produce_next_feature(),
                                            self.producer.produce_chain(),
                                            self.producer.chains,
                                            self.pygame_instance, self.W, self.H)
+        self.ui_ref.tiling = self.active_entity.main_title
 
     def add_line(self):
 
@@ -464,6 +528,7 @@ class ChainedProcessor():
         self.active_entity = ChainedEntity(self.producer.produce_next_feature(),
                                            self.producer.produce_chain(), self.producer.chains,
                                            self.pygame_instance, self.W, self.H)
+        self.ui_ref.tiling = self.active_entity.main_title
         self.time_elapsed_cummulative = 0
         self.active_beat_time = (60*1000)/self.active_entity.time_estemated
 
