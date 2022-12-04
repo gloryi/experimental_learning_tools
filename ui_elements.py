@@ -1,4 +1,4 @@
-from config import W, H
+from config import W, H, CHINESE_FONT
 
 class UpperLayout():
     def __init__(self, pygame_instance, display_instance):
@@ -14,7 +14,7 @@ class UpperLayout():
         font_file = pygame_instance.font.match_font("setofont")
         self.font = pygame_instance.font.Font(font_file, 50)
         self.large_font = pygame_instance.font.Font(font_file, 80)
-        self.utf_font = self.pygame_instance.font.Font("simhei.ttf", 150, bold = True)
+        self.utf_font = self.pygame_instance.font.Font(CHINESE_FONT, 150, bold = True)
         self.combo = 1
         self.tiling = ""
         self.tiling_utf = True

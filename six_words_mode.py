@@ -9,7 +9,6 @@ from colors import col_bg_darker, col_wicked_darker
 from colors import col_active_darker, col_bg_lighter
 from colors import col_wicked_lighter, col_active_lighter
 from colors import col_correct, col_error
-from config import TEST_CONTEXT_FILE
 
 THREE_PAIRS = 3
 LAST_EVENT = "POSITIVE"

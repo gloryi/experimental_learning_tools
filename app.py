@@ -1,8 +1,8 @@
 import pygame
 from time_utils import global_timer, Counter, Progression
-from six_words_mode import SixtletsProcessor
+#from six_words_mode import SixtletsProcessor
 from feature_chain_mode import ChainedProcessor
-from config import TEST_LANG_DATA, W, H, BPM
+from config import TEST_LANG_DATA, W, H, BPM, CYRILLIC_FONT
 from colors import white
 import colors
 import time
@@ -32,7 +32,7 @@ progression = Progression(new_line_counter,
 
 beat_time = new_line_counter.drop_time 
 
-font = pygame.font.Font("Inter_font.ttf", 200, bold = True)
+font = pygame.font.Font(CYRILLIC_FONT, 200, bold = True)
  
 for time_delta in delta_timer:
     display_surface.fill(white)

@@ -5,7 +5,7 @@ from math import sqrt
 from itertools import compress, groupby
 import random
 import re
-from config import W, H
+from config import W, H, CYRILLIC_FONT, CHINESE_FONT
 from colors import col_bg_darker, col_wicked_darker
 from colors import col_active_darker, col_bg_lighter
 from colors import col_wicked_lighter, col_active_lighter
@@ -363,15 +363,15 @@ class ChainedDrawer():
         self.display_instance = display_instance
         self.W = W
         self.H = H
-        self.cyrillic_30 = self.pygame_instance.font.Font("Inter_font.ttf", 30, bold = True)
-        self.cyrillic_40 = self.pygame_instance.font.Font("Inter_font.ttf", 40, bold = True)
-        self.cyrillic_60 = self.pygame_instance.font.Font("Inter_font.ttf", 60, bold = True)
-        self.cyrillic_120 = self.pygame_instance.font.Font("Inter_font.ttf", 120, bold = True)
+        self.cyrillic_30 = self.pygame_instance.font.Font(CYRILLIC_FONT, 30, bold = True)
+        self.cyrillic_40 = self.pygame_instance.font.Font(CYRILLIC_FONT, 40, bold = True)
+        self.cyrillic_60 = self.pygame_instance.font.Font(CYRILLIC_FONT, 60, bold = True)
+        self.cyrillic_120 = self.pygame_instance.font.Font(CYRILLIC_FONT, 120, bold = True)
 
-        self.utf_30 = self.pygame_instance.font.Font("simhei.ttf", 30, bold = True)
-        self.utf_40 = self.pygame_instance.font.Font("simhei.ttf", 40, bold = True)
-        self.utf_60 = self.pygame_instance.font.Font("simhei.ttf", 60, bold = True)
-        self.utf_120 = self.pygame_instance.font.Font("simhei.ttf", 120, bold = True)
+        self.utf_30 = self.pygame_instance.font.Font(CHINESE_FONT, 30, bold = True)
+        self.utf_40 = self.pygame_instance.font.Font(CHINESE_FONT, 40, bold = True)
+        self.utf_60 = self.pygame_instance.font.Font(CHINESE_FONT, 60, bold = True)
+        self.utf_120 = self.pygame_instance.font.Font(CHINESE_FONT, 120, bold = True)
 
     def pick_font(self, font_type = ChainUnitType.font_utf, size = 40):
         if font_type == ChainUnitType.font_utf:

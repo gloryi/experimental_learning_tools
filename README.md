@@ -4,3 +4,4 @@ A collection of scripts to experiment with increasing of self learning productiv
 No documentation, pipelines, architecture for now.
 
 * All datasets in use under copyright (if any) will be removed soon.
+Credits for HanziDB (in use temporary) - https://www.kaggle.com/datasets/ruddfawcett/hanzidb 

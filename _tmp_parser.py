@@ -31,7 +31,7 @@ def split_definition(definition):
 
 def extract_hanzi(hanzifile):
     extracted = []
-    with open(os.path.join(os.getcwd(), hanzifile)) as cn_file:
+    with open(hanzifile) as cn_file:
         reader = csv.DictReader(cn_file, quotechar='"')
         headers = reader.fieldnames
         for line in reader:
@@ -41,18 +41,22 @@ def extract_hanzi(hanzifile):
             pin = line["pinyin"]
             definition = line["definition"]
             stroke_count = line["stroke_count"]
+            hsk_number =  line["hsk_levl"]
             if not definition:
                 continue
             if not stroke_count:
+                continue
+            if not hsk_number:
                 continue
 
             features = split_definition(definition)
             if not len(features) > 1:
                 continue
 
-            extracted.append([charcter, features[0]] + [pin] + features[1:])
+            extracted.append([int(hsk_number), charcter, features[0]] + [pin] + features[1:])
+    extracted.sort(key = lambda _ : _[0])
 
-    return extracted
+    return [_[1:] for _ in extracted] 
 
 def chain_two_features(f1, f2, mnemonic_dict):
     ft1, ft2 = ipa.convert(f1), ipa.convert(f2)
@@ -90,10 +94,10 @@ def create_chain(f_in, f_out, f_key, f_tail, mnemonic_dict, ready_in = ""):
     return [in_key, out_key] + keys_tail
 
 
-semantic_keys = prepare_rus_keys("rus_semantics.csv")
-chinese_units = extract_hanzi("hanziDB.csv")
+semantic_keys = prepare_rus_keys(os.path.join(os.getcwd(), "datasets", "rus_semantics.csv"))
+chinese_units = extract_hanzi(os.path.join(os.getcwd(), "datasets",  "hanziDB.csv"))
 
-random.shuffle(chinese_units)
+#random.shuffle(chinese_units)
 
 BATCH_SIZE = 5
 batches = []
@@ -128,7 +132,7 @@ for I in range(0, len(chinese_units), BATCH_SIZE):
     if batch_counter > 500:
         break
 
-with open("hanzi_prepared.csv", "w") as hanzi_prepared:
+with open(os.path.join(os.getcwd(), "datasets", "hanzi_prepared.csv"), "w") as hanzi_prepared:
    csvwriter = csv.writer(hanzi_prepared)
    for line in batches:
        csvwriter.writerow(line)
