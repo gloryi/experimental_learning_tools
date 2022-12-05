@@ -17,6 +17,7 @@ time_to_cross_screen = 16000
 time_to_appear = 4000
 beat_time = 0 
 paused = True
+is_pause_displayed = False
 
 delta_timer = global_timer(pygame)
 upper_stats = UpperLayout(pygame, display_surface)
@@ -33,19 +34,27 @@ progression = Progression(new_line_counter,
 beat_time = new_line_counter.drop_time 
 
 font = pygame.font.Font(CYRILLIC_FONT, 200, bold = True)
+pygame.event.set_allowed([pygame.QUIT, pygame.KEYDOWN, pygame.KEYUP])
+fpsClock = pygame.time.Clock()
+
  
 for time_delta in delta_timer:
-    display_surface.fill(white)
+    fpsClock.tick(30)
 
-    if paused:
+    if paused and not is_pause_displayed:
+        display_surface.fill(white)
         text = font.render("PAUSED", True, colors.col_bg_darker)
         textRect = text.get_rect()
         textRect.center = (W//2, H//2)
         display_surface.blit(text, textRect)
+        is_pause_displayed = True
+
+    if paused:
         pygame.display.update()
         keys = pygame.key.get_pressed()
         if keys[pygame.K_SPACE]:
             paused = False
+            is_pause_displayed = False
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -53,6 +62,8 @@ for time_delta in delta_timer:
  
                 quit()
         continue
+
+    display_surface.fill(white)
 
     if pause_counter.is_tick(time_delta):
         paused = True

@@ -88,7 +88,8 @@ class ChainedEntity():
             self.time_estemated = self.chained_feature.get_timing() / (len(self.questions_queue)+1) 
             self.done = False
         else:
-            self.time_estemated = self.chained_feature.get_timing() / (len(self.context)//2 +1) 
+            #self.time_estemated = self.chained_feature.get_timing() / (len(self.context)//2 +1) 
+            self.time_estemated = self.chained_feature.get_timing() / (len(self.context) +1) 
 
 
     def extract_questions(self):
@@ -104,7 +105,7 @@ class ChainedEntity():
             self.options = self.chains.get_options_list(self.active_question)
 
     def delete_options(self):
-        self.options = [random.choice(["nice", "correct", "good", "great", "super", "bang", "cute"]) for _ in range(6)]
+        self.options = [random.choice(["+++", "***", "###"]) for _ in range(6)]
 
     def register_answers(self):
         is_solved = len(self.questions_queue) == 0
@@ -158,7 +159,8 @@ class ChainedEntity():
             if self.done:
                 time_p = (time_p - self.time_perce_reserved)/(1.0 - self.time_perce_reserved)
 
-            n_pairs = len(self.context)/2
+            #n_pairs = len(self.context)/2
+            n_pairs = len(self.context)
             pair_perce = 1/n_pairs
 
             pair_to_show = int(time_p/pair_perce)
@@ -190,30 +192,25 @@ class ChainedEntity():
             order_delta = self.order_in_work - ctx_order 
 
             if order_delta < 0:
+                ctx_x += 250/2
                 order_y_origin -= 25
             elif order_delta > 0:
                 order_y_origin += 200 + 25 
-                if ctx_type == ChainUnitType.type_key:
-                    ctx_x -= 250/2
-                else:
+                if ctx_type == ChainUnitType.type_feature:
                     ctx_x += 250/2
+            else:
+                if order_delta == 0:
+                    ctx_x += 250/2
+                #else:
+                    #ctx_x += 250/2
 
-            if ctx_type == ChainUnitType.type_key:
+            if ctx_type == ChainUnitType.type_feature:
                 ctx_y = order_y_origin + order_delta * 50 
-                #if ctx_order == self.order_in_work:
-                    #ctx_x += 25
-                    #ctx_w -= 50
+                #ctx_x += 250
 
             else:
                 ctx_y = order_y_origin + order_delta * 50 
-                ctx_x += 250
-                #if ctx_order == self.order_in_work:
-                    #ctx_y += 50
-                    #ctx_x += 25
-                    #ctx_w -= 50
-
-
-            #ctx_y = ctx_y_origin
+                #ctx_x += 250
 
             cx, cy = ctx_x + ctx_w/2, ctx_y + ctx_h/2
 
@@ -226,29 +223,10 @@ class ChainedEntity():
                                                    font_size = set_size(ctx),
                                                    rect = [ctx_x, ctx_y, ctx_w, ctx_h]))
 
-        # Static holder for main entity feature
-        #center_x = 570+25
-        #center_y = 375
-        #square_w = 250-50
-        #square_h = 50
-        #xc = center_x + square_w/2
-        #yc = center_y + square_h/2
-        #graphical_objects.append(WordGraphical(self.main_title,
-                                               #xc, yc,
-                                               #colors.col_bt_down,
-                                               #transparent = True,
-                                               #font_size = 40,
-                                               #font = ChainUnitType.font_utf,
-                                               #rect = [center_x, center_y, square_w, square_h]))
-
         options_x1 = 320
         options_y1 = 325
-        #options_x_corners = [320, 320, 320, 320+250*2, 320+250*2, 320+250*2]
         options_x_corners = [320+55, 320+55, 320+55, 320+250*2+5, 320+250*2+5, 320+250*2+5]
-        #options_y_corners = [275, 275+100, 275+150, 325, 325+50, 325+50*2]
         options_y_corners = [275, 275+75, 275+150, 275, 275+75, 275+150]
-        #options_x_corners = [320+50+25, 320+50+25, 320+50+25+200*2, 320+50+25+200*2]
-        #options_y_corners = [325+25, 325+25+50, 325+25, 325+25+50]
         options_w = 200
         options_h = 50
         set_font = lambda _ : ChainUnitType.font_cyrillic if not re.search(u'[\u4e00-\u9fff]', _) else ChainUnitType.font_utf
@@ -300,8 +278,8 @@ class ChainedEntity():
         # Produce large view of main feature of learning entity
         #large_notions_x_corners = [320, 320+250*2,  320,      320+250*2]
         #large_notions_y_corners = [100, 100,      100+50*8,       100+50*8]
-        large_notions_x_corners = [575, 575]
-        large_notions_y_corners = [275, 500]
+        large_notions_x_corners = [575, 320, 320+250*2+10]
+        large_notions_y_corners = [275, 500, 500]
         large_notion_w = 250
         large_notion_h = 200
         for i, (x1,y1) in enumerate(zip(large_notions_x_corners, large_notions_y_corners)):
@@ -426,11 +404,7 @@ class ChainedDrawer():
         options_x1 = 320
         options_y1 = 325
         options_x_corners = [320+55, 320+55, 320+55, 320+250*2+5, 320+250*2+5, 320+250*2+5]
-        #options_y_corners = [325, 325+50, 325+50*2, 325, 325+50, 325+50*2]
         options_y_corners = [275, 275+75, 275+150, 275, 275+75, 275+150]
-        #options_x_corners = [320+25+50, 320+25+50, 320+25+50+200*2, 320+25+50+200*2]
-        #options_y_corners = [325+25, 325+25+50, 325+25, 325+25+50]
-        #options_w = 250
         options_w = 200
         options_h = 50
 
@@ -518,6 +492,7 @@ class ChainedProcessor():
                                            self.producer.produce_chain(),
                                            self.producer.chains,
                                            self.pygame_instance, self.W, self.H)
+        self.ui_ref.set_image(self.active_entity.chained_feature.ask_for_image())
         self.ui_ref.tiling = self.active_entity.main_title
 
     def add_line(self):
@@ -528,6 +503,8 @@ class ChainedProcessor():
         self.active_entity = ChainedEntity(self.producer.produce_next_feature(),
                                            self.producer.produce_chain(), self.producer.chains,
                                            self.pygame_instance, self.W, self.H)
+
+        self.ui_ref.set_image(self.active_entity.chained_feature.ask_for_image())
         self.ui_ref.tiling = self.active_entity.main_title
         self.time_elapsed_cummulative = 0
         self.active_beat_time = (60*1000)/self.active_entity.time_estemated

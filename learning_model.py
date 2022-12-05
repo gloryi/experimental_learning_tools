@@ -1,7 +1,7 @@
 import random
 import json
 import os
-from config import PROGRESSION_FILE
+from config import PROGRESSION_FILE, IMAGES_MAPPING_FILE
 
 class MarkedAlias():
     def __init__(self, content, key, attached_unit, active = False):
@@ -111,67 +111,81 @@ class ChainedFeature():
         self.progression_level = 0
         self.decreased = False
         self.rised = False
+        self.attached_image = "" 
         self.basic_timing_per_level = {0:30,
                                        1:30,
-                                       2:30,
-                                       3:30,
-                                       4:30,
-                                       5:30}
+                                       2:30}
+                                       # 3:30,
+                                       # 4:30,
+                                       # 5:30}
 
     def set_mode(self, unit_type):
         if self.progression_level == 0:
             return ChainUnitType.mode_open
-        elif self.progression_level == 1 and unit_type == ChainUnitType.type_key:
-            return ChainUnitType.mode_question 
-        elif self.progression_level == 2 and unit_type == ChainUnitType.type_feature:
+        elif self.progression_level >= 1 and unit_type == ChainUnitType.type_feature:
             return ChainUnitType.mode_question
-        elif self.progression_level >= 3 and unit_type == ChainUnitType.type_feature:
-            return ChainUnitType.mode_question
-        elif self.progression_level >= 3 and unit_type == ChainUnitType.type_key:
-            return ChainUnitType.mode_hidden
         else:
             return ChainUnitType.mode_open
+        # elif self.progression_level == 1 and unit_type == ChainUnitType.type_key:
+        #     return ChainUnitType.mode_question 
+        # elif self.progression_level == 2 and unit_type == ChainUnitType.type_feature:
+        #     return ChainUnitType.mode_question
+        # elif self.progression_level >= 3 and unit_type == ChainUnitType.type_feature:
+        #     return ChainUnitType.mode_question
+        # elif self.progression_level >= 3 and unit_type == ChainUnitType.type_key:
+        #     return ChainUnitType.mode_hidden
+        # else:
+        #     return ChainUnitType.mode_open
+
+    def ask_for_image(self):
+        if self.attached_image and self.progression_level <2:
+            return self.attached_image
+        else:
+            return ""
+
 
     def set_extra(self, unit_type):
-        if self.progression_level == 0 and unit_type == ChainUnitType.type_key:
-            return ChainUnitType.extra_focus
-        if self.progression_level == 1 and unit_type == ChainUnitType.type_key:
-            return ChainUnitType.extra_focus 
-        elif self.progression_level == 2 and unit_type == ChainUnitType.type_feature:
-            return ChainUnitType.extra_focus
-        elif self.progression_level >= 3 and unit_type == ChainUnitType.type_feature:
-            return ChainUnitType.extra_focus
-        else:
-            return None
+        return ChainUnitType.extra_focus
+        # if self.progression_level == 0 and unit_type == ChainUnitType.type_key:
+        #     return ChainUnitType.extra_focus
+        # if self.progression_level == 1 and unit_type == ChainUnitType.type_key:
+        #     return ChainUnitType.extra_focus 
+        # elif self.progression_level == 2 and unit_type == ChainUnitType.type_feature:
+        #     return ChainUnitType.extra_focus
+        # elif self.progression_level >= 3 and unit_type == ChainUnitType.type_feature:
+        #     return ChainUnitType.extra_focus
+        # else:
+        #     return None
 
     def get_timing(self):
         return self.basic_timing_per_level[self.progression_level]
 
 
     def get_context(self):
-       keys = [ChainUnit(_, ChainUnitType.type_key,
-                         self.set_mode(ChainUnitType.type_key),
-                         ChainUnitType.position_keys, i+1,
-                         font=ChainUnitType.font_cyrillic,
-                         preferred_position = i,
-                         extra = self.set_extra(ChainUnitType.type_key)) for (i,_) in enumerate(self.keys)] 
+       # keys = [ChainUnit(_, ChainUnitType.type_key,
+       #                   self.set_mode(ChainUnitType.type_key),
+       #                   ChainUnitType.position_keys, i+1,
+       #                   font=ChainUnitType.font_cyrillic,
+       #                   preferred_position = i,
+       #                   extra = self.set_extra(ChainUnitType.type_key)) for (i,_) in enumerate(self.keys)] 
        features = [ChainUnit(_, ChainUnitType.type_feature,
                                  self.set_mode(ChainUnitType.type_feature),
                                  ChainUnitType.position_features, i+1,
                               preferred_position = i,
                              extra = self.set_extra(ChainUnitType.type_feature)) for (i,_) in enumerate(self.features)]
-       subtitle = [ChainUnit(self.in_key, ChainUnitType.type_key,
-                                 self.set_mode(ChainUnitType.type_key),
-                                 ChainUnitType.position_keys, 0,
-                                 font = ChainUnitType.font_cyrillic,
-                             preferred_position = "IN_KEY",
-                             extra = self.set_extra(ChainUnitType.type_key))]
-       subtitle += [ChainUnit(self.main_feature, ChainUnitType.type_feature,
+       # subtitle = [ChainUnit(self.in_key, ChainUnitType.type_key,
+       #                           self.set_mode(ChainUnitType.type_key),
+       #                           ChainUnitType.position_keys, 0,
+       #                           font = ChainUnitType.font_cyrillic,
+       #                       preferred_position = "IN_KEY",
+       #                       extra = self.set_extra(ChainUnitType.type_key))]
+       subtitle = [ChainUnit(self.main_feature, ChainUnitType.type_feature,
                                  self.set_mode(ChainUnitType.type_feature),
                                  ChainUnitType.position_keys, 0,
                               preferred_position = "MAIN_FEATURE",
                               extra = self.set_extra(ChainUnitType.type_feature))]
-       return keys + features + subtitle
+       #return keys + features + subtitle
+       return features + subtitle
 
 
     def get_main_title(self):
@@ -181,9 +195,10 @@ class ChainedFeature():
         timing = self.basic_timing_per_level[self.progression_level]
         level = self.progression_level
         if is_solved:
-            if not self.progression_level == 1:
-                self.basic_timing_per_level[self.progression_level] = timing +4 if timing < 40 else 40 
-            self.progression_level = level + 1 if level < 4 else 4 
+            # if not self.progression_level == 1:
+            #     self.basic_timing_per_level[self.progression_level] = timing +4 if timing < 40 else 40 
+            self.basic_timing_per_level[self.progression_level] = timing +4 if timing < 40 else 40 
+            self.progression_level = level + 1 if level < 2 else 2 
             self.rised = True
             self.decreased = False
         else:
@@ -217,7 +232,7 @@ class FeaturesChain():
     def create_review_chain(self, features):
         in_key = features[0].main_feature
         out_key = features[-1].main_feature
-        entity = "rev"
+        entity = "*"
         main_feature = features[0].entity
         key_feature_pairs = []
         for feature in features[1:]:
@@ -227,8 +242,13 @@ class FeaturesChain():
 
     def ascend(self):
         for feature in self.features:
-            feature.progression_level = 4
+            # feature.progression_level = 4
+            feature.progression_level = 2
             feature.deselect()
+
+    def initialize_images(self, images_list):
+        for image, feature in zip(images_list, self.features):
+            feature.attached_image = image
 
     def get_next_feature(self):
         # 0 level - card readed.
@@ -244,11 +264,13 @@ class FeaturesChain():
         if level == 1:
             # reached 1 means - learn keys
             return self.features[self.active_position]
-        if level == 2:
-            return self.features[self.active_position]
-        if level == 3:
-            return self.features[self.active_position]
-        if level == 4 and not is_up:
+        # if level == 2:
+        #     return self.features[self.active_position]
+        # if level == 3:
+        #     return self.features[self.active_position]
+        # if level == 4 and not is_up:
+        #     return self.features[self.active_position]
+        if level == 2 and not is_up:
             return self.features[self.active_position]
         
         self.features[self.active_position].deselect()
@@ -298,6 +320,8 @@ class ChainedModel():
         else:
             self.change_active_chain()
 
+        self.attach_images(IMAGES_MAPPING_FILE)
+
     def resample(self):
         # TODO - pick old fresh ones if old_counter > 4
         for chain in self.chains:
@@ -323,16 +347,16 @@ class ChainedModel():
         for i in range(5):
             random_chain = random.choice(random.choice(self.chains).features)
             preferred_position = sample.preferred_position
-            if sample.type == ChainUnitType.type_key:
-                if preferred_position == "IN_KEY":
-                    selected = random_chain.in_key
-                elif preferred_position is None or preferred_position >= len(random_chain.keys):
-                    #print("random picked key")
-                    selected = random.choice(random_chain.keys)
-                else:
-                    selected = random_chain.keys[preferred_position]
-                options.append(selected)
-            elif sample.type == ChainUnitType.type_feature:
+            # if sample.type == ChainUnitType.type_key:
+            #     if preferred_position == "IN_KEY":
+            #         selected = random_chain.in_key
+            #     elif preferred_position is None or preferred_position >= len(random_chain.keys):
+            #         #print("random picked key")
+            #         selected = random.choice(random_chain.keys)
+            #     else:
+            #         selected = random_chain.keys[preferred_position]
+            #     options.append(selected)
+            if sample.type == ChainUnitType.type_feature:
                 if preferred_position == "MAIN_FEATURE":
                     selected = random_chain.main_feature
                 elif preferred_position is None or preferred_position >= len(random_chain.features):
@@ -357,6 +381,15 @@ class ChainedModel():
             backup[chain.chain_no] = [chain.progression_level, chain.recall_level]
         with open(progression_file, "w") as current_progress:
             json.dump(backup, current_progress)
+
+    def attach_images(self, images_file):
+        if os.path.exists(images_file):
+            images = {}
+            with open(images_file) as images_ordered:
+                images = json.load(images_ordered)
+            if images:
+                for chain in self.chains:
+                    chain.initialize_images(images[chain.chain_no])
 
     def restore_results(self, progression_file):
         if os.path.exists(progression_file):
