@@ -112,9 +112,9 @@ class ChainedFeature():
         self.decreased = False
         self.rised = False
         self.attached_image = "" 
-        self.basic_timing_per_level = {0:30,
-                                       1:30,
-                                       2:30}
+        self.basic_timing_per_level = {0:35,
+                                       1:35,
+                                       2:35}
                                        # 3:30,
                                        # 4:30,
                                        # 5:30}
@@ -162,29 +162,16 @@ class ChainedFeature():
 
 
     def get_context(self):
-       # keys = [ChainUnit(_, ChainUnitType.type_key,
-       #                   self.set_mode(ChainUnitType.type_key),
-       #                   ChainUnitType.position_keys, i+1,
-       #                   font=ChainUnitType.font_cyrillic,
-       #                   preferred_position = i,
-       #                   extra = self.set_extra(ChainUnitType.type_key)) for (i,_) in enumerate(self.keys)] 
        features = [ChainUnit(_, ChainUnitType.type_feature,
                                  self.set_mode(ChainUnitType.type_feature),
                                  ChainUnitType.position_features, i+1,
                               preferred_position = i,
                              extra = self.set_extra(ChainUnitType.type_feature)) for (i,_) in enumerate(self.features)]
-       # subtitle = [ChainUnit(self.in_key, ChainUnitType.type_key,
-       #                           self.set_mode(ChainUnitType.type_key),
-       #                           ChainUnitType.position_keys, 0,
-       #                           font = ChainUnitType.font_cyrillic,
-       #                       preferred_position = "IN_KEY",
-       #                       extra = self.set_extra(ChainUnitType.type_key))]
        subtitle = [ChainUnit(self.main_feature, ChainUnitType.type_feature,
                                  self.set_mode(ChainUnitType.type_feature),
                                  ChainUnitType.position_keys, 0,
                               preferred_position = "MAIN_FEATURE",
                               extra = self.set_extra(ChainUnitType.type_feature))]
-       #return keys + features + subtitle
        return features + subtitle
 
 
@@ -195,14 +182,12 @@ class ChainedFeature():
         timing = self.basic_timing_per_level[self.progression_level]
         level = self.progression_level
         if is_solved:
-            # if not self.progression_level == 1:
-            #     self.basic_timing_per_level[self.progression_level] = timing +4 if timing < 40 else 40 
-            self.basic_timing_per_level[self.progression_level] = timing +4 if timing < 40 else 40 
+            self.basic_timing_per_level[self.progression_level] = timing +5 if timing < 50 else 50 
             self.progression_level = level + 1 if level < 2 else 2 
             self.rised = True
             self.decreased = False
         else:
-            self.basic_timing_per_level[self.progression_level] = timing -4 if timing > 20 else 20 
+            self.basic_timing_per_level[self.progression_level] = timing -5 if timing > 30 else 30 
             self.progression_level = level -1 if level > 0 else 0 
             self.decreased = True
             self.rised = False
@@ -242,7 +227,6 @@ class FeaturesChain():
 
     def ascend(self):
         for feature in self.features:
-            # feature.progression_level = 4
             feature.progression_level = 2
             feature.deselect()
 
@@ -251,25 +235,13 @@ class FeaturesChain():
             feature.attached_image = image
 
     def get_next_feature(self):
-        # 0 level - card readed.
-        # Next step is to restore associated keys
         level = self.features[self.active_position].progression_level
         is_fallback = self.features[self.active_position].decreased
         is_up = self.features[self.active_position].rised
-        # two main factors are card chain level and
-        # the way level was acheived - by recall or by forgetting some
         if level == 0 and is_fallback:
-            # back to zero means - learn chain again
             return self.features[self.active_position]
         if level == 1:
-            # reached 1 means - learn keys
             return self.features[self.active_position]
-        # if level == 2:
-        #     return self.features[self.active_position]
-        # if level == 3:
-        #     return self.features[self.active_position]
-        # if level == 4 and not is_up:
-        #     return self.features[self.active_position]
         if level == 2 and not is_up:
             return self.features[self.active_position]
         
@@ -281,19 +253,6 @@ class FeaturesChain():
             return None
         self.features[self.active_position].select()
         return self.features[self.active_position]
-
-    # def get_options_list(self, sample):
-    #     options = [sample.text]
-    #     for i in range(5):
-    #         random_chain = random.choice(self.features)
-    #         if sample.type == ChainUnitType.type_key:
-    #             selected = random.choice(random_chain.keys)
-    #             options.append(selected)
-    #         if sample.type == ChainUnitType.type_feature:
-    #             selected = random.choice(random_chain.features)
-    #             options.append(selected)
-    #     random.shuffle(options)
-    #     return options
 
     def get_features_list(self):
         units_list = [ChainUnit(_.entity + f" {_.progression_level}", font = ChainUnitType.font_utf) for _ in self.features]
@@ -311,6 +270,7 @@ class ChainedModel():
         self.chains = chains
         self.active_chain_index = 0
         self.old_limit = 2
+        self.new_limit = 2
 
         is_restored = self.restore_results(PROGRESSION_FILE)
 
@@ -331,7 +291,9 @@ class ChainedModel():
             self.chains.sort(key = lambda _ : _.progression_level + _.recall_level * 0.25)
         else:
             self.chains.sort(key = lambda _ : _.progression_level)
-            self.old_limit = 2
+            if not self.new_limit:
+                self.old_limit = 2
+                self.new_limit = 2
         self.dump_results(PROGRESSION_FILE)
 
     def change_active_chain(self):
@@ -340,6 +302,8 @@ class ChainedModel():
         self.active_chain = self.chains[0]
         if self.active_chain.recall_level < 0:
             self.old_limit -= 1
+        else:
+            self.new_limit -= 1
         self.active_chain.recall_level = 0
 
     def get_options_list(self, sample):
@@ -347,15 +311,6 @@ class ChainedModel():
         for i in range(5):
             random_chain = random.choice(random.choice(self.chains).features)
             preferred_position = sample.preferred_position
-            # if sample.type == ChainUnitType.type_key:
-            #     if preferred_position == "IN_KEY":
-            #         selected = random_chain.in_key
-            #     elif preferred_position is None or preferred_position >= len(random_chain.keys):
-            #         #print("random picked key")
-            #         selected = random.choice(random_chain.keys)
-            #     else:
-            #         selected = random_chain.keys[preferred_position]
-            #     options.append(selected)
             if sample.type == ChainUnitType.type_feature:
                 if preferred_position == "MAIN_FEATURE":
                     selected = random_chain.main_feature
@@ -415,6 +370,12 @@ class ChainedModel():
         elif len(units_list) > 12:
             units_list = units_list[:12]
         return units_list
+
+    def get_chains_progression(self):
+        minimal_level = min(self.chains, key = lambda _ : _.progression_level).progression_level
+        mastered = len(list(filter(lambda _: _.progression_level > minimal_level, self.chains)))
+        return f"{minimal_level}x {mastered}/{len(self.chains)}"
+
 
     def get_active_chain(self):
         return self.chains[self.active_chain_index]

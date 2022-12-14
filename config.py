@@ -8,5 +8,8 @@ CHINESE_FONT = os.path.join(os.getcwd(), "fonts", "simhei.ttf")
 CYRILLIC_FONT = os.path.join(os.getcwd(), "fonts", "Inter_font.ttf")
 BPM = 10
 
-W = 1400
-H = 800 
+W_OFFSET = 200
+H_OFFSET = 100
+
+W = 1400 + W_OFFSET * 2
+H = 800  + H_OFFSET * 2

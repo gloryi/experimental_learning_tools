@@ -25,8 +25,10 @@ def prepare_rus_keys(keysfile):
 
 def split_definition(definition):
     parts = re.split("[,;]",definition)
-    parts = list(filter( lambda _ : len(_) < 12, parts))
+    parts = list(filter( lambda _ : len(_) < 13, parts))
     parts.sort(key = lambda _ : len(_))
+    for i, _ in enumerate(parts):
+        parts[i] = _.strip()
     return parts[:5]
 
 def extract_hanzi(hanzifile):
@@ -37,20 +39,20 @@ def extract_hanzi(hanzifile):
         for line in reader:
             if "definition" not in line:
                 continue
-            charcter = line["charcter"]
-            pin = line["pinyin"]
-            definition = line["definition"]
+            charcter = line["charcter"].strip()
+            pin = line["pinyin"].strip()
+            definition = line["definition"].strip()
             stroke_count = line["stroke_count"]
             hsk_number =  line["hsk_levl"]
             if not definition:
                 continue
-            if not stroke_count:
-                continue
+            #if not stroke_count:
+                #continue
             if not hsk_number:
                 continue
 
             features = split_definition(definition)
-            if not len(features) > 1:
+            if not len(features) >= 1:
                 continue
 
             extracted.append([int(hsk_number), charcter, features[0]] + [pin] + features[1:])
@@ -80,6 +82,9 @@ def chain_single(f1, mnemonic_dict):
     return target_key
 
 def create_chain(f_in, f_out, f_key, f_tail, mnemonic_dict, ready_in = ""):
+    # KEYS GENERATION ARE DEPRECATED FOR NOW
+    return ["", ""] + ["" for i in range(len(f_tail))]
+
     if not ready_in:
         in_key = chain_single(f_key, mnemonic_dict)
     else:
@@ -94,7 +99,8 @@ def create_chain(f_in, f_out, f_key, f_tail, mnemonic_dict, ready_in = ""):
     return [in_key, out_key] + keys_tail
 
 
-semantic_keys = prepare_rus_keys(os.path.join(os.getcwd(), "datasets", "rus_semantics.csv"))
+#semantic_keys = prepare_rus_keys(os.path.join(os.getcwd(), "datasets", "rus_semantics.csv"))
+semantic_keys = {}
 chinese_units = extract_hanzi(os.path.join(os.getcwd(), "datasets",  "hanziDB.csv"))
 
 #random.shuffle(chinese_units)
@@ -102,6 +108,7 @@ chinese_units = extract_hanzi(os.path.join(os.getcwd(), "datasets",  "hanziDB.cs
 BATCH_SIZE = 5
 batches = []
 
+# TODO - Fix generation. Deprecate keys for now
 for I in range(0, len(chinese_units), BATCH_SIZE):
     selected_units = chinese_units[I:min(I+BATCH_SIZE,len(chinese_units))]
     selected_units =[selected_units[-1]] + selected_units + [selected_units[0]]
@@ -129,10 +136,10 @@ for I in range(0, len(chinese_units), BATCH_SIZE):
 
     batches[-1][3] = original_in
 
-    if batch_counter > 500:
+    if batch_counter > 700:
         break
 
-with open(os.path.join(os.getcwd(), "datasets", "hanzi_prepared.csv"), "w") as hanzi_prepared:
+with open(os.path.join(os.getcwd(), "datasets", "hanzi_nokey.csv"), "w") as hanzi_prepared:
    csvwriter = csv.writer(hanzi_prepared)
    for line in batches:
        csvwriter.writerow(line)

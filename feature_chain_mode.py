@@ -5,7 +5,7 @@ from math import sqrt
 from itertools import compress, groupby
 import random
 import re
-from config import W, H, CYRILLIC_FONT, CHINESE_FONT
+from config import W, H, CYRILLIC_FONT, CHINESE_FONT, H_OFFSET, W_OFFSET
 from colors import col_bg_darker, col_wicked_darker
 from colors import col_active_darker, col_bg_lighter
 from colors import col_wicked_lighter, col_active_lighter
@@ -34,7 +34,7 @@ class ChainedsProducer():
             for item in group:
                 entity, in_key, out_key, main_feature, *key_feature_pairs = item[1:]
                 # HARDCODE
-                key_feature_pairs = key_feature_pairs[:4]
+                key_feature_pairs = key_feature_pairs[2:6]
                 features.append(ChainedFeature(entity, in_key, out_key, main_feature, key_feature_pairs))
             chains.append(FeaturesChain(key, features))
         return ChainedModel(chains)
@@ -79,6 +79,7 @@ class ChainedEntity():
         
         self.feedback = None
         self.done = True
+        self.locked = False
         self.time_perce_reserved = 0.0
 
         self.options = None
@@ -105,7 +106,7 @@ class ChainedEntity():
             self.options = self.chains.get_options_list(self.active_question)
 
     def delete_options(self):
-        self.options = [random.choice(["+++", "***", "###"]) for _ in range(6)]
+        self.options = ["" for _ in range(6)]
 
     def register_answers(self):
         is_solved = len(self.questions_queue) == 0
@@ -113,6 +114,8 @@ class ChainedEntity():
         return is_solved 
 
     def match_correct(self):
+        if self.locked:
+            return
         global LAST_EVENT
         global NEW_EVENT
         LAST_EVENT = "POSITIVE"
@@ -137,8 +140,9 @@ class ChainedEntity():
         global NEW_EVENT
         LAST_EVENT = "ERROR"
         NEW_EVENT = True
+        self.locked = True
 
-        self.generate_options()
+        #self.generate_options()
 
     def register_keys(self, key_states, time_percent, time_based = False):
         if self.active_question and not time_based:
@@ -165,7 +169,6 @@ class ChainedEntity():
 
             pair_to_show = int(time_p/pair_perce)
             self.order_in_work = pair_to_show
-
 
 
     def produce_geometries(self):
@@ -243,43 +246,9 @@ class ChainedEntity():
                                                        font_size = set_size(self.options[i]),
                                                         rect = [x1, y1, options_w, options_h]))
 
-        # Produce chain progression visual
-        notions_x1 = 70
-        notions_y1 = 100
-        notions_w = 250
-        notions_h = 50
-        xc = notions_x1 + notions_w/2
-        for i, feature_notion in enumerate(self.features_chain.get_features_list()):
-            y1 = notions_y1 + notions_h * i
-            yc = y1 + notions_h / 2
-            graphical_objects.append(WordGraphical(feature_notion.text,
-                                     xc, yc,
-                                     set_color(feature_notion),
-                                     bg_color = None,
-                                                   font = ChainUnitType.font_utf,
-                                     rect = [notions_x1, y1, notions_w, notions_h]))
 
-        # Produce chains progression visual
-        notions_x1 = 1080
-        notions_y1 = 100
-        notions_w = 250
-        notions_h = 50
-        xc = notions_x1 + notions_w/2
-        for i, feature_notion in enumerate(self.chains.get_chains_list()):
-            y1 = notions_y1 + notions_h * i
-            yc = y1 + notions_h / 2
-            graphical_objects.append(WordGraphical(feature_notion.text,
-                                     xc, yc,
-                                     set_color(feature_notion),
-                                     bg_color = None,
-                                   font = ChainUnitType.font_utf,
-                                     rect = [notions_x1, y1, notions_w, notions_h]))
-
-        # Produce large view of main feature of learning entity
-        #large_notions_x_corners = [320, 320+250*2,  320,      320+250*2]
-        #large_notions_y_corners = [100, 100,      100+50*8,       100+50*8]
-        large_notions_x_corners = [575, 320, 320+250*2+10]
-        large_notions_y_corners = [275, 500, 500]
+        large_notions_x_corners = [575]
+        large_notions_y_corners = [275]
         large_notion_w = 250
         large_notion_h = 200
         for i, (x1,y1) in enumerate(zip(large_notions_x_corners, large_notions_y_corners)):
@@ -293,21 +262,6 @@ class ChainedEntity():
                                    font = ChainUnitType.font_utf,
                                      rect = [x1, y1, large_notion_w, large_notion_h]))
 
-        large_notions_x_corners = [320,  320+130+250*2]
-        large_notions_y_corners = [100, 100] 
-        large_notion_w = 130 
-        large_notion_h = 100 
-        for (x1,y1) in zip(large_notions_x_corners, large_notions_y_corners):
-            xc, yc = x1 + large_notion_w/2, y1 + large_notion_h/2
-
-            graphical_objects.append(WordGraphical(self.chained_feature.entity,
-                                     xc, yc,
-                                     colors.col_black,
-                                     bg_color = col_correct if LAST_EVENT == "POSITIVE" else col_error,
-                                    font_size = 60,
-                                   font = ChainUnitType.font_utf,
-                                     rect = [x1, y1, large_notion_w, large_notion_h]))
-        
 
         return graphical_objects
 
@@ -388,19 +342,21 @@ class ChainedDrawer():
                 text = font.render(message, True, geometry.color)
 
             textRect = text.get_rect()
-            textRect.center = (geometry.x, geometry.y)
+            textRect.center = (geometry.x + W_OFFSET, geometry.y + H_OFFSET)
 
             if geometry.rect:
 
                 x, y, w, h = geometry.rect 
                 self.pygame_instance.draw.rect(self.display_instance,
                                   (50,50,50),
-                                  (x,y,w,h),
+                                  (x+W_OFFSET,y+H_OFFSET,w,h),
                                    width = 2)
 
             self.display_instance.blit(text, textRect)
 
-    def display_keys(self, keys):
+    def display_keys(self, keys, line):
+        if line.done:
+            return
         options_x1 = 320
         options_y1 = 325
         options_x_corners = [320+55, 320+55, 320+55, 320+250*2+5, 320+250*2+5, 320+250*2+5]
@@ -422,7 +378,7 @@ class ChainedDrawer():
 
             self.pygame_instance.draw.rect(self.display_instance,
                                   color,
-                                  (x1, y1, options_w, options_h))
+                                  (x1+W_OFFSET, y1+H_OFFSET, options_w, options_h))
  
             
 
@@ -493,7 +449,10 @@ class ChainedProcessor():
                                            self.producer.chains,
                                            self.pygame_instance, self.W, self.H)
         self.ui_ref.set_image(self.active_entity.chained_feature.ask_for_image())
+        self.ui_ref.randomize()
+        self.ui_ref.global_progress = self.producer.chains.get_chains_progression()
         self.ui_ref.tiling = self.active_entity.main_title
+        self.ui_ref.show_less = False
 
     def add_line(self):
 
@@ -505,7 +464,11 @@ class ChainedProcessor():
                                            self.pygame_instance, self.W, self.H)
 
         self.ui_ref.set_image(self.active_entity.chained_feature.ask_for_image())
+        self.ui_ref.randomize()
+        self.ui_ref.global_progress = self.producer.chains.get_chains_progression()
         self.ui_ref.tiling = self.active_entity.main_title
+        self.ui_ref.bg_color = colors.col_black
+        self.ui_ref.show_less = False
         self.time_elapsed_cummulative = 0
         self.active_beat_time = (60*1000)/self.active_entity.time_estemated
 
@@ -522,10 +485,12 @@ class ChainedProcessor():
     def get_feedback(self):
         global NEW_EVENT
         if LAST_EVENT == "POSITIVE" and NEW_EVENT:
+            self.ui_ref.bg_color = colors.dark_green
             NEW_EVENT = False
             return 1
         elif LAST_EVENT == "ERROR" and NEW_EVENT:
             NEW_EVENT = False
+            self.ui_ref.bg_color = colors.dark_red
             return -1
         else:
             return 0
@@ -533,7 +498,8 @@ class ChainedProcessor():
 
     def process_inputs(self, time_elapsed = 0):
         key_states = self.control.get_keys()
-        self.drawer.display_keys(key_states)
+        if self.active_entity:
+            self.drawer.display_keys(key_states, self.active_entity)
 
         pressed_keys = self.get_pressed(key_states)
 
@@ -543,6 +509,10 @@ class ChainedProcessor():
             self.active_entity.register_keys(pressed_keys,
                                              self.time_elapsed_cummulative / self.active_beat_time, 
                                              time_based = True)
+            if self.active_entity.done:
+                self.ui_ref.set_image(self.active_entity.chained_feature.attached_image)
+                self.ui_ref.show_less = True
+
 
 
     def tick(self, beat_time, time_elapsed):

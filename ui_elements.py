@@ -1,6 +1,8 @@
-from config import W, H, CHINESE_FONT
+from config import W, H, CHINESE_FONT, W_OFFSET, H_OFFSET
 from colors import white
+import colors
 from itertools import islice
+import random
 import os
 
 class UpperLayout():
@@ -14,6 +16,7 @@ class UpperLayout():
         self.pygame_instance = pygame_instance
         self.display_instance = display_instance
         self.backgroudn_color = (60, 60, 60)
+        self.bg_color = colors.col_black
         font_file = pygame_instance.font.match_font("setofont")
         self.font = pygame_instance.font.Font(font_file, 50)
         self.large_font = pygame_instance.font.Font(font_file, 80)
@@ -21,6 +24,9 @@ class UpperLayout():
         self.combo = 1
         self.tiling = ""
         self.tiling_utf = True
+        self.show_less = False
+
+        self.global_progress = ""
 
         self.speed_index = 5000
         self.percent = 0.8
@@ -30,6 +36,8 @@ class UpperLayout():
         self.to_master = 0
         self.variation = 0
         self.variation_on_rise = True
+        self.random_variation = 0
+
         self.images_cached = {} 
         self.image = None
 
@@ -41,17 +49,19 @@ class UpperLayout():
         else:
             text = renderer.render(text, True, base_col)
         textRect = text.get_rect()
-        textRect.center = (x, y)
+        textRect.center = (x + W_OFFSET, y + H_OFFSET)
         self.display_instance.blit(text, textRect)
 
     def set_image(self, path_to_image):
 
-        if not path_to_image:
+        #self.randomize()
+
+        if not path_to_image or not os.path.exists(path_to_image):
             self.image = None
 
-        elif not path_to_image in self.images_cached and os.path.exists(path_to_image):
+        elif not path_to_image in self.images_cached:
             if len(self.images_cached) > 100:
-                self.images_cached = dict(itertools.islice(self.images_cached.items(), 50))
+                self.images_cached = dict(islice(self.images_cached.items(), 50))
 
             self.images_cached[path_to_image] = self.pygame_instance.image.load(path_to_image).convert()
             self.image = self.images_cached[path_to_image]
@@ -60,15 +70,26 @@ class UpperLayout():
             self.image = self.images_cached[path_to_image]
 
 
+    def randomize(self):
+        self.random_variation = random.choice([-1,0,1])
+
 
     def redraw(self):
+        clip_color = lambda _ : 0 if _ <=0 else 255 if _ >=255 else int(_)
 
-        self.display_instance.fill(white)
-        tiling_step = 200
+        self.display_instance.fill(self.bg_color)
+        tiling_step = 270 
 
         if self.image:
-            self.display_instance.blit(self.image, (0, 0))
-            tiling_step = 300
+            self.display_instance.blit(self.image, (W_OFFSET+self.random_variation, H_OFFSET+self.random_variation))
+            tiling_step = 400
+        else:
+            self.pygame_instance.draw.rect(self.display_instance,
+                                  white,
+                                  (W_OFFSET,
+                                   H_OFFSET,
+                                   W-W_OFFSET*2,
+                                   H-H_OFFSET*2))
 
 
         if self.variation_on_rise:
@@ -81,77 +102,76 @@ class UpperLayout():
         elif self.variation < 0:
             self.variation_on_rise = True
 
-        for x in range(100,1400,tiling_step):
-            for y in range(100,800,tiling_step):
+        for x in range(100+self.random_variation,W,tiling_step):
+            for y in range(100+self.random_variation,H,tiling_step):
                 self.place_text(self.tiling,
-                                x,
-                                y,
+                                x-W_OFFSET,
+                                y-H_OFFSET,
                                 transparent=True,
                                 renderer = self.utf_font,
-                                base_col = (225+self.variation*2,225-self.variation,225))
+                                base_col = (clip_color(225+self.variation*3+self.random_variation),225-self.variation+self.random_variation,225+self.random_variation))
 
         line_color = (int(255*(1-self.percent)),int(255*(self.percent)),0)
-        self.pygame_instance.draw.rect(self.display_instance,
-                                  line_color,
-                                  ((320 + (250*3*(1-self.percent))/2),
-                                   475,
-                                   250*3*self.percent,
-                                   25))
 
-        self.pygame_instance.draw.rect(self.display_instance,
-                                  line_color,
-                                  ((320 + (250*3*(1-self.percent))/2),
-                                   200,
-                                   250*3*self.percent,
-                                   25))
-
-        self.place_text(str(self.combo)+"x", 420,
-                        40,
+        self.place_text(str(self.combo)+"x", 420 - 100,
+                        60,
                         transparent = True,
                         renderer = self.large_font,
-                        base_col = (10,10,10))
+                        base_col = (50,50,50))
 
-        self.place_text(str(self.combo)+"x", 920,
+        self.place_text(str(self.global_progress), 420 - 300,
                         40,
                         transparent = True,
+                        renderer = self.font,
+                        base_col = (50,50,50))
+
+        self.place_text(str(self.combo)+"x", 920 + 100,
+                        60,
+                        transparent = True,
                         renderer = self.large_font,
-                        base_col = (10,10,10))
+                        base_col = (50,50,50))
+
+        self.place_text(str(self.global_progress), 920 + 300,
+                        40,
+                        transparent = True,
+                        renderer = self.font,
+                        base_col = (50,50,50))
 
         
-        clip_color = lambda _ : 0 if _ <=0 else 255 if _ >=255 else int(_)
 
-        line_color = (clip_color((178)*(1-self.timing_ratio)),
-                      clip_color((150)*(self.timing_ratio)),
-                      clip_color((150)*(1-self.timing_ratio)))
+        line_color = (clip_color((178)*(1-self.timing_ratio)+self.random_variation),
+                      clip_color((150)*(self.timing_ratio)+self.random_variation),
+                      clip_color((150)*(1-self.timing_ratio)+self.random_variation))
 
-        self.pygame_instance.draw.rect(self.display_instance,
+        if self.random_variation == 0 or self.random_variation == -1:
+            self.pygame_instance.draw.rect(self.display_instance,
                                   line_color,
-                                  ((575+25 - 200 + ((200+400)*(1-self.timing_ratio))/2),
-                                   275+25+25,
+                                  ((575+25 - 200 + ((200+400)*(1-self.timing_ratio))/2)+W_OFFSET,
+                                   275+25+25+H_OFFSET,
                                    (200+400)*self.timing_ratio,
                                    200-50-50))
 
-        self.pygame_instance.draw.rect(self.display_instance,
+        if self.random_variation == 0 or self.random_variation == 1:
+            self.pygame_instance.draw.rect(self.display_instance,
                                   line_color,
-                                  (575+50+25,
-                                   (275-200 + ((200+400)*(1-self.timing_ratio))/2),
+                                  (575+50+25+W_OFFSET,
+                                   (275-200 + ((200+400)*(1-self.timing_ratio))/2)+H_OFFSET,
                                    200-50-50,
                                    (200+400)*self.timing_ratio))
+        if self.show_less:
+            return
 
         line_color = (int((235)*(1-self.percent)),int((235)*(self.percent)),0)
         self.pygame_instance.draw.rect(self.display_instance,
                                   line_color,
-                                  ((320 + (250*3*(1-self.percent))/2),
-                                   475,
+                                  ((320 + (250*3*(1-self.percent))/2)+W_OFFSET,
+                                   475+H_OFFSET,
                                    250*3*self.percent,
                                    25))
 
         self.pygame_instance.draw.rect(self.display_instance,
                                   line_color,
-                                  ((320 + (250*3*(1-self.percent))/2),
-                                   200,
+                                  ((320 + (250*3*(1-self.percent))/2)+W_OFFSET,
+                                   200+H_OFFSET,
                                    250*3*self.percent,
                                    25))
-
-        #self.place_text(str(self.mastered)+"/"+str(self.to_master), self.W/2, (self.y1 + self.y2)/2)
-        #self.place_text(str(self.speed_index)+"x", self.W - self.W//10, self.higher_center)
