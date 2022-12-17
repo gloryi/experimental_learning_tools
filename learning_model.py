@@ -308,17 +308,21 @@ class ChainedModel():
 
     def get_options_list(self, sample):
         options = [sample.text]
-        for i in range(5):
-            random_chain = random.choice(random.choice(self.chains).features)
-            preferred_position = sample.preferred_position
-            if sample.type == ChainUnitType.type_feature:
-                if preferred_position == "MAIN_FEATURE":
-                    selected = random_chain.main_feature
-                elif preferred_position is None or preferred_position >= len(random_chain.features):
-                    selected = random.choice(random_chain.features)
-                else:
-                    selected = random_chain.features[preferred_position]
-                options.append(selected)
+        while len(options) < 6:
+            try:
+                random_features_chain = random.choice
+                random_chain = random.choice(random.choice(self.chains).features)
+                preferred_position = sample.preferred_position
+                if sample.type == ChainUnitType.type_feature:
+                    if preferred_position == "MAIN_FEATURE":
+                        selected = random_chain.main_feature
+                    elif preferred_position is None or preferred_position >= len(random_chain.features):
+                        selected = random.choice(random_chain.features)
+                    else:
+                            selected = random_chain.features[preferred_position]
+                    options.append(selected)
+            except Exception as e:
+                continue
         random.shuffle(options)
         return options
 
@@ -344,7 +348,10 @@ class ChainedModel():
                 images = json.load(images_ordered)
             if images:
                 for chain in self.chains:
-                    chain.initialize_images(images[chain.chain_no])
+                    if chain.chain_no in images:
+                        chain.initialize_images(images[chain.chain_no])
+                    else:
+                        print(f"Chain {chain.chain_no} have no image prepared")
 
     def restore_results(self, progression_file):
         if os.path.exists(progression_file):

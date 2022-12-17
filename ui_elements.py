@@ -63,9 +63,11 @@ class UpperLayout():
             if len(self.images_cached) > 100:
                 self.images_cached = dict(islice(self.images_cached.items(), 50))
 
-            self.images_cached[path_to_image] = self.pygame_instance.image.load(path_to_image).convert()
+            image_converted = self.pygame_instance.image.load(path_to_image).convert()
+            image_converted.set_alpha(200)
+            image_scaled = self.pygame_instance.transform.scale(image_converted, (int(W*0.95), int(H*0.95)))
+            self.images_cached[path_to_image]  = image_scaled
             self.image = self.images_cached[path_to_image]
-
         else:
             self.image = self.images_cached[path_to_image]
 
@@ -81,7 +83,7 @@ class UpperLayout():
         tiling_step = 270 
 
         if self.image:
-            self.display_instance.blit(self.image, (W_OFFSET+self.random_variation, H_OFFSET+self.random_variation))
+            self.display_instance.blit(self.image, (int(W*(0.05/2))+self.random_variation, int(H*(0.05/2))+self.random_variation))
             tiling_step = 400
         else:
             self.pygame_instance.draw.rect(self.display_instance,
