@@ -5,7 +5,7 @@ from math import sqrt
 from itertools import compress, groupby
 import random
 import re
-from config import W, H, CYRILLIC_FONT, CHINESE_FONT, H_OFFSET, W_OFFSET
+from config import W, H, CYRILLIC_FONT, CHINESE_FONT, H_OFFSET, W_OFFSET, META_SCRIPT
 from colors import col_bg_darker, col_wicked_darker
 from colors import col_active_darker, col_bg_lighter
 from colors import col_wicked_lighter, col_active_lighter
@@ -19,12 +19,21 @@ NEW_EVENT = False
 ######################################
 
 class ChainedsProducer():
-    def __init__(self, label, csv_path, ui_ref = None):
+    def __init__(self, label, csv_path, meta_path = None, ui_ref = None):
         self.csv_path = csv_path
         self.label = label 
+        self.meta_path = meta_path
+        self.meta_lines = self.extract_meta(self.meta_path) if self.meta_path else []
         self.chains = self.prepare_data()
         self.active_chain = self.chains.get_active_chain()
         self.ui_ref = ui_ref
+
+    def extract_meta(self, meta_path):
+        meta = []
+        with open(meta_path, "r") as metafile:
+            for line in metafile:
+                meta.append(line[:-1].upper())
+        return meta
 
     def prepare_data(self):
         data_extractor = raw_extracter(self.csv_path) 
@@ -45,6 +54,11 @@ class ChainedsProducer():
 
     def produce_next_feature(self):
         return self.chains.get_next_feature()
+
+    def produce_meta(self):
+        if self.meta_lines:
+            return random.choice(self.meta_lines)
+        return ""
 
 
 ######################################
@@ -435,7 +449,7 @@ class ChainedProcessor():
     def __init__(self, pygame_instance, display_instance, ui_ref, data_label, data_path, beat_time = 1):
         self.W = W
         self.H = H
-        self.producer = ChainedsProducer(data_label, data_path, ui_ref)
+        self.producer = ChainedsProducer(data_label, data_path, meta_path = META_SCRIPT, ui_ref = ui_ref)
         self.drawer = ChainedDrawer(pygame_instance, display_instance, W, H)
         self.control = KeyboardChainModel(pygame_instance)
         self.active_line = None
@@ -472,7 +486,7 @@ class ChainedProcessor():
         self.time_elapsed_cummulative = 0
         self.active_beat_time = (60*1000)/self.active_entity.time_estemated
 
-        return self.active_entity.time_estemated
+        return self.active_entity.time_estemated, self.producer.produce_meta()
 
 
     def redraw(self):
