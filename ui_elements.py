@@ -40,6 +40,7 @@ class UpperLayout():
 
         self.images_cached = {} 
         self.image = None
+        self.images_set = None
 
     def place_text(self, text, x, y, transparent = False, renderer = None, base_col = (80,80,80)):
         if renderer is None:
@@ -52,24 +53,39 @@ class UpperLayout():
         textRect.center = (x + W_OFFSET, y + H_OFFSET)
         self.display_instance.blit(text, textRect)
 
-    def set_image(self, path_to_image):
-
-        #self.randomize()
+    def check_cached_image(self, path_to_image):
+        if len(self.images_cached) > 100:
+            self.images_cached = dict(islice(self.images_cached.items(), 50))
 
         if not path_to_image or not os.path.exists(path_to_image):
+            self.images_cached[path_to_image] = None
+            return
+
+        image_converted = self.pygame_instance.image.load(path_to_image).convert()
+        image_converted.set_alpha(200)
+        image_scaled = self.pygame_instance.transform.scale(image_converted, (int(W*0.95), int(H*0.95)))
+        self.images_cached[path_to_image]  = image_scaled
+
+    def set_image(self, path_to_image):
+
+        if isinstance(path_to_image, list):
+            self.images_set = []
             self.image = None
+            for image_name in path_to_image:
+                self.check_cached_image(image_name)
+                if image_name in self.images_cached:
+                    self.images_set.append(self.pygame_instance.transform.scale(self.images_cached[image_name], (int((W*0.95)/3), int(H*0.95)/2)))
+                else:
+                    self.images_set.append(None)
+            return
 
-        elif not path_to_image in self.images_cached:
-            if len(self.images_cached) > 100:
-                self.images_cached = dict(islice(self.images_cached.items(), 50))
-
-            image_converted = self.pygame_instance.image.load(path_to_image).convert()
-            image_converted.set_alpha(200)
-            image_scaled = self.pygame_instance.transform.scale(image_converted, (int(W*0.95), int(H*0.95)))
-            self.images_cached[path_to_image]  = image_scaled
-            self.image = self.images_cached[path_to_image]
         else:
-            self.image = self.images_cached[path_to_image]
+            self.images_set = None
+
+        if not path_to_image in self.images_cached:
+            self.check_cached_image(path_to_image)
+
+        self.image = self.images_cached[path_to_image]
 
 
     def randomize(self):
@@ -82,10 +98,19 @@ class UpperLayout():
         self.display_instance.fill(self.bg_color)
         tiling_step = 270 
 
-        if self.image:
+        if self.images_set:
+            for i1 in range(2):
+                if i1 < len(self.images_set) and self.images_set[i1]:
+                    self.display_instance.blit(self.images_set[i1], (int(W*(0.05/2) + (W*0.95/3)*(i1+1) - (W*0.95)/6), int(H*(0.05/6))))
+            for i2 in range(3):
+                if (i2+2) < len(self.images_set) and self.images_set[2+i2]:
+                    self.display_instance.blit(self.images_set[2+i2], (int(W*(0.05/2) + (W*0.95/3)*(i2)), int(H*(0.05/2)+H*0.95/2)))
+
+        elif self.image:
             self.display_instance.blit(self.image, (int(W*(0.05/2))+self.random_variation, int(H*(0.05/2))+self.random_variation))
             tiling_step = 400
-        else:
+
+        elif not self.images_set and not self.image:
             self.pygame_instance.draw.rect(self.display_instance,
                                   white,
                                   (W_OFFSET,

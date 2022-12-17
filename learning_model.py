@@ -233,6 +233,7 @@ class FeaturesChain():
     def initialize_images(self, images_list):
         for image, feature in zip(images_list, self.features):
             feature.attached_image = image
+        self.features[-1].attached_image = images_list
 
     def get_next_feature(self):
         level = self.features[self.active_position].progression_level
