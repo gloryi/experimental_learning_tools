@@ -41,6 +41,7 @@ class UpperLayout():
         self.images_cached = {} 
         self.image = None
         self.images_set = None
+        self.images_set_cached = None
 
     def place_text(self, text, x, y, transparent = False, renderer = None, base_col = (80,80,80)):
         if renderer is None:
@@ -69,11 +70,14 @@ class UpperLayout():
     def set_image(self, path_to_image):
 
         if isinstance(path_to_image, list):
+            if path_to_image == self.images_set_cached:
+                return
             self.images_set = []
+            self.images_set_cached = []
             self.image = None
             for image_name in path_to_image:
                 self.check_cached_image(image_name)
-                if image_name in self.images_cached:
+                if image_name in self.images_cached and self.images_cached[image_name]:
                     self.images_set.append(self.pygame_instance.transform.scale(self.images_cached[image_name], (int((W*0.95)/3), int(H*0.95)/2)))
                 else:
                     self.images_set.append(None)
@@ -101,7 +105,7 @@ class UpperLayout():
         if self.images_set:
             for i1 in range(2):
                 if i1 < len(self.images_set) and self.images_set[i1]:
-                    self.display_instance.blit(self.images_set[i1], (int(W*(0.05/2) + (W*0.95/3)*(i1+1) - (W*0.95)/6), int(H*(0.05/6))))
+                    self.display_instance.blit(self.images_set[i1], (int(W*(0.05/2) + (W*0.95/3)*(i1*2)), int(H*(0.05/6))))
             for i2 in range(3):
                 if (i2+2) < len(self.images_set) and self.images_set[2+i2]:
                     self.display_instance.blit(self.images_set[2+i2], (int(W*(0.05/2) + (W*0.95/3)*(i2)), int(H*(0.05/2)+H*0.95/2)))
