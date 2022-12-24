@@ -38,8 +38,11 @@ pygame.event.set_allowed([pygame.QUIT, pygame.KEYDOWN, pygame.KEYUP])
 fpsClock = pygame.time.Clock()
 
 meta = ""
+meta_minor = []
 
 base_font = pygame.font.Font(CHINESE_FONT, 100, bold = True)
+minor_font = pygame.font.match_font("setofont")
+minor_font = pygame.font.Font(minor_font, 22)
     
 def place_text(text, x, y, transparent = False, renderer = None, base_col = (80,80,80)):
     if renderer is None:
@@ -54,7 +57,7 @@ def place_text(text, x, y, transparent = False, renderer = None, base_col = (80,
 
  
 for time_delta in delta_timer:
-    fpsClock.tick(30)
+    fpsClock.tick(28)
 
     if paused and not is_pause_displayed:
         display_surface.fill(white)
@@ -63,14 +66,23 @@ for time_delta in delta_timer:
         textRect.center = (W//2, H//2)
         display_surface.blit(text, textRect)
         if meta:
-            chunks = [meta[i:i+50] for i in range(0, len(meta), 50)]
+            chunks = [meta[i:i+16] for i in range(0, len(meta), 16)]
             for i, chunk in enumerate(chunks):
                 place_text(chunk,
                             W//2,
-                            H//2+90 + 40*(i+1),
+                            H//2+90 + 100*(i+1),
                             transparent = True,
                             renderer = None,
                             base_col = (colors.col_bt_pressed))
+        if meta_minor:
+            for i, line in enumerate(meta_minor):
+                place_text(line,
+                            W//2,
+                            H//2-400 + 16*(i+1),
+                            transparent = True,
+                            renderer = minor_font,
+                            base_col = (colors.col_bt_pressed))
+
         is_pause_displayed = True
 
     if paused:
@@ -93,7 +105,7 @@ for time_delta in delta_timer:
         paused = True
 
     if new_line_counter.is_tick(time_delta):
-        next_tick_time, meta = game.add_line()
+        next_tick_time, meta, meta_minor = game.add_line()
         new_line_counter.modify_bpm(next_tick_time)
 
     upper_stats.redraw()

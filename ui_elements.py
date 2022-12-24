@@ -20,7 +20,9 @@ class UpperLayout():
         font_file = pygame_instance.font.match_font("setofont")
         self.font = pygame_instance.font.Font(font_file, 50)
         self.large_font = pygame_instance.font.Font(font_file, 80)
-        self.utf_font = self.pygame_instance.font.Font(CHINESE_FONT, 150, bold = True)
+        self.utf_font1 = self.pygame_instance.font.Font(CHINESE_FONT, 150, bold = True)
+        self.utf_font2 = self.pygame_instance.font.Font(CHINESE_FONT, 100, bold = True)
+        self.utf_font3 = self.pygame_instance.font.Font(CHINESE_FONT, 50, bold = True)
         self.combo = 1
         self.tiling = ""
         self.tiling_utf = True
@@ -37,6 +39,7 @@ class UpperLayout():
         self.variation = 0
         self.variation_on_rise = True
         self.random_variation = 0
+        self.constant_variation = 0
 
         self.images_cached = {} 
         self.image = None
@@ -60,6 +63,9 @@ class UpperLayout():
 
         if not path_to_image or not os.path.exists(path_to_image):
             self.images_cached[path_to_image] = None
+            return
+
+        if path_to_image in self.images_cached:
             return
 
         image_converted = self.pygame_instance.image.load(path_to_image).convert()
@@ -98,20 +104,30 @@ class UpperLayout():
 
     def redraw(self):
         clip_color = lambda _ : 0 if _ <=0 else 255 if _ >=255 else int(_)
+        tiling_len = len(self.tiling)
+        tiling_font = self.utf_font1 if tiling_len==1 else self.utf_font2 if tiling_len <= 3 else self.utf_font3
 
         self.display_instance.fill(self.bg_color)
         tiling_step = 270 
 
+
         if self.images_set:
-            for i1 in range(2):
-                if i1 < len(self.images_set) and self.images_set[i1]:
-                    self.display_instance.blit(self.images_set[i1], (int(W*(0.05/2) + (W*0.95/3)*(i1*2)), int(H*(0.05/6))))
-            for i2 in range(3):
-                if (i2+2) < len(self.images_set) and self.images_set[2+i2]:
-                    self.display_instance.blit(self.images_set[2+i2], (int(W*(0.05/2) + (W*0.95/3)*(i2)), int(H*(0.05/2)+H*0.95/2)))
+            set_locations = []
+            set_locations.append((int(W*(0.05/2)), int(H*(0.05/6)))) # 0
+            set_locations.append((int(W*(0.05/2) + (W*0.95/3)*(0)), int(H*(0.05/2)+H*0.95/2))) # 1
+            set_locations.append((int(W*(0.05/2) + (W*0.95/3)*(1)), int(H*(0.05/2)+H*0.95/2))) # 2
+            set_locations.append((int(W*(0.05/2) + (W*0.95/3)*(2)), int(H*(0.05/2)+H*0.95/2))) # 3
+            set_locations.append((int(W*(0.05/2) + (W*0.95/3)*(2)), int(H*(0.05/6)))) # 5
+            if self.constant_variation%2 == 0:
+                set_locations = set_locations[::-1]
+            for i in range(5):
+                if i < len(self.images_set) and self.images_set[i]:
+                    self.display_instance.blit(self.images_set[i], set_locations[i])
 
         elif self.image:
-            self.display_instance.blit(self.image, (int(W*(0.05/2))+self.random_variation, int(H*(0.05/2))+self.random_variation))
+            self.display_instance.blit(self.image,
+                                       (int(W*(0.05/2))+self.random_variation,
+                                        int(H*(0.05/2))+self.random_variation))
             tiling_step = 400
 
         elif not self.images_set and not self.image:
@@ -139,8 +155,10 @@ class UpperLayout():
                                 x-W_OFFSET,
                                 y-H_OFFSET,
                                 transparent=True,
-                                renderer = self.utf_font,
-                                base_col = (clip_color(225+self.variation*3+self.random_variation),225-self.variation+self.random_variation,225+self.random_variation))
+                                renderer = tiling_font,
+                                base_col = (clip_color(225+self.variation*4+self.random_variation),
+                                            225-self.variation+self.random_variation,
+                                            225+self.random_variation))
 
         line_color = (int(255*(1-self.percent)),int(255*(self.percent)),0)
 

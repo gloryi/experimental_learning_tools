@@ -101,44 +101,29 @@ class ChainUnit():
         self.extra = extra
 
 class ChainedFeature():
-    def __init__(self, entity, in_key, out_key, main_feature, key_feature_pairs): 
+    def __init__(self, entity, features): 
         self.entity = entity
-        self.in_key = in_key.upper()
-        self.out_key = out_key.upper()
-        self.main_feature = main_feature
-        self.keys = [_.upper() for _ in key_feature_pairs[0::2]]
-        self.features = key_feature_pairs[1::2]
-        self.progression_level = 0
+        self.features = [_[:20] for _ in features]
+        self.feature_level = 0
+        self.feature_errors = []
+        self.cummulative_error = 0
         self.decreased = False
         self.rised = False
         self.attached_image = "" 
         self.basic_timing_per_level = {0:35,
                                        1:35,
                                        2:35}
-                                       # 3:30,
-                                       # 4:30,
-                                       # 5:30}
 
     def set_mode(self, unit_type):
-        if self.progression_level == 0:
+        if self.feature_level == 0:
             return ChainUnitType.mode_open
-        elif self.progression_level >= 1 and unit_type == ChainUnitType.type_feature:
+        elif self.feature_level >= 1 and unit_type == ChainUnitType.type_feature:
             return ChainUnitType.mode_question
         else:
             return ChainUnitType.mode_open
-        # elif self.progression_level == 1 and unit_type == ChainUnitType.type_key:
-        #     return ChainUnitType.mode_question 
-        # elif self.progression_level == 2 and unit_type == ChainUnitType.type_feature:
-        #     return ChainUnitType.mode_question
-        # elif self.progression_level >= 3 and unit_type == ChainUnitType.type_feature:
-        #     return ChainUnitType.mode_question
-        # elif self.progression_level >= 3 and unit_type == ChainUnitType.type_key:
-        #     return ChainUnitType.mode_hidden
-        # else:
-        #     return ChainUnitType.mode_open
 
     def ask_for_image(self):
-        if self.attached_image and self.progression_level <2:
+        if self.attached_image and self.feature_level <2:
             return self.attached_image
         else:
             return ""
@@ -146,49 +131,52 @@ class ChainedFeature():
 
     def set_extra(self, unit_type):
         return ChainUnitType.extra_focus
-        # if self.progression_level == 0 and unit_type == ChainUnitType.type_key:
-        #     return ChainUnitType.extra_focus
-        # if self.progression_level == 1 and unit_type == ChainUnitType.type_key:
-        #     return ChainUnitType.extra_focus 
-        # elif self.progression_level == 2 and unit_type == ChainUnitType.type_feature:
-        #     return ChainUnitType.extra_focus
-        # elif self.progression_level >= 3 and unit_type == ChainUnitType.type_feature:
-        #     return ChainUnitType.extra_focus
-        # else:
-        #     return None
 
     def get_timing(self):
-        return self.basic_timing_per_level[self.progression_level]
+        return self.basic_timing_per_level[self.feature_level]
 
 
     def get_context(self):
        features = [ChainUnit(_, ChainUnitType.type_feature,
                                  self.set_mode(ChainUnitType.type_feature),
-                                 ChainUnitType.position_features, i+1,
+                                 ChainUnitType.position_features, i,
                               preferred_position = i,
                              extra = self.set_extra(ChainUnitType.type_feature)) for (i,_) in enumerate(self.features)]
-       subtitle = [ChainUnit(self.main_feature, ChainUnitType.type_feature,
-                                 self.set_mode(ChainUnitType.type_feature),
-                                 ChainUnitType.position_keys, 0,
-                              preferred_position = "MAIN_FEATURE",
-                              extra = self.set_extra(ChainUnitType.type_feature))]
-       return features + subtitle
+       return features
 
+    def register_error(self, error_index):
+        if error_index < len(self.feature_errors):
+            self.feature_errors[error_index] += 1
+            self.cummulative_error += 1
 
+    def decrease_errors(self):
+        if self.cummulative_error > 1:
+            self.cummulative_error //= 2
+        else:
+            self.cummulative_error = 0
+
+        for i in range(len(self.feature_errors)):
+            error = self.feature_errors[i]
+            if error > 1:
+                self.feature_errors[i]//=2
+            else:
+                self.feature_errors[i] = 0
+        
+    
     def get_main_title(self):
         return self.entity
 
     def register_progress(self, is_solved = False):
-        timing = self.basic_timing_per_level[self.progression_level]
-        level = self.progression_level
+        timing = self.basic_timing_per_level[self.feature_level]
+        level = self.feature_level
         if is_solved:
-            self.basic_timing_per_level[self.progression_level] = timing +5 if timing < 50 else 50 
-            self.progression_level = level + 1 if level < 2 else 2 
+            self.basic_timing_per_level[self.feature_level] = timing +5 if timing < 50 else 50 
+            self.feature_level = level + 1 if level < 2 else 2 
             self.rised = True
             self.decreased = False
         else:
-            self.basic_timing_per_level[self.progression_level] = timing -5 if timing > 30 else 30 
-            self.progression_level = level -1 if level > 0 else 0 
+            self.basic_timing_per_level[self.feature_level] = timing -5 if timing > 30 else 30 
+            self.feature_level = level -1 if level > 0 else 0 
             self.decreased = True
             self.rised = False
 
@@ -203,32 +191,60 @@ class ChainedFeature():
     def get_features_len(self):
         return len(self.keys)
 
+    def __repr__(self):
+        return f"{self.entity} | progress = {self.feature_level} | errors = {self.cummulative_error}"
+
 
 class FeaturesChain():
-    def __init__(self, chain_no, features):
+    def __init__(self, chain_no, features, is_review_requires = True):
         self.chain_no = chain_no
         self.features = features
-        self.features.append(self.create_review_chain(self.features))
+
+        if is_review_requires:
+            self.features.append(self.create_review_chain(self.features))
+
         self.progression_level = 0
-        self.recall_level = 0
+        self.errors_mapping = [[0 for _ in range(10)] for j in range(5)]
+        self.max_error = 0
+        self.cummulative_error = 0
+        self.fresh_errors = 0
+        self.last_review_urge = 0
         self.active_position = -1
         self.ascended = False
 
     def create_review_chain(self, features):
-        in_key = features[0].main_feature
-        out_key = features[-1].main_feature
-        entity = "*"
-        main_feature = features[0].entity
-        key_feature_pairs = []
-        for feature in features[1:]:
-            key_feature_pairs.append(feature.main_feature)
-            key_feature_pairs.append(feature.entity)
-        return ChainedFeature(entity, in_key, out_key, main_feature, key_feature_pairs)
+        entity = str(self.chain_no).rjust(3, "0")
+        review_features = []
+        for feature in features:
+            review_features.append(feature.entity)
+        return ChainedFeature(entity, review_features)
 
     def ascend(self):
         for feature in self.features:
-            feature.progression_level = 2
+            feature.feature_level = 2
             feature.deselect()
+
+    def set_errors(self, errors_mapping):
+        self.errors_mapping = errors_mapping
+        for feature, feature_errors in zip(self.features, self.errors_mapping):
+            feature.feature_errors = feature_errors
+            feature.cummulative_error = sum(feature_errors)
+        self.max_error = max([max(feature.feature_errors, default=0) for feature in self.features], default=0)
+        self.cummulative_error = sum(sum(feature.feature_errors) for feature in self.features)
+
+    def update_errors(self, register_new = False):
+        if register_new:
+            self.fresh_errors += 1
+
+        for error_index, (feature, _) in enumerate(zip(self.features, self.errors_mapping)):
+            self.errors_mapping[error_index] = feature.feature_errors
+        self.max_error = max([max(feature.feature_errors, default = 0) for feature in self.features], default=0)
+        self.cummulative_error = sum(sum(feature.feature_errors) for feature in self.features)
+
+    def get_worst_features(self, features_no = 1):
+        sorted_by_mistake = sorted(self.features,key = lambda _ : _.cummulative_error, reverse = True)
+        return sorted_by_mistake[:features_no] 
+
 
     def initialize_images(self, images_list):
         for image, feature in zip(images_list, self.features):
@@ -236,7 +252,7 @@ class FeaturesChain():
         self.features[-1].attached_image = images_list
 
     def get_next_feature(self):
-        level = self.features[self.active_position].progression_level
+        level = self.features[self.active_position].feature_level
         is_fallback = self.features[self.active_position].decreased
         is_up = self.features[self.active_position].rised
         if level == 0 and is_fallback:
@@ -250,28 +266,31 @@ class FeaturesChain():
         self.active_position += 1
         if self.active_position >= len(self.features):
             self.active_position = 0
-            self.progression_level += 1
+            if self.fresh_errors <= 3:
+                self.progression_level += 1
+            elif self.fresh_errors <= 6:
+                self.progression_level = self.progression_level
+            else:
+                self.progression_level -= 1
+                if self.progression_level < 0:
+                    self.progression_level = 0
+
+            self.fresh_errors = 0
+
             return None
         self.features[self.active_position].select()
         return self.features[self.active_position]
 
-    def get_features_list(self):
-        units_list = [ChainUnit(_.entity + f" {_.progression_level}", font = ChainUnitType.font_utf) for _ in self.features]
-        # TODO specify in config
-        if len(units_list) < 12:
-            delta_len = 12 - len(units_list)
-            units_list += [ChainUnit("") for _ in range(delta_len)]
-        elif len(units_list) > 12:
-            units_list = units_list[:12]
-        return units_list
 
 
 class ChainedModel():
     def __init__(self, chains):
         self.chains = chains
-        self.active_chain_index = 0
+        self.active_chain = None
         self.old_limit = 2
         self.new_limit = 2
+        self.mistakes_trigger = False
+        self.mistakes_chain = []
 
         is_restored = self.restore_results(PROGRESSION_FILE)
 
@@ -284,28 +303,70 @@ class ChainedModel():
         self.attach_images(IMAGES_MAPPING_FILE)
 
     def resample(self):
-        # TODO - pick old fresh ones if old_counter > 4
+
+        if len(self.mistakes_chain) >= 5:
+            self.mistakes_trigger = True
+
         for chain in self.chains:
             if chain.progression_level > 0:
-                chain.recall_level = chain.recall_level - 1
+
+                chain.last_review_urge = chain.last_review_urge - 1
+
         if self.old_limit:
-            self.chains.sort(key = lambda _ : _.progression_level + _.recall_level * 0.25)
+            self.chains.sort(key = lambda _ : _.progression_level + _.last_review_urge * 0.25)
         else:
             self.chains.sort(key = lambda _ : _.progression_level)
             if not self.new_limit:
+
                 self.old_limit = 2
                 self.new_limit = 2
         self.dump_results(PROGRESSION_FILE)
 
+    def add_mistake_chains(self):
+
+        if not self.active_chain:
+            return
+
+        worst_features = self.active_chain.get_worst_features(features_no = 2)
+
+        for feature in worst_features:
+            if feature.cummulative_error == 0 or feature in self.mistakes_chain:
+                continue
+            self.mistakes_chain.append(feature)
+
+        self.mistakes_chain.sort(key = lambda _ : _.cummulative_error, reverse = True)
+
+        for mistake in self.mistakes_chain:
+            print(mistake)
+        print()
+
     def change_active_chain(self):
+
+        self.add_mistake_chains()
+
         self.resample()
-        self.active_chain_index = 0
+
+
+        if self.mistakes_trigger:
+            self.mistakes_trigger = False
+
+            if len(self.mistakes_chain) > 5:
+                mistakes_to_work, self.mistakes_chain = self.mistakes_chain[:5], self.mistakes_chain[5:]
+
+                for mistake in mistakes_to_work:
+                    mistake.decrease_errors()
+                self.active_chain =  FeaturesChain(-1, mistakes_to_work, is_review_requires = False)
+                return
+
         self.active_chain = self.chains[0]
-        if self.active_chain.recall_level < 0:
+
+        if self.active_chain.last_review_urge < 0:
             self.old_limit -= 1
         else:
             self.new_limit -= 1
-        self.active_chain.recall_level = 0
+
+        self.active_chain.last_review_urge = 0
+        self.active_chain.update_errors()
 
     def get_options_list(self, sample):
         options = [sample.text]
@@ -315,12 +376,10 @@ class ChainedModel():
                 random_chain = random.choice(random.choice(self.chains).features)
                 preferred_position = sample.preferred_position
                 if sample.type == ChainUnitType.type_feature:
-                    if preferred_position == "MAIN_FEATURE":
-                        selected = random_chain.main_feature
-                    elif preferred_position is None or preferred_position >= len(random_chain.features):
+                    if preferred_position is None or preferred_position >= len(random_chain.features):
                         selected = random.choice(random_chain.features)
                     else:
-                            selected = random_chain.features[preferred_position]
+                        selected = random_chain.features[preferred_position]
                     options.append(selected)
             except Exception as e:
                 continue
@@ -338,9 +397,9 @@ class ChainedModel():
     def dump_results(self, progression_file):
         backup = {}
         for chain in self.chains:
-            backup[chain.chain_no] = [chain.progression_level, chain.recall_level]
+            backup[chain.chain_no] = [chain.progression_level, chain.last_review_urge, chain.errors_mapping]
         with open(progression_file, "w") as current_progress:
-            json.dump(backup, current_progress)
+            json.dump(backup, current_progress, indent=2)
 
     def attach_images(self, images_file):
         if os.path.exists(images_file):
@@ -362,22 +421,21 @@ class ChainedModel():
             if progress:
                 for chain in self.chains:
                     chain.progression_level = progress[chain.chain_no][0]
-                    chain.recall_level = progress[chain.chain_no][1]
+                    chain.last_review_urge = progress[chain.chain_no][1]
                     if chain.progression_level > 0:
                         chain.ascend()
+                    errors_mapping = []
+                    if len(progress[chain.chain_no]) == 2:
+                        errors_mapping = [[0 for _ in range(10)] for j in range[5]]
+                    else:
+                        errors_mapping = progress[chain.chain_no][2]
+
+                    chain.set_errors(errors_mapping)
+
             return True
         else:
             return False
 
-    def get_chains_list(self):
-        units_list = [ChainUnit(_.features[0].entity + "..." + _.features[-1].entity + f" {_.progression_level} | {_.recall_level}", font = ChainUnitType.font_utf) for _ in sorted(self.chains, key = lambda _ : _.progression_level + _.recall_level*0.25, reverse = True)]
-        # TODO specify in config
-        if len(units_list) < 12:
-            delta_len = 12 - len(units_list)
-            units_list += [ChainUnit("") for _ in range(delta_len)]
-        elif len(units_list) > 12:
-            units_list = units_list[:12]
-        return units_list
 
     def get_chains_progression(self):
         minimal_level = min(self.chains, key = lambda _ : _.progression_level).progression_level
@@ -386,4 +444,5 @@ class ChainedModel():
 
 
     def get_active_chain(self):
-        return self.chains[self.active_chain_index]
+
+        return self.active_chain

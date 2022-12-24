@@ -5,7 +5,7 @@ from math import sqrt
 from itertools import compress, groupby
 import random
 import re
-from config import W, H, CYRILLIC_FONT, CHINESE_FONT, H_OFFSET, W_OFFSET, META_SCRIPT
+from config import W, H, CYRILLIC_FONT, CHINESE_FONT, H_OFFSET, W_OFFSET, META_SCRIPT, META_MINOR
 from colors import col_bg_darker, col_wicked_darker
 from colors import col_active_darker, col_bg_lighter
 from colors import col_wicked_lighter, col_active_lighter
@@ -19,11 +19,13 @@ NEW_EVENT = False
 ######################################
 
 class ChainedsProducer():
-    def __init__(self, label, csv_path, meta_path = None, ui_ref = None):
+    def __init__(self, label, csv_path, meta_path = None, minor_meta = None, ui_ref = None):
         self.csv_path = csv_path
         self.label = label 
         self.meta_path = meta_path
+        self.minor_meta = minor_meta
         self.meta_lines = self.extract_meta(self.meta_path) if self.meta_path else []
+        self.minor_lines = self.extract_meta(self.minor_meta) if self.minor_meta else []
         self.chains = self.prepare_data()
         self.active_chain = self.chains.get_active_chain()
         self.ui_ref = ui_ref
@@ -41,10 +43,8 @@ class ChainedsProducer():
         for key, group in groupby(list(_ for _ in data_extractor), key = lambda _ : _[0]):
             features = []
             for item in group:
-                entity, in_key, out_key, main_feature, *key_feature_pairs = item[1:]
-                # HARDCODE
-                key_feature_pairs = key_feature_pairs[2:6]
-                features.append(ChainedFeature(entity, in_key, out_key, main_feature, key_feature_pairs))
+                entity,  *key_features = item[1:]
+                features.append(ChainedFeature(entity, key_features))
             chains.append(FeaturesChain(key, features))
         return ChainedModel(chains)
 
@@ -59,6 +59,13 @@ class ChainedsProducer():
         if self.meta_lines:
             return random.choice(self.meta_lines)
         return ""
+
+    def produce_meta_minor(self):
+        if self.minor_lines:
+            minor_idx = random.randint(0, len(self.minor_lines)-17)
+            return self.minor_lines[minor_idx:minor_idx+16] 
+        return ""
+
 
 
 ######################################
@@ -99,6 +106,8 @@ class ChainedEntity():
         self.options = None
         self.active_question = None
         self.questions_queue = self.extract_questions()
+        self.constant_variation = random.randint(0, 10)
+
         if self.questions_queue:
             self.time_estemated = self.chained_feature.get_timing() / (len(self.questions_queue)+1) 
             self.done = False
@@ -155,8 +164,9 @@ class ChainedEntity():
         LAST_EVENT = "ERROR"
         NEW_EVENT = True
         self.locked = True
+        self.chained_feature.register_error(self.active_question.order_no)
+        self.features_chain.update_errors(register_new=True)
 
-        #self.generate_options()
 
     def register_keys(self, key_states, time_percent, time_based = False):
         if self.active_question and not time_based:
@@ -179,7 +189,7 @@ class ChainedEntity():
 
             #n_pairs = len(self.context)/2
             n_pairs = len(self.context)
-            pair_perce = 1/n_pairs
+            pair_perce = 1/(n_pairs + 1)
 
             pair_to_show = int(time_p/pair_perce)
             self.order_in_work = pair_to_show
@@ -189,15 +199,39 @@ class ChainedEntity():
         graphical_objects = []
         set_color = lambda _ : colors.col_active_lighter if _.extra else col_wicked_darker if _.type == ChainUnitType.type_key else colors.feature_text_col if _.type == ChainUnitType.type_feature  else colors.col_correct if _.mode == ChainUnitType.mode_highligted else colors.col_black 
         set_bg_color = lambda _ : colors.col_bt_down if _.extra else col_active_darker if _.type == ChainUnitType.type_key else colors.feature_bg 
-        get_text  = lambda _ : _.text if self.done or _.mode == ChainUnitType.mode_open else "???"  if _.mode == ChainUnitType.mode_question else ""
+        get_text  = lambda _ : _.text if self.done or _.mode == ChainUnitType.mode_open else "???"
         get_position_x = lambda _ : self.x_positions[_.order_no+1]  
         get_y_position = lambda _ : self.H//2 - self.H//4 + self.H//16 if _.position == ChainUnitType.position_subtitle else self.H//2 - self.H//16 if _.position == ChainUnitType.position_keys else self.H//2 + self.H//16
         set_font = lambda _ : ChainUnitType.font_cyrillic if not re.search(u'[\u4e00-\u9fff]', _.text) else ChainUnitType.font_utf
-        set_size = lambda _ : 30 if not re.search(u'[\u4e00-\u9fff]', _.text) else 40
+        set_size = lambda _ : 10 if len(_.text)>=17 else 20 if len(_.text)>=10 else 30 if len(_.text)>=5 else 40
 
-        ctx_len = len(self.context)//2
+        ctx_len = len(self.context)
         ctx_y_origin = 275 - 50 
         ctx_x_origin = 500 - 50 
+
+        out_positions = []
+        w,h = int(W*0.95), int(H*0.95)
+        if ctx_len == 1:
+            out_positions.append([w//2,   5*h//6 - h//6])
+        if ctx_len == 2:
+            out_positions.append([w//6 +w//6,   h//6 + h//6])
+            out_positions.append([5*w//6 -w//6 , 5*h//6 - h//6])
+        if ctx_len == 3:
+            out_positions.append([w//6 + w//6,   h//6 + h//6])
+            out_positions.append([w//2,   5*h//6 - h//6])
+            out_positions.append([5*w//6 - w//6, h//6 + h//6])
+        if ctx_len == 4:
+            out_positions.append([w//6 + w//6,   h//6+h//6])
+            out_positions.append([w//6 + w//6,   5*h//6 - h//6])
+            out_positions.append([5*w//6 -w//6, 5*h//6 - h//6])
+            out_positions.append([5*w//6 -w//6, h//6+h//6])
+        if ctx_len >= 5:
+            out_positions.append([w//6 ,   h//6 + h//12])
+            out_positions.append([w//6 ,   5*h//6 - h//12])
+            out_positions.append([w//2,   5*h//6 - h//12])
+            out_positions.append([5*w//6 , 5*h//6 - h//12])
+            out_positions.append([5*w//6 , h//6 + h//12])
+
         for ctx in self.context:
             order_y_origin = ctx_y_origin
             ctx_x = ctx_x_origin 
@@ -231,6 +265,26 @@ class ChainedEntity():
 
             cx, cy = ctx_x + ctx_w/2, ctx_y + ctx_h/2
 
+            if order_delta > 0:
+
+                if self.constant_variation%2:
+                    pos_no = ctx.order_no
+                    pos_no %= len(out_positions)
+                    ctx_x, ctx_y = out_positions[pos_no]
+                else:
+                    pos_no = ctx_len -1 - ctx.order_no
+                    pos_no%=len(out_positions)
+                    ctx_x, ctx_y = out_positions[pos_no]
+                cx, cy = ctx_x - W_OFFSET, ctx_y - H_OFFSET 
+
+                ctx_x -= ctx_w/2 + W_OFFSET
+                ctx_y -= ctx_h/2 + H_OFFSET
+
+                ctx_x += int(W*0.05/2)
+                cx += int(W*0.05/2)
+                ctx_y += int(H*0.05/2)
+                cy += int(H*0.05/2)
+
             graphical_objects.append(WordGraphical(get_text(ctx),
                                                    cx,
                                                    cy,
@@ -242,12 +296,13 @@ class ChainedEntity():
 
         options_x1 = 320
         options_y1 = 325
-        options_x_corners = [320+55, 320+55, 320+55, 320+250*2+5, 320+250*2+5, 320+250*2+5]
+        options_x_corners = [320+55-5, 320+55-15, 320+55-5, 320+250*2+5+5, 320+250*2+5+15, 320+250*2+5+5]
         options_y_corners = [275, 275+75, 275+150, 275, 275+75, 275+150]
         options_w = 200
         options_h = 50
         set_font = lambda _ : ChainUnitType.font_cyrillic if not re.search(u'[\u4e00-\u9fff]', _) else ChainUnitType.font_utf
-        set_size = lambda _ : 30 if not re.search(u'[\u4e00-\u9fff]', _) else 40
+        #set_size = lambda _ : 30 if not re.search(u'[\u4e00-\u9fff]', _) else 40
+        set_size = lambda _ : 15 if len(_)>=15 else 25 if len(_)>=10 else 30 if len(_)>=5 else 40
         if self.options:
             for i, (x1, y1) in enumerate(zip(options_x_corners, options_y_corners)):
                 xc, yc = x1 + options_w / 2, y1 + options_h / 2
@@ -258,7 +313,7 @@ class ChainedEntity():
                                                        colors.col_bt_text, transparent = True,
                                                        font = set_font(self.options[i]),
                                                        font_size = set_size(self.options[i]),
-                                                        rect = [x1, y1, options_w, options_h]))
+                                                        rect = [x1, y1, options_w, options_h] if self.options[i] else []))
 
 
         large_notions_x_corners = [575]
@@ -309,11 +364,19 @@ class ChainedDrawer():
         self.display_instance = display_instance
         self.W = W
         self.H = H
+        self.cyrillic_10 = self.pygame_instance.font.Font(CYRILLIC_FONT, 10, bold = True)
+        self.cyrillic_15 = self.pygame_instance.font.Font(CYRILLIC_FONT, 15, bold = True)
+        self.cyrillic_20 = self.pygame_instance.font.Font(CYRILLIC_FONT, 20, bold = True)
+        self.cyrillic_25 = self.pygame_instance.font.Font(CYRILLIC_FONT, 25, bold = True)
         self.cyrillic_30 = self.pygame_instance.font.Font(CYRILLIC_FONT, 30, bold = True)
         self.cyrillic_40 = self.pygame_instance.font.Font(CYRILLIC_FONT, 40, bold = True)
         self.cyrillic_60 = self.pygame_instance.font.Font(CYRILLIC_FONT, 60, bold = True)
         self.cyrillic_120 = self.pygame_instance.font.Font(CYRILLIC_FONT, 120, bold = True)
 
+        self.utf_10 = self.pygame_instance.font.Font(CHINESE_FONT, 10, bold = True)
+        self.utf_15 = self.pygame_instance.font.Font(CHINESE_FONT, 15, bold = True)
+        self.utf_20 = self.pygame_instance.font.Font(CHINESE_FONT, 20, bold = True)
+        self.utf_25 = self.pygame_instance.font.Font(CHINESE_FONT, 25, bold = True)
         self.utf_30 = self.pygame_instance.font.Font(CHINESE_FONT, 30, bold = True)
         self.utf_40 = self.pygame_instance.font.Font(CHINESE_FONT, 40, bold = True)
         self.utf_60 = self.pygame_instance.font.Font(CHINESE_FONT, 60, bold = True)
@@ -323,6 +386,12 @@ class ChainedDrawer():
         if font_type == ChainUnitType.font_utf:
             if not size:
                 return self.utf_30
+            elif size <= 15:
+                return self.utf_15
+            elif size <= 20:
+                return self.utf_20
+            elif size <= 25:
+                return self.utf_25
             elif size <= 30:
                 return self.utf_30
             elif size <= 40:
@@ -334,6 +403,12 @@ class ChainedDrawer():
         else:
             if not size:
                 return self.cyrillic_30 
+            elif size <= 15:
+                return self.cyrillic_15
+            elif size <= 20:
+                return self.cyrillic_20
+            elif size <= 25:
+                return self.cyrillic_25
             elif size <= 30:
                 return self.cyrillic_30
             elif size <= 40:
@@ -364,7 +439,7 @@ class ChainedDrawer():
                 self.pygame_instance.draw.rect(self.display_instance,
                                   (50,50,50),
                                   (x+W_OFFSET,y+H_OFFSET,w,h),
-                                   width = 2)
+                                   width = 2, border_radius = 15)
 
             self.display_instance.blit(text, textRect)
 
@@ -373,7 +448,7 @@ class ChainedDrawer():
             return
         options_x1 = 320
         options_y1 = 325
-        options_x_corners = [320+55, 320+55, 320+55, 320+250*2+5, 320+250*2+5, 320+250*2+5]
+        options_x_corners = [320+55-5, 320+55-15, 320+55-5, 320+250*2+5+5, 320+250*2+5+15, 320+250*2+5+5]
         options_y_corners = [275, 275+75, 275+150, 275, 275+75, 275+150]
         options_w = 200
         options_h = 50
@@ -392,7 +467,7 @@ class ChainedDrawer():
 
             self.pygame_instance.draw.rect(self.display_instance,
                                   color,
-                                  (x1+W_OFFSET, y1+H_OFFSET, options_w, options_h))
+                                  (x1+W_OFFSET, y1+H_OFFSET, options_w, options_h), border_radius=15)
  
             
 
@@ -449,7 +524,7 @@ class ChainedProcessor():
     def __init__(self, pygame_instance, display_instance, ui_ref, data_label, data_path, beat_time = 1):
         self.W = W
         self.H = H
-        self.producer = ChainedsProducer(data_label, data_path, meta_path = META_SCRIPT, ui_ref = ui_ref)
+        self.producer = ChainedsProducer(data_label, data_path, meta_path = META_SCRIPT, minor_meta = META_MINOR, ui_ref = ui_ref)
         self.drawer = ChainedDrawer(pygame_instance, display_instance, W, H)
         self.control = KeyboardChainModel(pygame_instance)
         self.active_line = None
@@ -462,6 +537,7 @@ class ChainedProcessor():
                                            self.producer.produce_chain(),
                                            self.producer.chains,
                                            self.pygame_instance, self.W, self.H)
+        self.ui_ref.constant_variation = self.active_entity.constant_variation
         self.ui_ref.set_image(self.active_entity.chained_feature.ask_for_image())
         self.ui_ref.randomize()
         self.ui_ref.global_progress = self.producer.chains.get_chains_progression()
@@ -477,6 +553,7 @@ class ChainedProcessor():
                                            self.producer.produce_chain(), self.producer.chains,
                                            self.pygame_instance, self.W, self.H)
 
+        self.ui_ref.constant_variation = self.active_entity.constant_variation
         self.ui_ref.set_image(self.active_entity.chained_feature.ask_for_image())
         self.ui_ref.randomize()
         self.ui_ref.global_progress = self.producer.chains.get_chains_progression()
@@ -486,7 +563,7 @@ class ChainedProcessor():
         self.time_elapsed_cummulative = 0
         self.active_beat_time = (60*1000)/self.active_entity.time_estemated
 
-        return self.active_entity.time_estemated, self.producer.produce_meta()
+        return self.active_entity.time_estemated, self.producer.produce_meta(), self.producer.produce_meta_minor()
 
 
     def redraw(self):
