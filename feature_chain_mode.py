@@ -55,6 +55,13 @@ class ChainedsProducer():
     def produce_next_feature(self):
         return self.chains.get_next_feature()
 
+    def is_burning(self):
+        return self.chains.is_burning()
+
+    def get_burning_features_list(self):
+        return self.chains.get_burning_features_list()
+        
+
     def produce_meta(self):
         if self.meta_lines:
             return random.choice(self.meta_lines)
@@ -605,6 +612,12 @@ class ChainedProcessor():
                 self.ui_ref.show_less = True
 
 
+
+    def is_burning(self):
+        return self.producer.is_burning()
+
+    def get_burning_features_list(self):
+        return self.producer.get_burning_features_list()
 
     def tick(self, beat_time, time_elapsed):
 

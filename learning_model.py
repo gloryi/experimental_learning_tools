@@ -3,67 +3,6 @@ import json
 import os
 from config import PROGRESSION_FILE, IMAGES_MAPPING_FILE
 
-class MarkedAlias():
-    def __init__(self, content, key, attached_unit, active = False):
-        self.content = content
-        self.content_type = "text"
-        self.active = active
-        self.correct = False
-        self.wrong = False
-        self.attached_unit = attached_unit
-        self.key = key
-
-    def activate(self):
-        self.active = True
-
-    def deactivate(self):
-        self.active = False
-
-    def register_match(self):
-        self.attached_unit.deactivate(positive_feedback = True)
-
-    def register_error(self):
-        self.attached_unit.deactivate(positive_feedback = False)
-
-class SemanticUnit():
-    def __init__(self, aliases):
-        self.aliases = aliases
-        self.activated = False
-        self.learning_score = 100 
-        self.key = id(self)
-
-    def __increment(self):
-        self.learning_score += 1
-            
-
-    def __decrement(self):
-        self.learning_score -= 1 
-        if self.learning_score <= 98:
-            self.learning_score = 98
-
-    def activate(self):
-        self.activated = True
-
-    def produce_pair(self):
-        if not self.activated:
-            return [MarkedAlias(_, self.key, self) for _ in random.sample(self.aliases, 2)]
-        else:
-            selected = [MarkedAlias(_, self.key, self) for _ in random.sample(self.aliases, 2)]
-            active = random.choice(selected)
-            active.activate()
-            
-            return selected
-
-    def deactivate(self, positive_feedback = False):
-        if self.activated:
-
-            if positive_feedback:
-                self.__increment()
-            else:
-                self.__decrement()
-
-        self.activated = False
-
 class ChainUnitType():
     type_key = "type_key"
     type_feature = "type_feature"
@@ -109,6 +48,7 @@ class ChainedFeature():
         self.cummulative_error = 0
         self.decreased = False
         self.rised = False
+        self.review = False
         self.attached_image = "" 
         self.basic_timing_per_level = {0:35,
                                        1:35,
@@ -127,7 +67,6 @@ class ChainedFeature():
             return self.attached_image
         else:
             return ""
-
 
     def set_extra(self, unit_type):
         return ChainUnitType.extra_focus
@@ -202,6 +141,7 @@ class FeaturesChain():
 
         if is_review_requires:
             self.features.append(self.create_review_chain(self.features))
+            self.features[-1].review = True
 
         self.progression_level = 0
         self.errors_mapping = [[0 for _ in range(10)] for j in range(5)]
@@ -282,7 +222,6 @@ class FeaturesChain():
         return self.features[self.active_position]
 
 
-
 class ChainedModel():
     def __init__(self, chains):
         self.chains = chains
@@ -291,6 +230,7 @@ class ChainedModel():
         self.new_limit = 2
         self.mistakes_trigger = False
         self.mistakes_chain = []
+        self.burning_chain = []
 
         is_restored = self.restore_results(PROGRESSION_FILE)
 
@@ -335,10 +275,6 @@ class ChainedModel():
             self.mistakes_chain.append(feature)
 
         self.mistakes_chain.sort(key = lambda _ : _.cummulative_error, reverse = True)
-
-        for mistake in self.mistakes_chain:
-            print(mistake)
-        print()
 
     def change_active_chain(self):
 
@@ -387,12 +323,28 @@ class ChainedModel():
         return options
 
     def get_next_feature(self):
-        next_chain = self.active_chain.get_next_feature()
-        if not next_chain:
+        next_feature = self.active_chain.get_next_feature()
+        if not next_feature:
             self.change_active_chain()
-            next_chain = self.active_chain.get_next_feature()
+            next_feature = self.active_chain.get_next_feature()
 
-        return next_chain
+        if not next_feature.review and not next_feature in self.burning_chain:
+            self.burning_chain.append(next_feature)
+            print(self.burning_chain)
+
+        return next_feature
+
+    def is_burning(self):
+        return len(self.burning_chain) >= 30
+
+    def get_burning_features_list(self):
+        features_list = []
+        self.burning_chain = random.sample(self.burning_chain, 30)
+        for feature in self.burning_chain:
+            features_list.append([feature.entity])
+            features_list[-1] += [feature.features[0]]
+        self.burning_chain = []
+        return features_list
 
     def dump_results(self, progression_file):
         backup = {}
@@ -426,7 +378,7 @@ class ChainedModel():
                         chain.ascend()
                     errors_mapping = []
                     if len(progress[chain.chain_no]) == 2:
-                        errors_mapping = [[0 for _ in range(10)] for j in range[5]]
+                        errors_mapping = [[0 for _ in range(10)] for j in range(5)]
                     else:
                         errors_mapping = progress[chain.chain_no][2]
 
@@ -435,7 +387,6 @@ class ChainedModel():
             return True
         else:
             return False
-
 
     def get_chains_progression(self):
         minimal_level = min(self.chains, key = lambda _ : _.progression_level).progression_level

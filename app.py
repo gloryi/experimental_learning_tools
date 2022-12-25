@@ -1,12 +1,14 @@
 import pygame
 from time_utils import global_timer, Counter, Progression
-#from six_words_mode import SixtletsProcessor
 from feature_chain_mode import ChainedProcessor
-from config import TEST_LANG_DATA, W, H, BPM, CYRILLIC_FONT, CHINESE_FONT
+from config import TEST_LANG_DATA, W, H, BPM, CYRILLIC_FONT, CHINESE_FONT, BURNER_APP, BURNER_FILE 
 from colors import white
 import colors
 import time
 import random
+import csv
+import subprocess
+
 from ui_elements import UpperLayout
  
 pygame.init()
@@ -17,7 +19,9 @@ time_to_cross_screen = 16000
 time_to_appear = 4000
 beat_time = 0 
 paused = True
+paused_manually = True
 is_pause_displayed = False
+burner_casted = False
 
 delta_timer = global_timer(pygame)
 upper_stats = UpperLayout(pygame, display_surface)
@@ -85,17 +89,29 @@ for time_delta in delta_timer:
 
         is_pause_displayed = True
 
+    if paused and not paused_manually:
+        if not burner_casted:
+            if game.is_burning():
+                burning_list = game.get_burning_features_list()
+                with open(BURNER_FILE, "w") as burning_file:
+                    writer = csv.writer(burning_file)
+                    writer.writerows(burning_list)
+
+                subprocess.Popen(["python3", BURNER_APP])
+                burner_casted = True
+
+
     if paused:
         pygame.display.update()
         keys = pygame.key.get_pressed()
         if keys[pygame.K_SPACE]:
             paused = False
             is_pause_displayed = False
+            burner_casted = False
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
- 
                 quit()
         continue
 
@@ -103,6 +119,7 @@ for time_delta in delta_timer:
 
     if pause_counter.is_tick(time_delta):
         paused = True
+        paused_manually = False
 
     if new_line_counter.is_tick(time_delta):
         next_tick_time, meta, meta_minor = game.add_line()
@@ -124,6 +141,7 @@ for time_delta in delta_timer:
     keys = pygame.key.get_pressed()
     if keys[pygame.K_v]:
         paused = True
+        paused_manually = True
  
     for event in pygame.event.get():
  

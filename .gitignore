@@ -8,6 +8,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 hsk_csv-master/
+# TODO later change to submodule 
+burner/
 
 # C extensions
 *.so
