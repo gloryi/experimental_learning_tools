@@ -5,6 +5,7 @@ api_keys.py
 *.png
 # Byte-compiled / optimized / DLL files
 __pycache__/
+personal_set/
 *.py[cod]
 *$py.class
 hsk_csv-master/

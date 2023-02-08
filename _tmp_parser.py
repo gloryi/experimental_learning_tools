@@ -48,17 +48,16 @@ def extract_hanzi(hanzifile):
                 continue
             #if not stroke_count:
                 #continue
-            if not hsk_number:
+            if hsk_number:
                 continue
 
             features = split_definition(definition)
             if not len(features) >= 1:
                 continue
 
-            extracted.append([int(hsk_number), charcter, features[0]] + [pin] + features[1:])
-    extracted.sort(key = lambda _ : _[0])
+            extracted.append([charcter] + features)
 
-    return [_[1:] for _ in extracted] 
+    return [_ for _ in extracted] 
 
 def chain_two_features(f1, f2, mnemonic_dict):
     ft1, ft2 = ipa.convert(f1), ipa.convert(f2)
@@ -101,7 +100,7 @@ def create_chain(f_in, f_out, f_key, f_tail, mnemonic_dict, ready_in = ""):
 
 #semantic_keys = prepare_rus_keys(os.path.join(os.getcwd(), "datasets", "rus_semantics.csv"))
 semantic_keys = {}
-chinese_units = extract_hanzi(os.path.join(os.getcwd(), "datasets",  "hanziDB.csv"))
+chinese_units = extract_hanzi(os.path.join(os.getcwd(), "datasets",  "HanziHSK_raw.csv"))
 
 #random.shuffle(chinese_units)
 
@@ -111,35 +110,38 @@ batches = []
 # TODO - Fix generation. Deprecate keys for now
 for I in range(0, len(chinese_units), BATCH_SIZE):
     selected_units = chinese_units[I:min(I+BATCH_SIZE,len(chinese_units))]
-    selected_units =[selected_units[-1]] + selected_units + [selected_units[0]]
-    copied_keys = deepcopy(semantic_keys)
+    # selected_units =[selected_units[-1]] + selected_units + [selected_units[0]]
+    # copied_keys = deepcopy(semantic_keys)
     batch_counter = I//BATCH_SIZE
-    prev_in = ""
-    original_in = ""
+    # prev_in = ""
+    # original_in = ""
+    for unit in selected_units:
+        batches.append([batch_counter]+unit)
 
-    for i in range(1,len(selected_units)-1, 1):
-        batches.append([batch_counter])
-        prev_f, next_f = selected_units[i-1][1], selected_units[i+1][1]
-        current_f = selected_units[i][1]
-        features_tail = selected_units[i][2:]
-        if not prev_in:
-            prev_k, next_k, *keys_tail = create_chain(prev_f, next_f, current_f, features_tail, copied_keys)
-            original_in = prev_k
-        else:
-            prev_k, next_k, *keys_tail = create_chain(prev_f, next_f, current_f, features_tail, copied_keys, ready_in = prev_in)
-        prev_in = next_k
+    #
+    # for i in range(1,len(selected_units)-1, 1):
+    #     batches.append([batch_counter])
+    #     prev_f, next_f = selected_units[i-1][1], selected_units[i+1][1]
+    #     current_f = selected_units[i][1]
+    #     features_tail = selected_units[i][2:]
+    #     if not prev_in:
+    #         prev_k, next_k, *keys_tail = create_chain(prev_f, next_f, current_f, features_tail, copied_keys)
+    #         original_in = prev_k
+    #     else:
+    #         prev_k, next_k, *keys_tail = create_chain(prev_f, next_f, current_f, features_tail, copied_keys, ready_in = prev_in)
+    #     prev_in = next_k
+    #
+    #     entity = selected_units[i][0]
+    #     batches[-1] += [entity, prev_k, next_k, current_f]
+    #     for feature, key in zip(features_tail, keys_tail):
+    #         batches[-1] += [key, feature]
+    #
+    # batches[-1][3] = original_in
+    #
+    # if batch_counter > 700:
+    #     break
 
-        entity = selected_units[i][0]
-        batches[-1] += [entity, prev_k, next_k, current_f]
-        for feature, key in zip(features_tail, keys_tail):
-            batches[-1] += [key, feature]
-
-    batches[-1][3] = original_in
-
-    if batch_counter > 700:
-        break
-
-with open(os.path.join(os.getcwd(), "datasets", "hanzi_nokey.csv"), "w") as hanzi_prepared:
+with open(os.path.join(os.getcwd(), "learning_sets", "hanzi_2", "raw_features.csv"), "w") as hanzi_prepared:
    csvwriter = csv.writer(hanzi_prepared)
    for line in batches:
        csvwriter.writerow(line)

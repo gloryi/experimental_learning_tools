@@ -40,7 +40,7 @@ class ChainUnit():
         self.extra = extra
 
 class ChainedFeature():
-    def __init__(self, entity, features): 
+    def __init__(self, entity, features):
         self.entity = entity
         self.features = [_[:20] for _ in features]
         self.feature_level = 0
@@ -49,7 +49,7 @@ class ChainedFeature():
         self.decreased = False
         self.rised = False
         self.review = False
-        self.attached_image = "" 
+        self.attached_image = ""
         self.basic_timing_per_level = {0:35,
                                        1:35,
                                        2:35}
@@ -100,8 +100,8 @@ class ChainedFeature():
                 self.feature_errors[i]//=2
             else:
                 self.feature_errors[i] = 0
-        
-    
+
+
     def get_main_title(self):
         return self.entity
 
@@ -109,13 +109,13 @@ class ChainedFeature():
         timing = self.basic_timing_per_level[self.feature_level]
         level = self.feature_level
         if is_solved:
-            self.basic_timing_per_level[self.feature_level] = timing +5 if timing < 50 else 50 
-            self.feature_level = level + 1 if level < 2 else 2 
+            self.basic_timing_per_level[self.feature_level] = timing +5 if timing < 50 else 50
+            self.feature_level = level + 1 if level < 2 else 2
             self.rised = True
             self.decreased = False
         else:
-            self.basic_timing_per_level[self.feature_level] = timing -5 if timing > 30 else 30 
-            self.feature_level = level -1 if level > 0 else 0 
+            self.basic_timing_per_level[self.feature_level] = timing -5 if timing > 30 else 30
+            self.feature_level = level -1 if level > 0 else 0
             self.decreased = True
             self.rised = False
 
@@ -183,7 +183,7 @@ class FeaturesChain():
 
     def get_worst_features(self, features_no = 1):
         sorted_by_mistake = sorted(self.features,key = lambda _ : _.cummulative_error, reverse = True)
-        return sorted_by_mistake[:features_no] 
+        return sorted_by_mistake[:features_no]
 
 
     def initialize_images(self, images_list):
@@ -201,7 +201,7 @@ class FeaturesChain():
             return self.features[self.active_position]
         if level == 2 and not is_up:
             return self.features[self.active_position]
-        
+
         self.features[self.active_position].deselect()
         self.active_position += 1
         if self.active_position >= len(self.features):
@@ -323,6 +323,9 @@ class ChainedModel():
         return options
 
     def get_next_feature(self):
+        if not self.active_chain:
+            self.change_active_chain()
+
         next_feature = self.active_chain.get_next_feature()
         if not next_feature:
             self.change_active_chain()
@@ -330,16 +333,15 @@ class ChainedModel():
 
         if not next_feature.review and not next_feature in self.burning_chain:
             self.burning_chain.append(next_feature)
-            print(self.burning_chain)
 
         return next_feature
 
     def is_burning(self):
-        return len(self.burning_chain) >= 30
+        return len(self.burning_chain) >= 25
 
     def get_burning_features_list(self):
         features_list = []
-        self.burning_chain = random.sample(self.burning_chain, 30)
+        self.burning_chain = random.sample(self.burning_chain, 25)
         for feature in self.burning_chain:
             features_list.append([feature.entity])
             features_list[-1] += [feature.features[0]]

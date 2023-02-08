@@ -11,6 +11,7 @@ with open("cities_1m.csv") as datafile:
         population = int(line["Population"])
         if population < 50000:
             continue
+#
 # 50 - 100 k for 1
 # 100 - 200 k for 3
 # 200 - 500 k for 4

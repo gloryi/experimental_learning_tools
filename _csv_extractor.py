@@ -53,7 +53,7 @@ def extract_hanzi(hanzifile):
 
     extracted = sorted(extracted, key = lambda _ : _[1])
 
-    return extracted 
+    return extracted
 
 uniquie_pins = extract_hanzi(os.path.join(os.getcwd(), "datasets",  "hanziDB.csv"))
 

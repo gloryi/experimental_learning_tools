@@ -1,4 +1,4 @@
-from utils import raw_extracter 
+from utils import raw_extracter
 from learning_model import ChainedFeature, FeaturesChain, ChainedModel, ChainUnit, ChainUnitType
 from collections import OrderedDict
 from math import sqrt
@@ -21,7 +21,7 @@ NEW_EVENT = False
 class ChainedsProducer():
     def __init__(self, label, csv_path, meta_path = None, minor_meta = None, ui_ref = None):
         self.csv_path = csv_path
-        self.label = label 
+        self.label = label
         self.meta_path = meta_path
         self.minor_meta = minor_meta
         self.meta_lines = self.extract_meta(self.meta_path) if self.meta_path else []
@@ -38,7 +38,7 @@ class ChainedsProducer():
         return meta
 
     def prepare_data(self):
-        data_extractor = raw_extracter(self.csv_path) 
+        data_extractor = raw_extracter(self.csv_path)
         chains = []
         for key, group in groupby(list(_ for _ in data_extractor), key = lambda _ : _[0]):
             features = []
@@ -60,17 +60,18 @@ class ChainedsProducer():
 
     def get_burning_features_list(self):
         return self.chains.get_burning_features_list()
-        
+
 
     def produce_meta(self):
         if self.meta_lines:
-            return random.choice(self.meta_lines)
+            minor_idx = random.randint(0, len(self.meta_lines)-5)
+            return "*".join(self.meta_lines[minor_idx:minor_idx+4])
         return ""
 
     def produce_meta_minor(self):
         if self.minor_lines:
             minor_idx = random.randint(0, len(self.minor_lines)-17)
-            return self.minor_lines[minor_idx:minor_idx+16] 
+            return self.minor_lines[minor_idx:minor_idx+16]
         return ""
 
 
@@ -96,15 +97,15 @@ class ChainedEntity():
         self.chained_feature = chained_feature
         self.features_chain = features_chain
         self.chains = chains
-        self.main_title = self.chained_feature.get_main_title() 
+        self.main_title = self.chained_feature.get_main_title()
         self.context = sorted(self.chained_feature.get_context(), key = lambda _ : _.order_no)
-        self.order_in_work = 0 
-        
+        self.order_in_work = 0
+
         self.pygame_instance = pygame_instance
 
         self.correct = False
         self.error = False
-        
+
         self.feedback = None
         self.done = True
         self.locked = False
@@ -116,11 +117,11 @@ class ChainedEntity():
         self.constant_variation = random.randint(0, 10)
 
         if self.questions_queue:
-            self.time_estemated = self.chained_feature.get_timing() / (len(self.questions_queue)+1) 
+            self.time_estemated = self.chained_feature.get_timing() / (len(self.questions_queue)+1)
             self.done = False
         else:
-            #self.time_estemated = self.chained_feature.get_timing() / (len(self.context)//2 +1) 
-            self.time_estemated = self.chained_feature.get_timing() / (len(self.context) +1) 
+            #self.time_estemated = self.chained_feature.get_timing() / (len(self.context)//2 +1)
+            self.time_estemated = self.chained_feature.get_timing() / (len(self.context) +1)
 
 
     def extract_questions(self):
@@ -141,7 +142,7 @@ class ChainedEntity():
     def register_answers(self):
         is_solved = len(self.questions_queue) == 0
         self.chained_feature.register_progress(is_solved = is_solved)
-        return is_solved 
+        return is_solved
 
     def match_correct(self):
         if self.locked:
@@ -204,17 +205,17 @@ class ChainedEntity():
 
     def produce_geometries(self):
         graphical_objects = []
-        set_color = lambda _ : colors.col_active_lighter if _.extra else col_wicked_darker if _.type == ChainUnitType.type_key else colors.feature_text_col if _.type == ChainUnitType.type_feature  else colors.col_correct if _.mode == ChainUnitType.mode_highligted else colors.col_black 
-        set_bg_color = lambda _ : colors.col_bt_down if _.extra else col_active_darker if _.type == ChainUnitType.type_key else colors.feature_bg 
+        set_color = lambda _ : colors.col_active_lighter if _.extra else col_wicked_darker if _.type == ChainUnitType.type_key else colors.feature_text_col if _.type == ChainUnitType.type_feature  else colors.col_correct if _.mode == ChainUnitType.mode_highligted else colors.col_black
+        set_bg_color = lambda _ : colors.col_bt_down if _.extra else col_active_darker if _.type == ChainUnitType.type_key else colors.feature_bg
         get_text  = lambda _ : _.text if self.done or _.mode == ChainUnitType.mode_open else "???"
-        get_position_x = lambda _ : self.x_positions[_.order_no+1]  
+        get_position_x = lambda _ : self.x_positions[_.order_no+1]
         get_y_position = lambda _ : self.H//2 - self.H//4 + self.H//16 if _.position == ChainUnitType.position_subtitle else self.H//2 - self.H//16 if _.position == ChainUnitType.position_keys else self.H//2 + self.H//16
         set_font = lambda _ : ChainUnitType.font_cyrillic if not re.search(u'[\u4e00-\u9fff]', _.text) else ChainUnitType.font_utf
-        set_size = lambda _ : 10 if len(_.text)>=17 else 20 if len(_.text)>=10 else 30 if len(_.text)>=5 else 40
+        set_size = lambda _ : 10 if len(_.text)>=15 else 20 if len(_.text)>=10 else 30 if len(_.text)>=5 else 40
 
         ctx_len = len(self.context)
-        ctx_y_origin = 275 - 50 
-        ctx_x_origin = 500 - 50 
+        ctx_y_origin = H//2 - 150
+        ctx_x_origin = W//2
 
         out_positions = []
         w,h = int(W*0.95), int(H*0.95)
@@ -241,33 +242,32 @@ class ChainedEntity():
 
         for ctx in self.context:
             order_y_origin = ctx_y_origin
-            ctx_x = ctx_x_origin 
+            ctx_x = ctx_x_origin
             ctx_h = 50
             ctx_w = 250
             ctx_order = ctx.order_no
             ctx_type = ctx.type
 
-            order_delta = self.order_in_work - ctx_order 
+            order_delta = self.order_in_work - ctx_order
 
             if order_delta < 0:
-                ctx_x += 250/2
+                ctx_x -= ctx_w//2
                 order_y_origin -= 25
             elif order_delta > 0:
-                order_y_origin += 200 + 25 
-                if ctx_type == ChainUnitType.type_feature:
-                    ctx_x += 250/2
-            else:
-                if order_delta == 0:
-                    ctx_x += 250/2
+                order_y_origin += 200 + 25
+                #if ctx_type == ChainUnitType.type_feature:
+                    #ctx_x += 250/2
+            elif order_delta == 0:
+                ctx_x -= ctx_w//2
                 #else:
                     #ctx_x += 250/2
 
             if ctx_type == ChainUnitType.type_feature:
-                ctx_y = order_y_origin + order_delta * 50 
+                ctx_y = order_y_origin + order_delta * 50
                 #ctx_x += 250
 
             else:
-                ctx_y = order_y_origin + order_delta * 50 
+                ctx_y = order_y_origin + order_delta * 50
                 #ctx_x += 250
 
             cx, cy = ctx_x + ctx_w/2, ctx_y + ctx_h/2
@@ -282,10 +282,10 @@ class ChainedEntity():
                     pos_no = ctx_len -1 - ctx.order_no
                     pos_no%=len(out_positions)
                     ctx_x, ctx_y = out_positions[pos_no]
-                cx, cy = ctx_x - W_OFFSET, ctx_y - H_OFFSET 
+                cx, cy = ctx_x, ctx_y
 
-                ctx_x -= ctx_w/2 + W_OFFSET
-                ctx_y -= ctx_h/2 + H_OFFSET
+                ctx_x -= ctx_w/2
+                ctx_y -= ctx_h/2
 
                 ctx_x += int(W*0.05/2)
                 cx += int(W*0.05/2)
@@ -301,19 +301,21 @@ class ChainedEntity():
                                                    font_size = set_size(ctx),
                                                    rect = [ctx_x, ctx_y, ctx_w, ctx_h]))
 
-        options_x1 = 320
+        options_x1 = W//2-250
         options_y1 = 325
-        options_x_corners = [320+55-5, 320+55-15, 320+55-5, 320+250*2+5+5, 320+250*2+5+15, 320+250*2+5+5]
-        options_y_corners = [275, 275+75, 275+150, 275, 275+75, 275+150]
         options_w = 200
         options_h = 50
+        options_x_corners = [W//2-250-options_w//2, W//2-250-options_w//2, W//2-250-options_w//2,
+                             W//2+250-options_w//2, W//2+250-options_w//2, W//2+250-options_w//2]
+        options_y_corners = [H//2-80-options_h//2, H//2-options_h//2, H//2+80-options_h//2,
+                             H//2-80-options_h//2, H//2-options_h//2, H//2+80-options_h//2]
         set_font = lambda _ : ChainUnitType.font_cyrillic if not re.search(u'[\u4e00-\u9fff]', _) else ChainUnitType.font_utf
         #set_size = lambda _ : 30 if not re.search(u'[\u4e00-\u9fff]', _) else 40
         set_size = lambda _ : 15 if len(_)>=15 else 25 if len(_)>=10 else 30 if len(_)>=5 else 40
         if self.options:
             for i, (x1, y1) in enumerate(zip(options_x_corners, options_y_corners)):
                 xc, yc = x1 + options_w / 2, y1 + options_h / 2
- 
+
                 graphical_objects.append(WordGraphical(self.options[i],
                                                        xc,
                                                        yc,
@@ -323,20 +325,21 @@ class ChainedEntity():
                                                         rect = [x1, y1, options_w, options_h] if self.options[i] else []))
 
 
-        large_notions_x_corners = [575]
-        large_notions_y_corners = [275]
         large_notion_w = 250
         large_notion_h = 200
+        large_notions_x_corners = [W//2]
+        large_notions_y_corners = [H//2]
         for i, (x1,y1) in enumerate(zip(large_notions_x_corners, large_notions_y_corners)):
-            xc, yc = x1 + large_notion_w/2, y1 + large_notion_h/2
+            xc, yc = x1, y1
 
+            tlen = len(self.chained_feature.entity)
             graphical_objects.append(WordGraphical(self.chained_feature.entity,
                                      xc, yc,
                                      colors.col_black,
                                      bg_color = None if i == 0 else col_correct if LAST_EVENT == "POSITIVE" else col_error,
-                                    font_size = 120,
-                                   font = ChainUnitType.font_utf,
-                                     rect = [x1, y1, large_notion_w, large_notion_h]))
+                                    font_size = 120 if tlen == 1 else 90 if tlen == 2 else 60 if tlen == 3 else 40 if tlen < 5 else 30 if tlen < 10 else 20,
+                                    font = ChainUnitType.font_utf,
+                                     rect = [x1-large_notion_w//2, y1-large_notion_h//2, large_notion_w, large_notion_h]))
 
 
         return graphical_objects
@@ -409,7 +412,7 @@ class ChainedDrawer():
                 return self.utf_120
         else:
             if not size:
-                return self.cyrillic_30 
+                return self.cyrillic_30
             elif size <= 15:
                 return self.cyrillic_15
             elif size <= 20:
@@ -428,6 +431,20 @@ class ChainedDrawer():
     def draw_line(self, line):
         geometries = line.produce_geometries()
         color = (128,128,128)
+        self.pygame_instance.draw.rect(self.display_instance,
+                              (10,10,10),
+                              (W//2 - 1,
+                               0,
+                               2,
+                               H))
+
+        self.pygame_instance.draw.rect(self.display_instance,
+                              (10,10,10),
+                              (0,
+                               H//2 - 1,
+                               W,
+                               2))
+
         for geometry in geometries:
             message = geometry.text
             font = self.pick_font(geometry.font, geometry.font_size)
@@ -438,14 +455,14 @@ class ChainedDrawer():
                 text = font.render(message, True, geometry.color)
 
             textRect = text.get_rect()
-            textRect.center = (geometry.x + W_OFFSET, geometry.y + H_OFFSET)
+            textRect.center = (geometry.x, geometry.y)
 
             if geometry.rect:
 
-                x, y, w, h = geometry.rect 
+                x, y, w, h = geometry.rect
                 self.pygame_instance.draw.rect(self.display_instance,
                                   (50,50,50),
-                                  (x+W_OFFSET,y+H_OFFSET,w,h),
+                                  (x,y,w,h),
                                    width = 2, border_radius = 15)
 
             self.display_instance.blit(text, textRect)
@@ -453,12 +470,14 @@ class ChainedDrawer():
     def display_keys(self, keys, line):
         if line.done:
             return
-        options_x1 = 320
+        options_x1 = W//2-250
         options_y1 = 325
-        options_x_corners = [320+55-5, 320+55-15, 320+55-5, 320+250*2+5+5, 320+250*2+5+15, 320+250*2+5+5]
-        options_y_corners = [275, 275+75, 275+150, 275, 275+75, 275+150]
         options_w = 200
         options_h = 50
+        options_x_corners = [W//2-250-options_w//2, W//2-250-options_w//2, W//2-250-options_w//2,
+                             W//2+250-options_w//2, W//2+250-options_w//2, W//2+250-options_w//2]
+        options_y_corners = [H//2-80-options_h//2, H//2-options_h//2, H//2+80-options_h//2,
+                             H//2-80-options_h//2, H//2-options_h//2, H//2+80-options_h//2]
 
         for i, (x1, y1) in enumerate(zip(options_x_corners, options_y_corners)):
             key_state = keys[i]
@@ -466,7 +485,7 @@ class ChainedDrawer():
 
             color = (255,255,255)
             if key_state == "up":
-                color = colors.col_bt_down if LAST_EVENT == "POSITIVE" else colors.col_error 
+                color = colors.col_bt_down if LAST_EVENT == "POSITIVE" else colors.col_error
             elif key_state == "down":
                 color = colors.col_bt_pressed if LAST_EVENT == "POSITIVE" else colors.col_active_lighter
             else:
@@ -474,9 +493,9 @@ class ChainedDrawer():
 
             self.pygame_instance.draw.rect(self.display_instance,
                                   color,
-                                  (x1+W_OFFSET, y1+H_OFFSET, options_w, options_h), border_radius=15)
- 
-            
+                                  (x1, y1, options_w, options_h), border_radius=15)
+
+
 
 ######################################
 ### SIX MODE CONTROLLER
@@ -520,12 +539,12 @@ class KeyboardChainModel():
                 self.mapping[control_key] = self.process_button(self.mapping[control_key], self.down)
             else:
                 self.mapping[control_key] = self.process_button(self.mapping[control_key], self.up)
-    
+
     def get_keys(self):
         self.get_inputs()
         self.prepare_inputs()
         return self.keys
-                
+
 
 class ChainedProcessor():
     def __init__(self, pygame_instance, display_instance, ui_ref, data_label, data_path, beat_time = 1):
@@ -537,7 +556,7 @@ class ChainedProcessor():
         self.active_line = None
         self.pygame_instance = pygame_instance
         self.display_instance = display_instance
-        self.active_beat_time = beat_time 
+        self.active_beat_time = beat_time
         self.time_elapsed_cummulative = 0
         self.ui_ref = ui_ref
         self.active_entity = ChainedEntity(self.producer.produce_next_feature(),
@@ -555,7 +574,7 @@ class ChainedProcessor():
 
         if self.active_entity:
             is_solved = self.active_entity.register_answers()
-            
+
         self.active_entity = ChainedEntity(self.producer.produce_next_feature(),
                                            self.producer.produce_chain(), self.producer.chains,
                                            self.pygame_instance, self.W, self.H)
@@ -575,7 +594,7 @@ class ChainedProcessor():
 
     def redraw(self):
         self.drawer.draw_line(self.active_entity)
-    
+
     def get_pressed(self, key_states):
         mark_pressed = lambda _ : True if _ == "pressed" else False
         return [mark_pressed(_) for _ in key_states]
@@ -605,7 +624,7 @@ class ChainedProcessor():
             self.active_entity.register_keys(pressed_keys, self.time_elapsed_cummulative / self.active_beat_time)
         elif self.active_entity:
             self.active_entity.register_keys(pressed_keys,
-                                             self.time_elapsed_cummulative / self.active_beat_time, 
+                                             self.time_elapsed_cummulative / self.active_beat_time,
                                              time_based = True)
             if self.active_entity.done:
                 self.ui_ref.set_image(self.active_entity.chained_feature.attached_image)

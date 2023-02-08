@@ -9,7 +9,7 @@ class UpperLayout():
     def __init__(self, pygame_instance, display_instance):
         self.W = W
         self.H = H
-        self.y1 = 0 
+        self.y1 = 0
         self.y2 = self.H//8
         self.y3 = self.H - self.H//16
         self.higher_center = (self.y1 + self.y2)/2
@@ -20,9 +20,11 @@ class UpperLayout():
         font_file = pygame_instance.font.match_font("setofont")
         self.font = pygame_instance.font.Font(font_file, 50)
         self.large_font = pygame_instance.font.Font(font_file, 80)
-        self.utf_font1 = self.pygame_instance.font.Font(CHINESE_FONT, 150, bold = True)
-        self.utf_font2 = self.pygame_instance.font.Font(CHINESE_FONT, 100, bold = True)
-        self.utf_font3 = self.pygame_instance.font.Font(CHINESE_FONT, 50, bold = True)
+        self.utf_font1 = self.pygame_instance.font.Font(CHINESE_FONT, 120, bold = True)
+        self.utf_font2 = self.pygame_instance.font.Font(CHINESE_FONT, 80, bold = True)
+        self.utf_font3 = self.pygame_instance.font.Font(CHINESE_FONT, 40, bold = True)
+        self.utf_font4 = self.pygame_instance.font.Font(CHINESE_FONT, 30, bold = True)
+        self.utf_font5 = self.pygame_instance.font.Font(CHINESE_FONT, 20, bold = True)
         self.combo = 1
         self.tiling = ""
         self.tiling_utf = True
@@ -38,10 +40,14 @@ class UpperLayout():
         self.to_master = 0
         self.variation = 0
         self.variation_on_rise = True
+        self.blink_flag = False
+        #self.blink_flag = True
+
+        
         self.random_variation = 0
         self.constant_variation = 0
 
-        self.images_cached = {} 
+        self.images_cached = {}
         self.image = None
         self.images_set = None
         self.images_set_cached = None
@@ -54,7 +60,7 @@ class UpperLayout():
         else:
             text = renderer.render(text, True, base_col)
         textRect = text.get_rect()
-        textRect.center = (x + W_OFFSET, y + H_OFFSET)
+        textRect.center = (x, y)
         self.display_instance.blit(text, textRect)
 
     def check_cached_image(self, path_to_image):
@@ -105,10 +111,10 @@ class UpperLayout():
     def redraw(self):
         clip_color = lambda _ : 0 if _ <=0 else 255 if _ >=255 else int(_)
         tiling_len = len(self.tiling)
-        tiling_font = self.utf_font1 if tiling_len==1 else self.utf_font2 if tiling_len <= 3 else self.utf_font3
+        tiling_font = self.utf_font1 if tiling_len==1 else self.utf_font2 if tiling_len == 2 else self.utf_font3 if tiling_len == 3 else self.utf_font4 if tiling_len < 5 else self.utf_font5
 
         self.display_instance.fill(self.bg_color)
-        tiling_step = 270 
+        tiling_step = 270
 
 
         if self.images_set:
@@ -146,14 +152,19 @@ class UpperLayout():
 
         if self.variation > 10:
             self.variation_on_rise = False
+            if random.randint(0,10) > 7 and self.blink_flag:
+                self.blink_flag = False
+
         elif self.variation < 0:
             self.variation_on_rise = True
+            if random.randint(0,100) > 95 and not self.blink_flag:
+                self.blink_flag = True
 
         for x in range(100+self.random_variation,W,tiling_step):
             for y in range(100+self.random_variation,H,tiling_step):
                 self.place_text(self.tiling,
-                                x-W_OFFSET,
-                                y-H_OFFSET,
+                                x,
+                                y,
                                 transparent=True,
                                 renderer = tiling_font,
                                 base_col = (clip_color(225+self.variation*4+self.random_variation),
@@ -162,65 +173,65 @@ class UpperLayout():
 
         line_color = (int(255*(1-self.percent)),int(255*(self.percent)),0)
 
-        self.place_text(str(self.combo)+"x", 420 - 100,
-                        60,
+        self.place_text(str(self.combo)+"x", W//2 - 100,
+                        50,
                         transparent = True,
                         renderer = self.large_font,
-                        base_col = (50,50,50))
+                        base_col = (70,70,70))
 
-        self.place_text(str(self.global_progress), 420 - 300,
-                        40,
+        self.place_text(str(self.global_progress), W//2 - 300,
+                        30,
                         transparent = True,
                         renderer = self.font,
-                        base_col = (50,50,50))
+                        base_col = (70,70,70))
 
-        self.place_text(str(self.combo)+"x", 920 + 100,
-                        60,
+        self.place_text(str(self.combo)+"x", W//2 + 100,
+                        50,
                         transparent = True,
                         renderer = self.large_font,
-                        base_col = (50,50,50))
+                        base_col = (70,70,70))
 
-        self.place_text(str(self.global_progress), 920 + 300,
-                        40,
+        self.place_text(str(self.global_progress), W//2 + 300,
+                        30,
                         transparent = True,
                         renderer = self.font,
-                        base_col = (50,50,50))
+                        base_col = (70,70,70))
 
-        
+
 
         line_color = (clip_color((178)*(1-self.timing_ratio)+self.random_variation),
                       clip_color((150)*(self.timing_ratio)+self.random_variation),
                       clip_color((150)*(1-self.timing_ratio)+self.random_variation))
 
-        if self.random_variation == 0 or self.random_variation == -1:
+        if (self.random_variation == 0 or self.random_variation == -1) and not(self.blink_flag and self.variation%7 == 0):
             self.pygame_instance.draw.rect(self.display_instance,
                                   line_color,
-                                  ((575+25 - 200 + ((200+400)*(1-self.timing_ratio))/2)+W_OFFSET,
-                                   275+25+25+H_OFFSET,
-                                   (200+400)*self.timing_ratio,
-                                   200-50-50))
+                                  ((W//2 - ((600)*(self.timing_ratio))/2),
+                                   H//2 - 50,
+                                   (600)*self.timing_ratio,
+                                   100))
 
-        if self.random_variation == 0 or self.random_variation == 1:
+        if (self.random_variation == 0 or self.random_variation == 1) and not(self.blink_flag and self.variation%7 == 0):
             self.pygame_instance.draw.rect(self.display_instance,
                                   line_color,
-                                  (575+50+25+W_OFFSET,
-                                   (275-200 + ((200+400)*(1-self.timing_ratio))/2)+H_OFFSET,
-                                   200-50-50,
-                                   (200+400)*self.timing_ratio))
+                                  (W//2 - 50,
+                                   (H//2 - ((600)*(self.timing_ratio))/2),
+                                   100,
+                                   (600)*self.timing_ratio))
         if self.show_less:
             return
 
         line_color = (int((235)*(1-self.percent)),int((235)*(self.percent)),0)
         self.pygame_instance.draw.rect(self.display_instance,
                                   line_color,
-                                  ((320 + (250*3*(1-self.percent))/2)+W_OFFSET,
-                                   475+H_OFFSET,
+                                  ((W//2 - (250*3*(self.percent))/2),
+                                   H//2 - 175,
                                    250*3*self.percent,
                                    25))
 
         self.pygame_instance.draw.rect(self.display_instance,
                                   line_color,
-                                  ((320 + (250*3*(1-self.percent))/2)+W_OFFSET,
-                                   200+H_OFFSET,
+                                  ((W//2 - (250*3*(self.percent))/2),
+                                   H//2 + 125,
                                    250*3*self.percent,
                                    25))

@@ -1,7 +1,7 @@
 import pygame
 from time_utils import global_timer, Counter, Progression
 from feature_chain_mode import ChainedProcessor
-from config import TEST_LANG_DATA, W, H, BPM, CYRILLIC_FONT, CHINESE_FONT, BURNER_APP, BURNER_FILE 
+from config import TEST_LANG_DATA, W, H, BPM, CYRILLIC_FONT, CHINESE_FONT, BURNER_APP, BURNER_FILE
 from colors import white
 import colors
 import time
@@ -10,14 +10,14 @@ import csv
 import subprocess
 
 from ui_elements import UpperLayout
- 
+
 pygame.init()
- 
+
 display_surface = pygame.display.set_mode((W, H))
 
 time_to_cross_screen = 16000
 time_to_appear = 4000
-beat_time = 0 
+beat_time = 0
 paused = True
 paused_manually = True
 is_pause_displayed = False
@@ -26,7 +26,7 @@ burner_casted = False
 delta_timer = global_timer(pygame)
 upper_stats = UpperLayout(pygame, display_surface)
 new_line_counter = Counter(upper_stats)
-pause_counter = Counter(bpm = 1/5)
+pause_counter = Counter(bpm = 1/2)
 
 game = ChainedProcessor(pygame, display_surface, upper_stats, "hanzi chineese", TEST_LANG_DATA,
                         (60*1000)/BPM)
@@ -35,7 +35,7 @@ game = ChainedProcessor(pygame, display_surface, upper_stats, "hanzi chineese", 
 progression = Progression(new_line_counter,
                           upper_stats)
 
-beat_time = new_line_counter.drop_time 
+beat_time = new_line_counter.drop_time
 
 font = pygame.font.Font(CYRILLIC_FONT, 200, bold = True)
 pygame.event.set_allowed([pygame.QUIT, pygame.KEYDOWN, pygame.KEYUP])
@@ -44,13 +44,13 @@ fpsClock = pygame.time.Clock()
 meta = ""
 meta_minor = []
 
-base_font = pygame.font.Font(CHINESE_FONT, 100, bold = True)
+base_font = pygame.font.Font(CHINESE_FONT, 50, bold = True)
 minor_font = pygame.font.match_font("setofont")
 minor_font = pygame.font.Font(minor_font, 22)
-    
+
 def place_text(text, x, y, transparent = False, renderer = None, base_col = (80,80,80)):
     if renderer is None:
-        renderer = base_font 
+        renderer = base_font
     if not transparent:
         text = renderer.render(text, True, base_col, (150,150,151))
     else:
@@ -59,9 +59,9 @@ def place_text(text, x, y, transparent = False, renderer = None, base_col = (80,
     textRect.center = (x, y)
     display_surface.blit(text, textRect)
 
- 
+
 for time_delta in delta_timer:
-    fpsClock.tick(28)
+    fpsClock.tick(27)
 
     if paused and not is_pause_displayed:
         display_surface.fill(white)
@@ -70,11 +70,11 @@ for time_delta in delta_timer:
         textRect.center = (W//2, H//2)
         display_surface.blit(text, textRect)
         if meta:
-            chunks = [meta[i:i+16] for i in range(0, len(meta), 16)]
+            chunks = [meta[i:i+50] for i in range(0, len(meta), 50)]
             for i, chunk in enumerate(chunks):
                 place_text(chunk,
                             W//2,
-                            H//2+90 + 100*(i+1),
+                            H//2+90 + 50*(i+1),
                             transparent = True,
                             renderer = None,
                             base_col = (colors.col_bt_pressed))
@@ -142,11 +142,11 @@ for time_delta in delta_timer:
     if keys[pygame.K_v]:
         paused = True
         paused_manually = True
- 
+
     for event in pygame.event.get():
- 
+
         if event.type == pygame.QUIT:
             pygame.quit()
- 
+
             quit()
-pygame.quit() 
+pygame.quit()

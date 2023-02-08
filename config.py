@@ -1,8 +1,23 @@
 import os
+import random
+from time import time
 
-#LEARNING_SET_FOLDER = os.path.join(os.getcwd(), "learning_sets", "hsk_set")
-LEARNING_SET_FOLDER = os.path.join(os.getcwd(), "learning_sets", "hanzi_set")
-#LEARNING_SET_FOLDER = os.path.join(os.getcwd(), "learning_sets", "peg_wiki")
+preparation = True
+
+LEARNING_FOLDERS = []
+if not preparation:
+#LEARNING_FOLDERS.append(os.path.join(os.getcwd(), "learning_sets", "peg_wiki"))
+    LEARNING_FOLDERS.append(os.path.join(os.getcwd(), "learning_sets", "hsk_set"))
+    LEARNING_FOLDERS.append(os.path.join(os.getcwd(), "learning_sets", "hsk_34"))
+    LEARNING_FOLDERS.append(os.path.join(os.getcwd(), "learning_sets", "hanzi_set"))
+    LEARNING_FOLDERS.append(os.path.join(os.getcwd(), "learning_sets", "hanzi_2"))
+    LEARNING_FOLDERS.append(os.path.join(os.getcwd(), "learning_sets", "hsk_5"))
+    LEARNING_FOLDERS.append(os.path.join(os.getcwd(), "learning_sets", "hsk_6"))
+else:
+    LEARNING_FOLDERS.append(os.path.join(os.getcwd(), "learning_sets", "personal_set"))
+
+random.seed(time())
+LEARNING_SET_FOLDER = random.choice(LEARNING_FOLDERS)
 
 META_MINOR = os.path.join(os.getcwd(), "datasets", "semantical_affirmations.csv")
 
@@ -21,5 +36,5 @@ BPM = 10
 W_OFFSET = 200
 H_OFFSET = 100
 
-W = 1400 + W_OFFSET * 2
-H = 800  + H_OFFSET * 2
+W = 2400 + W_OFFSET * 2
+H = 1240  + H_OFFSET * 2

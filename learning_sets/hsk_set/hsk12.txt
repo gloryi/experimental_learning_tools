@@ -1,0 +1,300 @@
+1 爱. ài to love.
+1 八. bā eight.
+1 爸爸. bà ba (informal) father.
+1 杯子. bēi zi cup.
+1 北京. Běi jīng Beijing.
+2 本. běn roots or stems of plants.
+2 不客气. bù kè qi you're welcome.
+2 不. bù (negative prefix).
+2 菜. cài dish (type of food).
+2 茶. chá tea.
+3 吃. chī to eat.
+3 出租车. chū zū chē taxi.
+3 打电话. dǎ diàn huà to make a telephone call.
+3 大. dà big.
+3 的. de of.
+4 点. diǎn point.
+4 电脑. diàn nǎo computer.
+4 电视. diàn shì television.
+4 电影. diàn yǐng movie.
+4 东西. dōng xi thing.
+5 都. dōu all.
+5 读. dú to read.
+5 对不起. duì bu qǐ unworthy.
+5 多. duō many.
+5 多少. duō shao how much.
+6 儿子. ér zi son.
+6 二. èr two.
+6 饭馆. fàn guǎn restaurant.
+6 飞机. fēi jī airplane.
+6 分钟. fēn zhōng minute.
+7 高兴. gāo xìng happy.
+7 个. gè variant of 個|个[gè].
+7 工作. gōng zuò to work.
+7 狗. gǒu dog.
+7 汉语. Hàn yǔ Chinese language.
+8 好. hǎo good.
+8 喝. hē to drink.
+8 和. hé and.
+8 很. hěn (adverb of degree).
+8 后面. hòu mian rear.
+9 回. huí to curve.
+9 会. huì can.
+9 火车站. huǒ chē zhàn train station.
+9 几. jǐ how much.
+9 家. jiā home.
+10 叫. jiào to shout.
+10 今天. jīn tiān today.
+10 九. jiǔ nine.
+10 开. kāi to open.
+10 看. kàn to see.
+11 看见. kàn jiàn to see.
+11 块. kuài lump (of earth).
+11 来. lái to come.
+11 老师. lǎo shī teacher.
+11 了. le (modal particle intensifying preceding clause).
+12 冷. lěng cold.
+12 里. lǐ li (Chinese mile).
+12 零. líng zero.
+12 六. liù six.
+12 妈妈. mā ma mama.
+13 吗. ma (question tag).
+13 买. mǎi to buy.
+13 猫. māo cat.
+13 没. méi (negative prefix for verbs).
+13 没关系. méi guān xi it doesn't matter.
+14 米饭. mǐ fàn (cooked) rice.
+14 明天. míng tiān tomorrow.
+14 名字. míng zi name (of a person or thing).
+14 哪. nǎ how.
+14 那. nà that.
+15 呢. ne "particle indicating that a previously asked question is to be applied to the preceding word (""What about ...?""".
+15 能. néng to be able to.
+15 你. nǐ you (informal.
+15 年. nián year.
+15 女儿. nǚ ér daughter.
+16 朋友. péng you friend.
+16 漂亮. piào liang pretty.
+16 苹果. píng guǒ apple.
+16 七. qī seven.
+16 钱. qián coin.
+17 前面. qián miàn ahead.
+17 请. qǐng to ask.
+17 去. qù to go.
+17 热. rè to warm up.
+17 人. rén man.
+18 认识. rèn shi to know.
+18 日. rì sun.
+18 三. sān three.
+18 商店. shāng diàn store.
+18 上. shàng on top.
+19 上午. shàng wǔ morning.
+19 少. shǎo few.
+19 谁. shéi who.
+19 什么. shén me what?.
+19 十. shí ten.
+20 时候. shí hou time.
+20 是. shì is.
+20 书. shū book.
+20 水. shuǐ water.
+20 水果. shuǐ guǒ fruit.
+21 睡觉. shuì jiào to go to bed.
+21 说话. shuō huà to speak.
+21 四. sì four.
+21 岁. suì classifier for years (of age).
+21 他. tā he or him.
+22 她. tā she.
+22 太. tài highest.
+22 天气. tiān qì weather.
+22 听. tīng to listen.
+22 同学. tóng xué to study at the same school.
+23 喂. wèi to feed.
+23 我. wǒ I.
+23 我们. wǒ men we.
+23 五. wǔ five.
+23 喜欢. xǐ huan to like.
+24 下. xià down.
+24 下午. xià wǔ afternoon.
+24 下雨. xià yǔ to rain.
+24 先生. xiān sheng teacher.
+24 现在. xiàn zài now.
+25 想. xiǎng to think.
+25 小. xiǎo small.
+25 小姐. xiǎo jie young lady.
+25 些. xiē some.
+25 写. xiě to write.
+26 谢谢. xiè xie to thank.
+26 星期. xīng qī week.
+26 学生. xué sheng student.
+26 学习. xué xí to learn.
+26 学校. xué xiào school.
+27 一. yī one.
+27 衣服. yī fu clothes.
+27 医生. yī shēng doctor.
+27 医院. yī yuàn hospital.
+27 椅子. yǐ zi chair.
+28 有. yǒu to have.
+28 月. yuè moon.
+28 在. zài (located) at.
+28 再见. zài jiàn goodbye.
+28 怎么. zěn me variant of 怎麼|怎么[zěn me].
+29 怎么样. zěn me yàng how?.
+29 这. zhè this.
+29 中国. Zhōng guó China.
+29 中午. zhōng wǔ noon.
+29 住. zhù to live.
+30 桌子. zhuō zi table.
+30 字. zì letter.
+30 昨天. zuó tiān yesterday.
+30 坐. zuò to sit.
+30 做. zuò to do.
+31 吧. ba (modal particle indicating suggestion or surmise).
+31 白. bái white.
+31 百. bǎi hundred.
+31 帮助. bāng zhù assistance.
+31 报纸. bào zhǐ newspaper.
+32 比. bǐ "(particle used for comparison and ""-er than"")".
+32 别. bié to leave.
+32 长. cháng length.
+32 唱歌. chàng gē to sing a song.
+32 出. chū to go out.
+33 穿. chuān to bore through.
+33 船. chuán a boat.
+33 次. cì next in sequence.
+33 从. cóng from.
+33 错. cuò mistake.
+34 打篮球. dá lán qiú Play basketball.
+34 大家. dà jiā everyone.
+34 但是. dàn shì but.
+34 到. dào to (a place).
+34 得. de structural particle: used after a verb (or adjective as main verb).
+35 得. děi to have to.
+35 弟弟. dì di younger brother.
+35 第一. dì yī first.
+35 懂. dǒng to understand.
+35 房间. fáng jiān room.
+36 非常. fēi cháng unusual.
+36 服务员. fú wù yuán waiter.
+36 高. gāo high.
+36 告诉. gào su to tell.
+36 哥哥. gē ge older brother.
+37 给. gěi to.
+37 公共汽车 gōng gòng qì chē bus.
+37 公斤. gōng jīn kilogram (kg).
+37 公司. gōng sī (business) company.
+37 贵. guì expensive.
+38 还. hái still.
+38 孩子. hái zi child.
+38 好吃. hǎo chī tasty.
+38 号. hào ordinal number.
+38 黑. hēi black.
+39 红. hóng red.
+39 欢迎. huān yíng to welcome.
+39 还. huán to pay back.
+39 回答. huí dá to reply.
+39 机场. jī chǎng airport.
+40 鸡蛋. jī dàn (chicken) egg.
+40 件. jiàn item.
+40 教室. jiào shì classroom.
+40 姐姐. jiě jie older sister.
+40 介绍. jiè shào to introduce (sb to sb).
+41 进. jìn to advance.
+41 近. jìn near.
+41 就. jiù at once.
+41 觉得. jué de to think.
+41 咖啡. kā fēi coffee.
+42 开始. kāi shǐ to begin.
+42 考试. kǎo shì to take an exam.
+42 可能. kě néng might (happen).
+42 可以. kě yǐ can.
+42 课. kè subject.
+43 快. kuài rapid.
+43 快乐. kuài lè happy.
+43 累. lèi tired.
+43 离. lí to leave.
+43 两. liǎng both.
+44 路. lù road.
+44 旅游. lǚ yóu trip.
+44 卖. mài to sell.
+44 慢. màn slow.
+44 忙. máng busy.
+45 每. měi each.
+45 妹妹. mèi mei younger sister.
+45 门. mén gate.
+45 男人. nán rén a man.
+45 您. nín you (courteous.
+46 牛奶. niú nǎi cow's milk.
+46 女人. nǚ rén woman.
+46 旁边. páng biān lateral.
+46 跑步. pǎo bù to walk quickly.
+46 便宜. pián yi small advantages.
+47 票. piào ticket.
+47 妻子. qī zi wife.
+47 起床. qǐ chuáng to get out of bed.
+47 千. qiān a swing.
+47 晴. qíng clear.
+48 去年. qù nián last year.
+48 让. ràng to yield.
+48 上班. shàng bān to go to work.
+48 身体. shēn tǐ (human) body.
+48 生病. shēng bìng to fall ill.
+49 生日. shēng rì birthday.
+49 时间. shí jiān time.
+49 事情. shì qing affair.
+49 手表. shǒu biǎo wrist watch.
+49 手机. shǒu jī cell phone.
+50 送. sòng to deliver.
+50 所以. suǒ yǐ therefore.
+50 它. tā it.
+50 踢. tī to kick.
+50 题. tí topic.
+51 跳舞. tiào wǔ to dance.
+51 外. wài outside.
+51 完. wán to finish.
+51 玩. wán toy.
+51 晚上. wǎn shang evening.
+52 为. wèi variant of 為|为.
+52 问. wèn to ask.
+52 问题. wèn tí question.
+52 西瓜. xī guā watermelon.
+52 希望. xī wàng to wish for.
+53 洗. xǐ to wash.
+53 向. xiàng towards.
+53 小时. xiǎo shí hour.
+53 笑. xiào laugh.
+53 新. xīn new.
+54 姓. xìng family name.
+54 休息. xiū xi rest.
+54 雪. xuě snow.
+54 颜色. yán sè color.
+54 眼睛. yǎn jing eye.
+55 羊肉. yáng ròu mutton.
+55 药. yào medicine.
+55 要. yào important.
+55 也. yě also.
+55 已经. yǐ jīng already.
+56 一起. yī qǐ in the same place.
+56 意思. yì si idea.
+56 阴. yīn overcast (weather).
+56 因为. yīn wèi because.
+56 游泳. yóu yǒng swimming.
+57 右边. yòu bian right side.
+57 鱼. yú fish.
+57 元. yuán Chinese monetary unit.
+57 远. yuǎn far.
+57 运动. yùn dòng to move.
+58 再. zài again.
+58 早上. zǎo shang early morning.
+58 张. zhāng to open up.
+58 长. zhǎng chief.
+58 丈夫. zhàng fu husband.
+59 找. zhǎo to try to find.
+59 着. zhe aspect particle indicating action in progress.
+59 真. zhēn really.
+59 正在. zhèng zài in the process of (doing something or happening).
+59 知道. zhī dào to know.
+60 准备. zhǔn bèi preparation.
+60 自行车. zì xíng chē bicycle.
+60 走. zǒu to walk.
+60 最. zuì most.
+60 左边. zuǒ bian left.
