@@ -6,7 +6,7 @@ unique_keys = set()
 
 origin_file = None
 sets_dir = os.path.join(os.getcwd(), "learning_sets")
-set_dir = os.path.join(sets_dir, "personal_set")
+set_dir = os.path.join(sets_dir, "latvian_set")
 
 update_file = os.path.join(set_dir, "raw_features.csv")
 merged_file = os.path.join(set_dir, "features.csv")

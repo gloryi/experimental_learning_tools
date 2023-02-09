@@ -1,9 +1,10 @@
-from config import W, H, CHINESE_FONT, W_OFFSET, H_OFFSET
+from config import W, H, CHINESE_FONT, CYRILLIC_FONT, W_OFFSET, H_OFFSET
 from colors import white
 import colors
 from itertools import islice
 import random
 import os
+import re
 
 class UpperLayout():
     def __init__(self, pygame_instance, display_instance):
@@ -25,6 +26,12 @@ class UpperLayout():
         self.utf_font3 = self.pygame_instance.font.Font(CHINESE_FONT, 40, bold = True)
         self.utf_font4 = self.pygame_instance.font.Font(CHINESE_FONT, 30, bold = True)
         self.utf_font5 = self.pygame_instance.font.Font(CHINESE_FONT, 20, bold = True)
+
+        self.lat_font1 = self.pygame_instance.font.Font(CYRILLIC_FONT, 120, bold = True)
+        self.lat_font2 = self.pygame_instance.font.Font(CYRILLIC_FONT, 80, bold = True)
+        self.lat_font3 = self.pygame_instance.font.Font(CYRILLIC_FONT, 50, bold = True)
+        self.lat_font4 = self.pygame_instance.font.Font(CYRILLIC_FONT, 40, bold = True)
+        self.lat_font5 = self.pygame_instance.font.Font(CYRILLIC_FONT, 30, bold = True)
         self.combo = 1
         self.tiling = ""
         self.tiling_utf = True
@@ -111,11 +118,13 @@ class UpperLayout():
     def redraw(self):
         clip_color = lambda _ : 0 if _ <=0 else 255 if _ >=255 else int(_)
         tiling_len = len(self.tiling)
-        tiling_font = self.utf_font1 if tiling_len==1 else self.utf_font2 if tiling_len == 2 else self.utf_font3 if tiling_len == 3 else self.utf_font4 if tiling_len < 5 else self.utf_font5
+        if re.findall(r'[\u4e00-\u9fff]+', self.tiling):
+            tiling_font = self.utf_font1 if tiling_len==1 else self.utf_font2 if tiling_len == 2 else self.utf_font3 if tiling_len == 3 else self.utf_font4 if tiling_len < 5 else self.utf_font5
+        else:
+            tiling_font = self.lat_font1 if tiling_len==1 else self.lat_font2 if tiling_len == 2 else self.lat_font3 if tiling_len == 3 else self.lat_font4 if tiling_len < 5 else self.lat_font5
 
         self.display_instance.fill(self.bg_color)
         tiling_step = 270
-
 
         if self.images_set:
             set_locations = []
@@ -158,7 +167,7 @@ class UpperLayout():
         elif self.variation < 0:
             self.variation_on_rise = True
             if random.randint(0,100) > 95 and not self.blink_flag:
-                self.blink_flag = True
+                self.blink_flag = False
 
         for x in range(100+self.random_variation,W,tiling_step):
             for y in range(100+self.random_variation,H,tiling_step):

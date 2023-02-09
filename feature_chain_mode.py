@@ -5,27 +5,34 @@ from math import sqrt
 from itertools import compress, groupby
 import random
 import re
-from config import W, H, CYRILLIC_FONT, CHINESE_FONT, H_OFFSET, W_OFFSET, META_SCRIPT, META_MINOR
+from config import W, H, CYRILLIC_FONT, CHINESE_FONT, H_OFFSET, W_OFFSET, META_SCRIPT, META_MINOR, META_ACTION
+from config import HAPTIC_CORRECT_CMD, HAPTIC_ERROR_CMD
 from colors import col_bg_darker, col_wicked_darker
 from colors import col_active_darker, col_bg_lighter
 from colors import col_wicked_lighter, col_active_lighter
 from colors import col_correct, col_error
 import colors
+import subprocess
+
+from text_morfer import textMorfer
 
 LAST_EVENT = "POSITIVE"
 NEW_EVENT = False
+morfer = textMorfer()
+
 ######################################
 ### DATA PRODUCER
 ######################################
 
 class ChainedsProducer():
-    def __init__(self, label, csv_path, meta_path = None, minor_meta = None, ui_ref = None):
+    def __init__(self, label, csv_path, meta_path = None, minor_meta = None, meta_actions = None, ui_ref = None):
         self.csv_path = csv_path
         self.label = label
         self.meta_path = meta_path
         self.minor_meta = minor_meta
         self.meta_lines = self.extract_meta(self.meta_path) if self.meta_path else []
         self.minor_lines = self.extract_meta(self.minor_meta) if self.minor_meta else []
+        self.action_lines = self.extract_meta(meta_actions) if meta_actions else []
         self.chains = self.prepare_data()
         self.active_chain = self.chains.get_active_chain()
         self.ui_ref = ui_ref
@@ -71,9 +78,11 @@ class ChainedsProducer():
     def produce_meta_minor(self):
         if self.minor_lines:
             minor_idx = random.randint(0, len(self.minor_lines)-17)
-            return self.minor_lines[minor_idx:minor_idx+16]
+            lines = self.minor_lines[minor_idx:minor_idx+16]
+            if self.action_lines:
+                lines = [random.choice(self.action_lines)] + lines
+            return lines
         return ""
-
 
 
 ######################################
@@ -338,7 +347,7 @@ class ChainedEntity():
                                      colors.col_black,
                                      bg_color = None if i == 0 else col_correct if LAST_EVENT == "POSITIVE" else col_error,
                                     font_size = 120 if tlen == 1 else 90 if tlen == 2 else 60 if tlen == 3 else 40 if tlen < 5 else 30 if tlen < 10 else 20,
-                                    font = ChainUnitType.font_utf,
+                                    font = ChainUnitType.font_utf if re.findall(r'[\u4e00-\u9fff]+', self.chained_feature.entity) else ChainUnitType.font_cyrillic,
                                      rect = [x1-large_notion_w//2, y1-large_notion_h//2, large_notion_w, large_notion_h]))
 
 
@@ -447,6 +456,8 @@ class ChainedDrawer():
 
         for geometry in geometries:
             message = geometry.text
+            if not re.findall(r'[\u5e00-\u9fff]+', message):
+                message = morfer.morf_text(message)
             font = self.pick_font(geometry.font, geometry.font_size)
 
             if not geometry.transparent:
@@ -550,7 +561,7 @@ class ChainedProcessor():
     def __init__(self, pygame_instance, display_instance, ui_ref, data_label, data_path, beat_time = 1):
         self.W = W
         self.H = H
-        self.producer = ChainedsProducer(data_label, data_path, meta_path = META_SCRIPT, minor_meta = META_MINOR, ui_ref = ui_ref)
+        self.producer = ChainedsProducer(data_label, data_path, meta_path = META_SCRIPT, minor_meta = META_MINOR, meta_actions = META_ACTION, ui_ref = ui_ref)
         self.drawer = ChainedDrawer(pygame_instance, display_instance, W, H)
         self.control = KeyboardChainModel(pygame_instance)
         self.active_line = None
@@ -603,11 +614,17 @@ class ChainedProcessor():
         global NEW_EVENT
         if LAST_EVENT == "POSITIVE" and NEW_EVENT:
             self.ui_ref.bg_color = colors.dark_green
+
+            if random.randint(0,10) > 5 and HAPTIC_CORRECT_CMD:
+                subprocess.Popen(["bash", HAPTIC_CORRECT_CMD])
+
             NEW_EVENT = False
             return 1
         elif LAST_EVENT == "ERROR" and NEW_EVENT:
             NEW_EVENT = False
             self.ui_ref.bg_color = colors.dark_red
+            if random.randint(0,10) > 5 and HAPTIC_ERROR_CMD:
+                subprocess.Popen(["bash", HAPTIC_ERROR_CMD])
             return -1
         else:
             return 0

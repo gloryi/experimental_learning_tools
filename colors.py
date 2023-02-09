@@ -13,6 +13,7 @@ col_active_lighter = hex_to_rgb("#F368F8")
 
 col_correct = hex_to_rgb("#006A68")
 col_error   = hex_to_rgb("#ED1500")
+red2 = hex_to_rgb("#700F3C")
 
 white = hex_to_rgb("#F2F1DF")
 
