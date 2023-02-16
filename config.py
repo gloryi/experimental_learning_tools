@@ -1,6 +1,7 @@
 import os
 import random
 from time import time
+from collections import OrderedDict
 
 TEST = True
 TEST = False
@@ -29,6 +30,16 @@ TEST_LANG_DATA = os.path.join(LEARNING_SET_FOLDER, "features.csv")
 PROGRESSION_FILE = os.path.join(LEARNING_SET_FOLDER, "saved_progress.json")
 IMAGES_MAPPING_FILE = os.path.join(LEARNING_SET_FOLDER, "images_mapping.json")
 META_ACTION = os.path.join(os.getcwd(), "action_affirmations.csv")
+META_ACTION_STACK = OrderedDict()
+META_ACTION_STACK["*** 1XBACK ***"] = []
+META_ACTION_STACK["*** 1XKEYS ***"] = []
+META_ACTION_STACK["*** 1XTEXT ***"] = []
+META_ACTION_STACK["*** IBACK ***"] = []
+META_ACTION_STACK["*** IBACKV ***"] = []
+META_ACTION_STACK["*** MU ***"] = []
+META_ACTION_STACK["*** PERM ***"] = []
+META_ACTION_STACK["*** OUT ***"] = []
+META_ACTION_STACK["*** UNORDERED ***"] = []
 META_SCRIPT = os.path.join(LEARNING_SET_FOLDER, "context.csv")
 
 HAPTIC_FEEDBACK_CMD = os.path.join(os.getcwd(), "controller_features", "example.sh")

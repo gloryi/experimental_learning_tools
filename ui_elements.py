@@ -7,156 +7,156 @@ import os
 import re
 
 class UpperLayout():
-    def __init__(self, pygame_instance, display_instance):
-        self.W = W
-        self.H = H
-        self.y1 = 0
-        self.y2 = self.H//8
-        self.y3 = self.H - self.H//16
-        self.higher_center = (self.y1 + self.y2)/2
-        self.pygame_instance = pygame_instance
-        self.display_instance = display_instance
-        self.backgroudn_color = (60, 60, 60)
-        self.bg_color = colors.col_black
+    def __init__(S, pygame_instance, display_instance):
+        S.W = W
+        S.H = H
+        S.y1 = 0
+        S.y2 = S.H//8
+        S.y3 = S.H - S.H//16
+        S.higher_center = (S.y1 + S.y2)/2
+        S.pygame_instance = pygame_instance
+        S.display_instance = display_instance
+        S.backgroudn_color = (60, 60, 60)
+        S.bg_color = colors.col_black
         font_file = pygame_instance.font.match_font("setofont")
-        self.font = pygame_instance.font.Font(font_file, 50)
-        self.large_font = pygame_instance.font.Font(font_file, 80)
-        self.utf_font1 = self.pygame_instance.font.Font(CHINESE_FONT, 120, bold = True)
-        self.utf_font2 = self.pygame_instance.font.Font(CHINESE_FONT, 80, bold = True)
-        self.utf_font3 = self.pygame_instance.font.Font(CHINESE_FONT, 40, bold = True)
-        self.utf_font4 = self.pygame_instance.font.Font(CHINESE_FONT, 30, bold = True)
-        self.utf_font5 = self.pygame_instance.font.Font(CHINESE_FONT, 20, bold = True)
+        S.font = pygame_instance.font.Font(font_file, 50)
+        S.large_font = pygame_instance.font.Font(font_file, 80)
+        S.utf_font1 = S.pygame_instance.font.Font(CHINESE_FONT, 120, bold = True)
+        S.utf_font2 = S.pygame_instance.font.Font(CHINESE_FONT, 80, bold = True)
+        S.utf_font3 = S.pygame_instance.font.Font(CHINESE_FONT, 40, bold = True)
+        S.utf_font4 = S.pygame_instance.font.Font(CHINESE_FONT, 30, bold = True)
+        S.utf_font5 = S.pygame_instance.font.Font(CHINESE_FONT, 20, bold = True)
 
-        self.lat_font1 = self.pygame_instance.font.Font(CYRILLIC_FONT, 120, bold = True)
-        self.lat_font2 = self.pygame_instance.font.Font(CYRILLIC_FONT, 80, bold = True)
-        self.lat_font3 = self.pygame_instance.font.Font(CYRILLIC_FONT, 50, bold = True)
-        self.lat_font4 = self.pygame_instance.font.Font(CYRILLIC_FONT, 40, bold = True)
-        self.lat_font5 = self.pygame_instance.font.Font(CYRILLIC_FONT, 30, bold = True)
-        self.combo = 1
-        self.tiling = ""
-        self.tiling_utf = True
-        self.show_less = False
+        S.lat_font1 = S.pygame_instance.font.Font(CYRILLIC_FONT, 120, bold = True)
+        S.lat_font2 = S.pygame_instance.font.Font(CYRILLIC_FONT, 80, bold = True)
+        S.lat_font3 = S.pygame_instance.font.Font(CYRILLIC_FONT, 50, bold = True)
+        S.lat_font4 = S.pygame_instance.font.Font(CYRILLIC_FONT, 40, bold = True)
+        S.lat_font5 = S.pygame_instance.font.Font(CYRILLIC_FONT, 30, bold = True)
+        S.combo = 1
+        S.tiling = ""
+        S.tiling_utf = True
+        S.show_less = False
 
-        self.global_progress = ""
+        S.global_progress = ""
 
-        self.speed_index = 5000
-        self.percent = 0.8
-        self.progress_ratio = 0.0
-        self.timing_ratio = 1.0
-        self.mastered = 0
-        self.to_master = 0
-        self.variation = 0
-        self.variation_on_rise = True
-        self.blink_flag = False
-        #self.blink_flag = True
+        S.speed_index = 5000
+        S.percent = 0.8
+        S.progress_ratio = 0.0
+        S.timing_ratio = 1.0
+        S.mastered = 0
+        S.to_master = 0
+        S.variation = 0
+        S.variation_on_rise = True
+        S.blink_flag = False
+        #S.blink_flag = True
 
         
-        self.random_variation = 0
-        self.constant_variation = 0
+        S.random_variation = 0
+        S.constant_variation = 0
 
-        self.images_cached = {}
-        self.image = None
-        self.images_set = None
-        self.images_set_cached = None
+        S.images_cached = {}
+        S.image = None
+        S.images_set = None
+        S.images_set_cached = None
 
-    def place_text(self, text, x, y, transparent = False, renderer = None, base_col = (80,80,80)):
+    def place_text(S, text, x, y, transparent = False, renderer = None, base_col = (80,80,80)):
         if renderer is None:
-            renderer = self.font
+            renderer = S.font
         if not transparent:
             text = renderer.render(text, True, base_col, (150,150,151))
         else:
             text = renderer.render(text, True, base_col)
         textRect = text.get_rect()
         textRect.center = (x, y)
-        self.display_instance.blit(text, textRect)
+        S.display_instance.blit(text, textRect)
 
-    def check_cached_image(self, path_to_image):
-        if len(self.images_cached) > 100:
-            self.images_cached = dict(islice(self.images_cached.items(), 50))
+    def check_cached_image(S, path_to_image):
+        if len(S.images_cached) > 100:
+            S.images_cached = dict(islice(S.images_cached.items(), 50))
 
         if not path_to_image or not os.path.exists(path_to_image):
-            self.images_cached[path_to_image] = None
+            S.images_cached[path_to_image] = None
             return
 
-        if path_to_image in self.images_cached:
+        if path_to_image in S.images_cached:
             return
 
-        image_converted = self.pygame_instance.image.load(path_to_image).convert()
+        image_converted = S.pygame_instance.image.load(path_to_image).convert()
         image_converted.set_alpha(200)
-        image_scaled = self.pygame_instance.transform.scale(image_converted, (int(W*0.95), int(H*0.95)))
-        self.images_cached[path_to_image]  = image_scaled
+        image_scaled = S.pygame_instance.transform.scale(image_converted, (int(W*0.95), int(H*0.95)))
+        S.images_cached[path_to_image]  = image_scaled
 
-    def set_image(self, path_to_image):
+    def set_image(S, path_to_image):
 
         if isinstance(path_to_image, list):
-            if path_to_image == self.images_set_cached:
+            if path_to_image == S.images_set_cached:
                 return
-            self.images_set = []
-            self.images_set_cached = []
-            self.image = None
+            S.images_set = []
+            S.images_set_cached = []
+            S.image = None
             for image_name in path_to_image:
-                self.check_cached_image(image_name)
-                if image_name in self.images_cached and self.images_cached[image_name]:
+                S.check_cached_image(image_name)
+                if image_name in S.images_cached and S.images_cached[image_name]:
                     if len(path_to_image)!=2:
-                        self.images_set.append(self.pygame_instance.transform.scale(self.images_cached[image_name], (int((W*0.95)/3), int(H*0.95)/2)))
+                        S.images_set.append(S.pygame_instance.transform.scale(S.images_cached[image_name], (int((W*0.95)/3), int(H*0.95)/2)))
                     else:
-                        self.images_set.append(self.images_cached[image_name])
+                        S.images_set.append(S.images_cached[image_name])
 
                 else:
-                    self.images_set.append(None)
+                    S.images_set.append(None)
             return
 
         else:
-            self.images_set = None
+            S.images_set = None
 
-        if not path_to_image in self.images_cached:
-            self.check_cached_image(path_to_image)
+        if not path_to_image in S.images_cached:
+            S.check_cached_image(path_to_image)
 
-        self.image = self.images_cached[path_to_image]
-
-
-    def randomize(self):
-        self.random_variation = random.choice([-1,0,1])
+        S.image = S.images_cached[path_to_image]
 
 
-    def redraw(self):
+    def randomize(S):
+        S.random_variation = random.choice([-1,0,1])
+
+
+    def redraw(S):
         clip_color = lambda _ : 0 if _ <=0 else 255 if _ >=255 else int(_)
-        tiling_len = len(self.tiling)
-        if re.findall(r'[\u4e00-\u9fff]+', self.tiling):
-            tiling_font = self.utf_font1 if tiling_len==1 else self.utf_font2 if tiling_len == 2 else self.utf_font3 if tiling_len == 3 else self.utf_font4 if tiling_len < 5 else self.utf_font5
+        tiling_len = len(S.tiling)
+        if re.findall(r'[\u4e00-\u9fff]+', S.tiling):
+            tiling_font = S.utf_font1 if tiling_len==1 else S.utf_font2 if tiling_len == 2 else S.utf_font3 if tiling_len == 3 else S.utf_font4 if tiling_len < 5 else S.utf_font5
         else:
-            tiling_font = self.lat_font1 if tiling_len==1 else self.lat_font2 if tiling_len == 2 else self.lat_font3 if tiling_len == 3 else self.lat_font4 if tiling_len < 5 else self.lat_font5
+            tiling_font = S.lat_font1 if tiling_len==1 else S.lat_font2 if tiling_len == 2 else S.lat_font3 if tiling_len == 3 else S.lat_font4 if tiling_len < 5 else S.lat_font5
 
-        self.display_instance.fill(self.bg_color)
+        S.display_instance.fill(S.bg_color)
         tiling_step = 270
 
-        if self.images_set:
+        if S.images_set:
             set_locations = []
-            if len(self.images_set) !=2:
+            if len(S.images_set) !=2:
                 set_locations.append((int(W*(0.05/2)), int(H*(0.05/6)))) # 0
                 set_locations.append((int(W*(0.05/2) + (W*0.95/3)*(0)), int(H*(0.05/2)+H*0.95/2))) # 1
                 set_locations.append((int(W*(0.05/2) + (W*0.95/3)*(1)), int(H*(0.05/2)+H*0.95/2))) # 2
                 set_locations.append((int(W*(0.05/2) + (W*0.95/3)*(2)), int(H*(0.05/2)+H*0.95/2))) # 3
                 set_locations.append((int(W*(0.05/2) + (W*0.95/3)*(2)), int(H*(0.05/6)))) # 5
-                if self.constant_variation%2 == 0:
+                if S.constant_variation%2 == 0:
                     set_locations = set_locations[::-1]
 
-            if len(self.images_set)==2:
+            if len(S.images_set)==2:
                 set_locations.append((int(-1*(W//2)+150), int(H*(0.05/2))))
                 set_locations.append((int(W//2), int(H*(0.05/2))))
 
-            for i in range(len(self.images_set)):
-                if i < len(self.images_set) and self.images_set[i]:
-                    self.display_instance.blit(self.images_set[i], set_locations[i])
+            for i in range(len(S.images_set)):
+                if i < len(S.images_set) and S.images_set[i]:
+                    S.display_instance.blit(S.images_set[i], set_locations[i])
 
-        elif self.image:
-            self.display_instance.blit(self.image,
-                                       (int(W*(0.05/2))+self.random_variation,
-                                        int(H*(0.05/2))+self.random_variation))
+        elif S.image:
+            S.display_instance.blit(S.image,
+                                       (int(W*(0.05/2))+S.random_variation,
+                                        int(H*(0.05/2))+S.random_variation))
             tiling_step = 400
 
-        elif not self.images_set and not self.image:
-            self.pygame_instance.draw.rect(self.display_instance,
+        elif not S.images_set and not S.image:
+            S.pygame_instance.draw.rect(S.display_instance,
                                   white,
                                   (W_OFFSET,
                                    H_OFFSET,
@@ -164,93 +164,93 @@ class UpperLayout():
                                    H-H_OFFSET*2))
 
 
-        if self.variation_on_rise:
-            self.variation += 1
+        if S.variation_on_rise:
+            S.variation += 1
         else:
-            self.variation -= 1
+            S.variation -= 1
 
-        if self.variation > 10:
-            self.variation_on_rise = False
-            if random.randint(0,10) > 7 and self.blink_flag:
-                self.blink_flag = False
+        if S.variation > 10:
+            S.variation_on_rise = False
+            if random.randint(0,10) > 7 and S.blink_flag:
+                S.blink_flag = False
 
-        elif self.variation < 0:
-            self.variation_on_rise = True
-            if random.randint(0,100) > 95 and not self.blink_flag:
-                self.blink_flag = False
+        elif S.variation < 0:
+            S.variation_on_rise = True
+            if random.randint(0,100) > 95 and not S.blink_flag:
+                S.blink_flag = False
 
-        for x in range(100+self.random_variation,W,tiling_step):
-            for y in range(100+self.random_variation,H,tiling_step):
-                self.place_text(self.tiling,
+        for x in range(100+S.random_variation,W,tiling_step):
+            for y in range(100+S.random_variation,H,tiling_step):
+                S.place_text(S.tiling,
                                 x,
                                 y,
                                 transparent=True,
                                 renderer = tiling_font,
-                                base_col = (clip_color(225+self.variation*4+self.random_variation),
-                                            225-self.variation+self.random_variation,
-                                            225+self.random_variation))
+                                base_col = (clip_color(225+S.variation*4+S.random_variation),
+                                            225-S.variation+S.random_variation,
+                                            225+S.random_variation))
 
-        line_color = (int(255*(1-self.percent)),int(255*(self.percent)),0)
+        line_color = (int(255*(1-S.percent)),int(255*(S.percent)),0)
 
-        self.place_text(str(self.combo)+"x", W//2 - 100,
+        S.place_text(str(S.combo)+"x", W//2 - 100,
                         50,
                         transparent = True,
-                        renderer = self.large_font,
+                        renderer = S.large_font,
                         base_col = (70,70,70))
 
-        self.place_text(str(self.global_progress), W//2 - 300,
+        S.place_text(str(S.global_progress), W//2 - 300,
                         30,
                         transparent = True,
-                        renderer = self.font,
+                        renderer = S.font,
                         base_col = (70,70,70))
 
-        self.place_text(str(self.combo)+"x", W//2 + 100,
+        S.place_text(str(S.combo)+"x", W//2 + 100,
                         50,
                         transparent = True,
-                        renderer = self.large_font,
+                        renderer = S.large_font,
                         base_col = (70,70,70))
 
-        self.place_text(str(self.global_progress), W//2 + 300,
+        S.place_text(str(S.global_progress), W//2 + 300,
                         30,
                         transparent = True,
-                        renderer = self.font,
+                        renderer = S.font,
                         base_col = (70,70,70))
 
 
 
-        line_color = (clip_color((178)*(1-self.timing_ratio)+self.random_variation),
-                      clip_color((150)*(self.timing_ratio)+self.random_variation),
-                      clip_color((150)*(1-self.timing_ratio)+self.random_variation))
+        line_color = (clip_color((178)*(1-S.timing_ratio)+S.random_variation),
+                      clip_color((150)*(S.timing_ratio)+S.random_variation),
+                      clip_color((150)*(1-S.timing_ratio)+S.random_variation))
 
-        if (self.random_variation == 0 or self.random_variation == -1) and not(self.blink_flag and self.variation%7 == 0):
-            self.pygame_instance.draw.rect(self.display_instance,
+        if (S.random_variation == 0 or S.random_variation == -1) and not(S.blink_flag and S.variation%7 == 0):
+            S.pygame_instance.draw.rect(S.display_instance,
                                   line_color,
-                                  ((W//2 - ((600)*(self.timing_ratio))/2),
+                                  ((W//2 - ((600)*(S.timing_ratio))/2),
                                    H//2 - 50,
-                                   (600)*self.timing_ratio,
+                                   (600)*S.timing_ratio,
                                    100))
 
-        if (self.random_variation == 0 or self.random_variation == 1) and not(self.blink_flag and self.variation%7 == 0):
-            self.pygame_instance.draw.rect(self.display_instance,
+        if (S.random_variation == 0 or S.random_variation == 1) and not(S.blink_flag and S.variation%7 == 0):
+            S.pygame_instance.draw.rect(S.display_instance,
                                   line_color,
                                   (W//2 - 50,
-                                   (H//2 - ((600)*(self.timing_ratio))/2),
+                                   (H//2 - ((600)*(S.timing_ratio))/2),
                                    100,
-                                   (600)*self.timing_ratio))
-        if self.show_less:
+                                   (600)*S.timing_ratio))
+        if S.show_less:
             return
 
-        line_color = (int((235)*(1-self.percent)),int((235)*(self.percent)),0)
-        self.pygame_instance.draw.rect(self.display_instance,
+        line_color = (int((235)*(1-S.percent)),int((235)*(S.percent)),0)
+        S.pygame_instance.draw.rect(S.display_instance,
                                   line_color,
-                                  ((W//2 - (250*3*(self.percent))/2),
+                                  ((W//2 - (250*3*(S.percent))/2),
                                    H//2 - 175,
-                                   250*3*self.percent,
+                                   250*3*S.percent,
                                    25))
 
-        self.pygame_instance.draw.rect(self.display_instance,
+        S.pygame_instance.draw.rect(S.display_instance,
                                   line_color,
-                                  ((W//2 - (250*3*(self.percent))/2),
+                                  ((W//2 - (250*3*(S.percent))/2),
                                    H//2 + 125,
-                                   250*3*self.percent,
+                                   250*3*S.percent,
                                    25))
