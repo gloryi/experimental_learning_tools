@@ -4,13 +4,15 @@ import random
 
 unique_keys = set()
 
-origin_file = None
 sets_dir = os.path.join(os.getcwd(), "learning_sets")
-set_dir = os.path.join(sets_dir, "latvian_set")
+set_dir = os.path.join(sets_dir, "personal_set")
 
-update_file = os.path.join(set_dir, "raw_features.csv")
+update_file = os.path.join(set_dir, "raw_features_01.csv")
+
+origin_file = os.path.join(set_dir, "features.csv")
+#origin_file = None
 merged_file = os.path.join(set_dir, "features.csv")
-LAST_NO = 0
+LAST_NO = 0 
 
 origin_lines = []
 update_lines = []
@@ -28,6 +30,8 @@ if update_file:
         for line in update_descriptor:
             line = line.replace('\n', '')
             key, *rest = line.split(',')
+            if not rest or not rest[0]:
+                continue
             if key not in unique_keys:
                 line_prep = line.split(',')
                 update_lines.append(line_prep)

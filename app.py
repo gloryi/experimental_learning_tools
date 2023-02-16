@@ -61,6 +61,7 @@ pause_counter = Counter(bpm = 1/2)
 
 timer_1m = Counter(bpm = 2)
 haptic_timer = Counter(bpm = 15)
+disable_haptic = False
 timer_dropped = False
 
 tokens_1m = []
@@ -120,7 +121,7 @@ for time_delta in delta_timer:
 
         if timer_dropped:
             if haptic_timer.is_tick(time_delta):
-                if HAPTIC_ERROR_CMD:
+                if HAPTIC_ERROR_CMD and not disable_haptic:
                     subprocess.Popen(["bash", HAPTIC_ERROR_CMD])
 
         if quadra_timer.is_tick(time_delta):
@@ -218,7 +219,10 @@ for time_delta in delta_timer:
 
                 subprocess.Popen(["python3", BURNER_APP])
                 burner_casted = True
+                disable_haptic = True
 
+                pygame.quit()
+                quit()
 
     if paused:
         pygame.display.update()
@@ -227,6 +231,7 @@ for time_delta in delta_timer:
             paused = False
             is_pause_displayed = False
             burner_casted = False
+            disable_haptic = False
 
         if keys[tokens_key] and not timer_dropped:
             if tokens_key == pygame.K_k:
@@ -234,7 +239,7 @@ for time_delta in delta_timer:
             else:
                 tokens_key = pygame.K_k
             tokens_1m.append("*")
-            if HAPTIC_CORRECT_CMD:
+            if HAPTIC_CORRECT_CMD and not disable_haptic:
                 subprocess.Popen(["bash", HAPTIC_CORRECT_CMD])
             if len(tokens_1m)>5:
                 tokens_1m = []

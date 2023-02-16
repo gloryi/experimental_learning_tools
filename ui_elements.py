@@ -97,7 +97,11 @@ class UpperLayout():
             for image_name in path_to_image:
                 self.check_cached_image(image_name)
                 if image_name in self.images_cached and self.images_cached[image_name]:
-                    self.images_set.append(self.pygame_instance.transform.scale(self.images_cached[image_name], (int((W*0.95)/3), int(H*0.95)/2)))
+                    if len(path_to_image)!=2:
+                        self.images_set.append(self.pygame_instance.transform.scale(self.images_cached[image_name], (int((W*0.95)/3), int(H*0.95)/2)))
+                    else:
+                        self.images_set.append(self.images_cached[image_name])
+
                 else:
                     self.images_set.append(None)
             return
@@ -128,14 +132,20 @@ class UpperLayout():
 
         if self.images_set:
             set_locations = []
-            set_locations.append((int(W*(0.05/2)), int(H*(0.05/6)))) # 0
-            set_locations.append((int(W*(0.05/2) + (W*0.95/3)*(0)), int(H*(0.05/2)+H*0.95/2))) # 1
-            set_locations.append((int(W*(0.05/2) + (W*0.95/3)*(1)), int(H*(0.05/2)+H*0.95/2))) # 2
-            set_locations.append((int(W*(0.05/2) + (W*0.95/3)*(2)), int(H*(0.05/2)+H*0.95/2))) # 3
-            set_locations.append((int(W*(0.05/2) + (W*0.95/3)*(2)), int(H*(0.05/6)))) # 5
-            if self.constant_variation%2 == 0:
-                set_locations = set_locations[::-1]
-            for i in range(5):
+            if len(self.images_set) !=2:
+                set_locations.append((int(W*(0.05/2)), int(H*(0.05/6)))) # 0
+                set_locations.append((int(W*(0.05/2) + (W*0.95/3)*(0)), int(H*(0.05/2)+H*0.95/2))) # 1
+                set_locations.append((int(W*(0.05/2) + (W*0.95/3)*(1)), int(H*(0.05/2)+H*0.95/2))) # 2
+                set_locations.append((int(W*(0.05/2) + (W*0.95/3)*(2)), int(H*(0.05/2)+H*0.95/2))) # 3
+                set_locations.append((int(W*(0.05/2) + (W*0.95/3)*(2)), int(H*(0.05/6)))) # 5
+                if self.constant_variation%2 == 0:
+                    set_locations = set_locations[::-1]
+
+            if len(self.images_set)==2:
+                set_locations.append((int(-1*(W//2)+150), int(H*(0.05/2))))
+                set_locations.append((int(W//2), int(H*(0.05/2))))
+
+            for i in range(len(self.images_set)):
                 if i < len(self.images_set) and self.images_set[i]:
                     self.display_instance.blit(self.images_set[i], set_locations[i])
 

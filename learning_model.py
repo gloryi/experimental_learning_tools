@@ -2,6 +2,7 @@ import random
 import json
 import os
 from config import PROGRESSION_FILE, IMAGES_MAPPING_FILE
+from config import TEST
 
 class ChainUnitType():
     type_key = "type_key"
@@ -64,9 +65,12 @@ class ChainedFeature():
 
     def ask_for_image(self):
         if self.attached_image and self.feature_level <2:
+            #if len(self.attached_image) <= 2:
             return self.attached_image
+            #else:
+                #return self.attached_image[0::2]
         else:
-            return ""
+            return None
 
     def set_extra(self, unit_type):
         return ChainUnitType.extra_focus
@@ -187,8 +191,16 @@ class FeaturesChain():
 
 
     def initialize_images(self, images_list):
-        for image, feature in zip(images_list, self.features):
-            feature.attached_image = image
+        for i, feature in enumerate(images_list):
+            i2 = (i+1)%len(images_list)
+            #print(i, i2, len(images_list))
+            if i < len(self.features):
+                self.features[i].attached_image = [images_list[i], images_list[i2]]
+            else:
+                break
+
+        #for image, feature in zip(images_list, self.features):
+            #feature.attached_image = image
         self.features[-1].attached_image = images_list
 
     def get_next_feature(self):
@@ -349,6 +361,8 @@ class ChainedModel():
         return features_list
 
     def dump_results(self, progression_file):
+        if TEST:
+            return
         backup = {}
         for chain in self.chains:
             backup[chain.chain_no] = [chain.progression_level, chain.last_review_urge, chain.errors_mapping]
@@ -374,6 +388,9 @@ class ChainedModel():
                 progress = json.load(saved_prgress)
             if progress:
                 for chain in self.chains:
+                    if chain.chain_no not in progress:
+                        errors_mapping = [[0 for _ in range(10)] for j in range(5)]
+                        progress[chain.chain_no] = [0, 0, chain.errors_mapping]
                     chain.progression_level = progress[chain.chain_no][0]
                     chain.last_review_urge = progress[chain.chain_no][1]
                     if chain.progression_level > 0:

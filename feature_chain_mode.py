@@ -77,8 +77,8 @@ class ChainedsProducer():
 
     def produce_meta_minor(self):
         if self.minor_lines:
-            minor_idx = random.randint(0, len(self.minor_lines)-17)
-            lines = self.minor_lines[minor_idx:minor_idx+16]
+            minor_idx = random.randint(0, len(self.minor_lines)-4)
+            lines = self.minor_lines[minor_idx:minor_idx+3]
             if self.action_lines:
                 lines = [random.choice(self.action_lines)] + lines
             return lines
@@ -615,7 +615,7 @@ class ChainedProcessor():
         if LAST_EVENT == "POSITIVE" and NEW_EVENT:
             self.ui_ref.bg_color = colors.dark_green
 
-            if random.randint(0,10) > 5 and HAPTIC_CORRECT_CMD:
+            if random.randint(0,10) > 8 and HAPTIC_CORRECT_CMD:
                 subprocess.Popen(["bash", HAPTIC_CORRECT_CMD])
 
             NEW_EVENT = False
@@ -623,7 +623,7 @@ class ChainedProcessor():
         elif LAST_EVENT == "ERROR" and NEW_EVENT:
             NEW_EVENT = False
             self.ui_ref.bg_color = colors.dark_red
-            if random.randint(0,10) > 5 and HAPTIC_ERROR_CMD:
+            if random.randint(0,10) > 8 and HAPTIC_ERROR_CMD:
                 subprocess.Popen(["bash", HAPTIC_ERROR_CMD])
             return -1
         else:

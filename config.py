@@ -2,8 +2,10 @@ import os
 import random
 from time import time
 
-#preparation = True
+TEST = True
+TEST = False
 preparation = False
+#preparation = True
 
 LEARNING_FOLDERS = []
 if not preparation:
