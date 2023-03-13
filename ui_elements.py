@@ -53,11 +53,16 @@ class UpperLayout():
         
         S.random_variation = 0
         S.constant_variation = 0
+        S.chain_no = 0
 
         S.images_cached = {}
         S.image = None
         S.images_set = None
         S.images_set_cached = None
+
+        S.tiling_meta = "5 img feat"
+        S.tiling_cooldown = 0
+        S.tiling_var = lambda a,b : a==b
 
     def place_text(S, text, x, y, transparent = False, renderer = None, base_col = (80,80,80)):
         if renderer is None:
@@ -86,7 +91,33 @@ class UpperLayout():
         image_scaled = S.pygame_instance.transform.scale(image_converted, (int(W*0.95), int(H*0.95)))
         S.images_cached[path_to_image]  = image_scaled
 
+    def co_variate(S):
+
+        if S.tiling_cooldown:
+            S.tiling_cooldown -= 1
+        else:
+            S.tiling_cooldown = random.randint(3,8)
+            S.tiling_meta = random.choice(["next/prev", "feat", "img feat",
+                                       "mnem story", "img/feat stor.", "example"])
+            #S.tiling_meta += random.choice(["", " FP"])
+
+        S.tiling_var = random.choice([lambda a,b : a==b,
+                                      lambda a,b : a==1,
+                                      lambda a,b : a==2,
+                                      lambda a,b : a==3,
+                                      lambda a,b : b==1,
+                                      lambda a,b : b==2,
+                                      lambda a,b : b==3,
+                                      lambda a,b : a==4-b,
+                                      lambda a,b : b==4-a,
+                                      lambda a,b : a==3-b,
+                                      lambda a,b : b==3-a,
+                                      lambda a,b : a==2-b,
+                                      lambda a,b : b==2-a])
+
+
     def set_image(S, path_to_image):
+        #S.co_variate()
 
         if isinstance(path_to_image, list):
             if path_to_image == S.images_set_cached:
@@ -138,16 +169,22 @@ class UpperLayout():
                 set_locations.append((int(W*(0.05/2) + (W*0.95/3)*(1)), int(H*(0.05/2)+H*0.95/2))) # 2
                 set_locations.append((int(W*(0.05/2) + (W*0.95/3)*(2)), int(H*(0.05/2)+H*0.95/2))) # 3
                 set_locations.append((int(W*(0.05/2) + (W*0.95/3)*(2)), int(H*(0.05/6)))) # 5
-                if S.constant_variation%2 == 0:
+
+                if int(S.chain_no)%2 == 0:
                     set_locations = set_locations[::-1]
 
             if len(S.images_set)==2:
                 set_locations.append((int(-1*(W//2)+150), int(H*(0.05/2))))
                 set_locations.append((int(W//2), int(H*(0.05/2))))
+                if int(S.chain_no)%2 == 0:
+                    set_locations = set_locations[::-1]
+
+
 
             for i in range(len(S.images_set)):
                 if i < len(S.images_set) and S.images_set[i]:
                     S.display_instance.blit(S.images_set[i], set_locations[i])
+            tiling_step = 400
 
         elif S.image:
             S.display_instance.blit(S.image,
@@ -179,13 +216,25 @@ class UpperLayout():
             if random.randint(0,100) > 95 and not S.blink_flag:
                 S.blink_flag = False
 
-        for x in range(100+S.random_variation,W,tiling_step):
-            for y in range(100+S.random_variation,H,tiling_step):
-                S.place_text(S.tiling,
+        for i,x in enumerate(range(100+S.random_variation,W,tiling_step)):
+            for j,y in enumerate(range(100+S.random_variation,H,tiling_step)):
+
+                tiling_text = S.tiling
+                t_font = tiling_font
+                extra_text = ""
+
+                if S.tiling_var(i,j):
+                    t_font = S.utf_font4
+                    tiling_text = S.tiling_meta
+                    extra_text = f" {S.tiling_cooldown}"
+                else:
+                    continue
+
+                S.place_text(tiling_text + extra_text,
                                 x,
                                 y,
                                 transparent=True,
-                                renderer = tiling_font,
+                                renderer = t_font,
                                 base_col = (clip_color(225+S.variation*4+S.random_variation),
                                             225-S.variation+S.random_variation,
                                             225+S.random_variation))
@@ -239,18 +288,3 @@ class UpperLayout():
                                    (600)*S.timing_ratio))
         if S.show_less:
             return
-
-        line_color = (int((235)*(1-S.percent)),int((235)*(S.percent)),0)
-        S.pygame_instance.draw.rect(S.display_instance,
-                                  line_color,
-                                  ((W//2 - (250*3*(S.percent))/2),
-                                   H//2 - 175,
-                                   250*3*S.percent,
-                                   25))
-
-        S.pygame_instance.draw.rect(S.display_instance,
-                                  line_color,
-                                  ((W//2 - (250*3*(S.percent))/2),
-                                   H//2 + 125,
-                                   250*3*S.percent,
-                                   25))

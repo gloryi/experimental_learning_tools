@@ -11,11 +11,12 @@ images_dirs.append("/home/gloryi/Pictures/OldPhotos")
 images_dirs.append("/home/gloryi/Pictures/Windows 10 Spotlight")
 
 sets_dir = os.path.join(os.getcwd(), "learning_sets")
-set_dir = os.path.join(sets_dir, "personal_set")
+#set_dir = os.path.join(sets_dir, "personal_set")
+set_dir = os.path.join(sets_dir, "test_set")
 
 #set_dir = "/mnt/X/WORKSHOP/Scripts/stocks_learning_git/experimental_learning_tools"
 
-TO_EXTRACT = 2000
+TO_EXTRACT = 250
 TARGET_NAME = os.path.join(set_dir, "images_mapping.json")
 
 def extract_images_from_root(root_dir):

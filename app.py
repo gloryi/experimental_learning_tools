@@ -3,7 +3,7 @@ from time_utils import global_timer, Counter, Progression
 from feature_chain_mode import ChainedProcessor
 from config import TEST_LANG_DATA, W, H, BPM, CYRILLIC_FONT, CHINESE_FONT, BURNER_APP, BURNER_FILE
 from config import HAPTIC_CORRECT_CMD, HAPTIC_ERROR_CMD
-from colors import white
+from colors import white, hex_to_rgb
 import colors
 from text_morfer import textMorfer
 import time
@@ -11,13 +11,11 @@ import random
 import csv
 import re
 import subprocess
+import pyautogui
+SCREEN_X_0 = 3400
+SCREEN_Y_0 = 0
 
 from ui_elements import UpperLayout
-
-def hex_to_rgb(h, cache = False):
-    h = h[1:]
-    resulting =  tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
-    return resulting
 
 pygame.init()
 
@@ -55,11 +53,11 @@ trans_surface_2.fill((40,0,40))
 delta_timer = global_timer(pygame)
 upper_stats = UpperLayout(pygame, display_surface)
 new_line_counter = Counter(upper_stats)
-quadra_timer = Counter(bpm = 10)
-morfer_timer = Counter(bpm = 15)
-pause_counter = Counter(bpm = 1/2)
+quadra_timer = Counter(bpm = 15)
+morfer_timer = Counter(bpm = 12)
+pause_counter = Counter(bpm = 1/3)
 
-timer_1m = Counter(bpm = 2)
+timer_1m = Counter(bpm = 1)
 haptic_timer = Counter(bpm = 15)
 disable_haptic = False
 timer_dropped = False
@@ -78,6 +76,7 @@ beat_time = new_line_counter.drop_time
 
 font = pygame.font.Font(CYRILLIC_FONT, 200, bold = True)
 pygame.event.set_allowed([pygame.QUIT, pygame.KEYDOWN, pygame.KEYUP])
+pygame.mouse.set_visible(False)
 fpsClock = pygame.time.Clock()
 morfer = textMorfer()
 
@@ -178,7 +177,16 @@ for time_delta in delta_timer:
                             renderer = None,
                             base_col = (colors.col_bt_pressed))
         if meta_minor:
+            back_t_found = False
+
             for i, line in enumerate(meta_minor):
+
+                if "*** 1XTEXT ***" in line:
+                    back_t_found = True
+
+                if not back_t_found and not "#" in line:
+                    continue
+
                 place_text(line,
                             W//2,
                             H//8 + 25*(i+1),
@@ -265,8 +273,10 @@ for time_delta in delta_timer:
         next_tick_time, meta, meta_minor = game.add_line()
         new_line_counter.modify_bpm(next_tick_time)
 
+        #pyautogui.moveTo(SCREEN_X_0//2+W//64, SCREEN_Y_0 + H//2, H//2)
+
     upper_stats.redraw()
-    feedback = game.tick(beat_time, time_delta)
+    feedback = game.tick(time_delta)
 
     resume_game = progression.register_event(feedback)
     if not resume_game:
@@ -308,17 +318,65 @@ for time_delta in delta_timer:
         quadra_w_perce1 = 0.0
         quadra_w_perce2 = quadra_timer.get_percent()
 
-    trans_surface.fill((40,0,40))
-    pygame.draw.circle(trans_surface,
-                          interpolate(quadra_col_1, quadra_col_2, quadra_timer.get_percent()),
-                          (H//2, H//2),
-                           (H//2-100)*quadra_w_perce1+100)
-    pygame.draw.circle(trans_surface,
-                          interpolate(quadra_col_1, quadra_col_2, quadra_timer.get_percent()**2),
-                          (H//2, H//2),
-                           (H//2-50)*quadra_w_perce2+50, width = 3)
+    # HORISONTAL
+    pygame.draw.rect(display_surface,
+                      interpolate(quadra_col_1, quadra_col_2, quadra_timer.get_percent()),
+                      (W//2 - ((W//2)*(quadra_w_perce1)),
+                       H - 20,
+                       (W)*quadra_w_perce1,
+                       20))
+    #
+    # pygame.draw.rect(display_surface,
+    #                   interpolate(quadra_col_1, quadra_col_2, quadra_timer.get_percent()**2),
+    #                   (W//2 - ((W//2)*(quadra_w_perce2)),
+    #                    H - 20,
+    #                    (W)*quadra_w_perce2,
+    #                    20), width=4)
 
-    display_surface.blit(trans_surface, (W//2-H//2,0))
+    pygame.draw.rect(display_surface,
+                      interpolate(quadra_col_1, quadra_col_2, quadra_timer.get_percent()),
+                      (W//2 - ((W//2)*(quadra_w_perce1)),
+                       0,
+                       (W)*quadra_w_perce1,
+                       20))
+
+    # pygame.draw.rect(display_surface,
+    #                   interpolate(quadra_col_1, quadra_col_2, quadra_timer.get_percent()**2),
+    #                   (W//2 - ((W//2)*(quadra_w_perce2)),
+    #                    0,
+    #                    (W)*quadra_w_perce2,
+    #                    20),width=4)
+
+    # VERTICAL
+    pygame.draw.rect(display_surface,
+                      interpolate(quadra_col_1, quadra_col_2, quadra_timer.get_percent()),
+                      (W - 20,
+                      H//2 - ((H//2)*(quadra_w_perce1)),
+                       20,
+                       (H)*quadra_w_perce1))
+
+    # pygame.draw.rect(display_surface,
+    #                   interpolate(quadra_col_1, quadra_col_2, quadra_timer.get_percent()**2),
+    #                    (W - 20,
+    #                   H//2 - ((H//2)*(quadra_w_perce2)),
+    #                    20, 
+    #                    (H)*quadra_w_perce2),width=4)
+
+    pygame.draw.rect(display_surface,
+                      interpolate(quadra_col_1, quadra_col_2, quadra_timer.get_percent()),
+                       (0,
+                      H//2 - ((H//2)*(quadra_w_perce1)),
+                       20,
+                       (H)*quadra_w_perce1))
+
+    # pygame.draw.rect(display_surface,
+    #                   interpolate(quadra_col_1, quadra_col_2, quadra_timer.get_percent()**2),
+    #                    (0,
+    #                   H//2 - ((H//2)*(quadra_w_perce2)),
+    #                    20,
+    #                    (H)*quadra_w_perce2),width=4)
+
+    #display_surface.blit(trans_surface, (W//2-H//2,0))
 
 
     pygame.display.update()

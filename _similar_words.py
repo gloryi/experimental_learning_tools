@@ -5,12 +5,18 @@ import random
 
 print(ipa.convert("zhèng heart solo"))
 
-exit()
-
+#exit()
 
 features = "top sky heart root square big labor old relation appear beginning"
 features = features.split()
-#converted = ipa.convert(keys)
+
+#converted = ipa.convert(features)
+
+
+
+#print(*features)
+#print(converted)
+#exit()
 #features_chain = {}
 
 #for word in keys.split():

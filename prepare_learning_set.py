@@ -5,9 +5,10 @@ import random
 unique_keys = set()
 
 sets_dir = os.path.join(os.getcwd(), "learning_sets")
-set_dir = os.path.join(sets_dir, "personal_set")
+#set_dir = os.path.join(sets_dir, "personal_set")
+set_dir = os.path.join(sets_dir, "test_set")
 
-update_file = os.path.join(set_dir, "raw_features_01.csv")
+update_file = os.path.join(set_dir, "raw_features.csv")
 
 origin_file = os.path.join(set_dir, "features.csv")
 #origin_file = None

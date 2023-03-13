@@ -68,7 +68,25 @@ class ChainedsProducer():
             for item in group:
                 entity,  *key_features = item[1:]
                 features.append(ChainedFeature(entity, key_features))
+
+            for i1 in range(len(features)):
+                i2 = (i1+1)%len(features)
+
+                if len(features[i1].features) < 5:
+                    l1 = len(features[i1].features) 
+                    l2 = len(features[i2].features) + 1
+
+                    if l1 + l2 <= 5:
+                        features[i1].features += [features[i2].entity] + features[i2].features[:]
+                    else:
+                        extra_len = 5 - l1 - 1
+                        if extra_len <= 0:
+                            features[i1].features += [features[i2].entity]
+                        else:
+                            features[i1].features += [features[i2].entity] + features[i2].features[:extra_len]
+
             chains.append(FeaturesChain(key, features))
+
         return ChainedModel(chains)
 
     def produce_chain(S):
@@ -99,6 +117,8 @@ class ChainedsProducer():
             if any(S.meta_stack.values()):
                 ordered_meta = []
                 for key, stk in S.meta_stack.items():
+                    if random.randint(0,10)>3:
+                        continue
                     if stk:
                         ordered_meta.append(key+" "+random.choice(stk))
                     else:
@@ -127,8 +147,6 @@ class ChainedEntity():
 
         S.W, S.H = W, H
 
-        S.x_positions = [S.W//7*(i+1) - S.W//14 for i in range(7)]
-
         S.chained_feature = chained_feature
         S.features_chain = features_chain
         S.chains = chains
@@ -151,6 +169,10 @@ class ChainedEntity():
         S.questions_queue = S.extract_questions()
         S.constant_variation = random.randint(0, 10)
 
+        S.idle_coursor_x = None
+        S.idle_coursor_y = None
+        S.hint_circles_queue = []
+
         if S.questions_queue:
             S.time_estemated = S.chained_feature.get_timing() / (len(S.questions_queue)+1)
             S.done = False
@@ -172,20 +194,28 @@ class ChainedEntity():
             S.options = S.chains.get_options_list(S.active_question)
 
     def delete_options(S):
-        S.options = ["" for _ in range(6)]
+        S.options = ["" for _ in range(10)]
 
     def register_answers(S):
-        is_solved = len(S.questions_queue) == 0
+        is_solved = len(S.questions_queue) == 0 and not S.locked
         S.chained_feature.register_progress(is_solved = is_solved)
         return is_solved
 
     def match_correct(S):
-        if S.locked:
-            return
+
+        #if S.locked:
+            #return
+
         global LAST_EVENT
         global NEW_EVENT
-        LAST_EVENT = "POSITIVE"
-        NEW_EVENT = True
+
+        if not S.locked:
+            LAST_EVENT = "POSITIVE"
+            NEW_EVENT = True
+        else:
+            LAST_EVENT = "POST_POSITIVE"
+            NEW_EVENT = True
+
         S.order_in_work += 1
         if S.questions_queue:
             S.questions_queue.pop(0)
@@ -205,10 +235,44 @@ class ChainedEntity():
         global LAST_EVENT
         global NEW_EVENT
         LAST_EVENT = "ERROR"
-        NEW_EVENT = True
+
+        if not S.locked:
+            NEW_EVENT = True
+            S.chained_feature.register_error(S.active_question.order_no)
+            S.features_chain.update_errors(register_new=True)
         S.locked = True
-        S.chained_feature.register_error(S.active_question.order_no)
-        S.features_chain.update_errors(register_new=True)
+
+    def register_mouse(S, mouse_poses):
+
+        if not S.done:
+            return
+
+        mouse_position = S.pygame_instance.mouse.get_pos()
+
+        LMB, RMB = 0, 2
+
+
+        if mouse_poses[LMB]:
+            index = S.order_in_work
+
+           # if index == 0:
+           #    return
+            index -= 1
+
+            if index  < len(S.context) and index >= 0 and S.context[index]:
+
+                rel_x = mouse_position[0]/W
+                rel_y = mouse_position[1]/H
+
+                S.chained_feature.register_hint(S.context[index].order_no, rel_x, rel_y)
+                S.context[index].hint = [rel_x, rel_y]
+
+
+    def register_idle_mouse(S):
+
+        mouse_position = S.pygame_instance.mouse.get_pos()
+        S.idle_coursor_x = mouse_position[0]
+        S.idle_coursor_y = mouse_position[1]
 
 
     def register_keys(S, key_states, time_percent, time_based = False):
@@ -236,6 +300,8 @@ class ChainedEntity():
 
             pair_to_show = int(time_p/pair_perce)
             S.order_in_work = pair_to_show
+            #print(S.order_in_work)
+            #print(S.context[S.order_in_work].order_no)
 
 
     def produce_geometries(S):
@@ -243,7 +309,6 @@ class ChainedEntity():
         set_color = lambda _ : colors.col_active_lighter if _.extra else col_wicked_darker if _.type == ChainUnitType.type_key else colors.feature_text_col if _.type == ChainUnitType.type_feature  else colors.col_correct if _.mode == ChainUnitType.mode_highligted else colors.col_black
         set_bg_color = lambda _ : colors.col_bt_down if _.extra else col_active_darker if _.type == ChainUnitType.type_key else colors.feature_bg
         get_text  = lambda _ : _.text if S.done or _.mode == ChainUnitType.mode_open else "???"
-        get_position_x = lambda _ : S.x_positions[_.order_no+1]
         get_y_position = lambda _ : S.H//2 - S.H//4 + S.H//16 if _.position == ChainUnitType.position_subtitle else S.H//2 - S.H//16 if _.position == ChainUnitType.position_keys else S.H//2 + S.H//16
         set_font = lambda _ : ChainUnitType.font_cyrillic if not re.search(u'[\u4e00-\u9fff]', _.text) else ChainUnitType.font_utf
         set_size = lambda _ : 10 if len(_.text)>=15 else 20 if len(_.text)>=10 else 30 if len(_.text)>=5 else 40
@@ -309,14 +374,21 @@ class ChainedEntity():
 
             if order_delta > 0:
 
-                if S.constant_variation%2:
+                if int(S.features_chain.chain_no)%2:
                     pos_no = ctx.order_no
                     pos_no %= len(out_positions)
                     ctx_x, ctx_y = out_positions[pos_no]
+
+                    if ctx.order_no >= len(out_positions):
+                        ctx_y += ctx.order_no//len(out_positions)*100
                 else:
                     pos_no = ctx_len -1 - ctx.order_no
                     pos_no%=len(out_positions)
                     ctx_x, ctx_y = out_positions[pos_no]
+
+                    if ctx.order_no >= len(out_positions):
+                        ctx_y += ctx.order_no//len(out_positions)*100
+
                 cx, cy = ctx_x, ctx_y
 
                 ctx_x -= ctx_w/2
@@ -327,23 +399,48 @@ class ChainedEntity():
                 ctx_y += int(H*0.05/2)
                 cy += int(H*0.05/2)
 
+            if order_delta <= 0:
+                continue
+
             graphical_objects.append(WordGraphical(get_text(ctx),
                                                    cx,
                                                    cy,
                                                    set_color(ctx),
-                                                   set_bg_color(ctx),
+                                                   #set_bg_color(ctx),
+                                                   None,
                                                    font = set_font(ctx),
-                                                   font_size = set_size(ctx),
-                                                   rect = [ctx_x, ctx_y, ctx_w, ctx_h]))
+                                                   font_size = set_size(ctx)*3,
+                                                   rect = None))
 
         options_x1 = W//2-250
         options_y1 = 325
-        options_w = 200
-        options_h = 50
-        options_x_corners = [W//2-250-options_w//2, W//2-250-options_w//2, W//2-250-options_w//2,
-                             W//2+250-options_w//2, W//2+250-options_w//2, W//2+250-options_w//2]
-        options_y_corners = [H//2-80-options_h//2, H//2-options_h//2, H//2+80-options_h//2,
-                             H//2-80-options_h//2, H//2-options_h//2, H//2+80-options_h//2]
+        options_w = 250
+        options_h = 75
+
+        options_x_corners = [W//2-W//5-options_w//2+100,
+                             W//2-W//5-options_w//2+50,
+                             W//2-W//5-options_w//2,
+                             W//2-W//5-options_w//2+50,
+                             W//2-W//5-options_w//2+100,
+
+                             W//2+W//5-options_w//2-100,
+                             W//2+W//5-options_w//2-50,
+                             W//2+W//5-options_w//2,
+                             W//2+W//5-options_w//2-50,
+                             W//2+W//5-options_w//2-100]
+
+        options_y_corners = [1*H//12-options_h//2+H//4,
+                             2*H//12-options_h//2+H//4,
+                             3*H//12-options_h//2+H//4,
+                             4*H//12-options_h//2+H//4,
+                             5*H//12-options_h//2+H//4,
+
+                             1*H//12-options_h//2+H//4,
+                             2*H//12-options_h//2+H//4,
+                             3*H//12-options_h//2+H//4,
+                             4*H//12-options_h//2+H//4,
+                             5*H//12-options_h//2+H//4]
+
         set_font = lambda _ : ChainUnitType.font_cyrillic if not re.search(u'[\u4e00-\u9fff]', _) else ChainUnitType.font_utf
         #set_size = lambda _ : 30 if not re.search(u'[\u4e00-\u9fff]', _) else 40
         set_size = lambda _ : 15 if len(_)>=15 else 25 if len(_)>=10 else 30 if len(_)>=5 else 40
@@ -356,8 +453,8 @@ class ChainedEntity():
                                                        yc,
                                                        colors.col_bt_text, transparent = True,
                                                        font = set_font(S.options[i]),
-                                                       font_size = set_size(S.options[i]),
-                                                        rect = [x1, y1, options_w, options_h] if S.options[i] else []))
+                                                       font_size = int(set_size(S.options[i])*1.5),
+                                                       rect = None))
 
 
         large_notion_w = 250
@@ -371,13 +468,50 @@ class ChainedEntity():
             graphical_objects.append(WordGraphical(S.chained_feature.entity,
                                      xc, yc,
                                      colors.col_black,
-                                     bg_color = None if i == 0 else col_correct if LAST_EVENT == "POSITIVE" else col_error,
-                                    font_size = 120 if tlen == 1 else 90 if tlen == 2 else 60 if tlen == 3 else 40 if tlen < 5 else 30 if tlen < 10 else 20,
+                                     bg_color = None,
+                                    font_size = 300 if tlen == 1 else 250 if tlen == 2 else 200 if tlen == 3 else 150 if tlen < 5 else 100 if tlen < 10 else 50,
                                     font = ChainUnitType.font_utf if re.findall(r'[\u4e00-\u9fff]+', S.chained_feature.entity) else ChainUnitType.font_cyrillic,
-                                     rect = [x1-large_notion_w//2, y1-large_notion_h//2, large_notion_w, large_notion_h]))
+                                     rect = None))
 
 
         return graphical_objects
+
+    def produce_hints(S):
+        hints = []
+        index = S.order_in_work
+
+        if S.locked:
+            if index < len(S.context) and index >= 0 and S.context[index].hint:
+                rel_x, rel_y = S.context[index].hint
+                abs_x, abs_y = rel_x*W, rel_y*H
+                hints.append([abs_x, abs_y, H//10, 3, colors.feature_bg])
+            return hints
+
+        if not S.done:
+            return []
+
+        #if index == 0:
+        #    return []
+        index -= 1
+
+        if index >= 0 and index < len(S.context) and S.idle_coursor_x and S.idle_coursor_y:
+            hints.append([S.idle_coursor_x, S.idle_coursor_y, H//15, 3, colors.col_bg_lighter])
+
+
+        if index < len(S.context) and index >= 0 and S.context[index].hint:
+            rel_x, rel_y = S.context[index].hint
+            abs_x, abs_y = rel_x*W, rel_y*H
+            hints.append([abs_x, abs_y, H//10, 3, colors.feature_bg])
+
+        for ctx in S.context:
+            if ctx.hint:
+                rel_x, rel_y = ctx.hint
+                abs_x, abs_y = rel_x*W, rel_y*H
+                hints.append([abs_x, abs_y, H//13, 3, colors.col_bt_pressed])
+
+        return hints
+
+
 
     def fetch_feedback(S):
         to_return = S.feedback
@@ -409,59 +543,42 @@ class ChainedDrawer():
         S.display_instance = display_instance
         S.W = W
         S.H = H
-        S.cyrillic_10 = S.pygame_instance.font.Font(CYRILLIC_FONT, 10, bold = True)
-        S.cyrillic_15 = S.pygame_instance.font.Font(CYRILLIC_FONT, 15, bold = True)
-        S.cyrillic_20 = S.pygame_instance.font.Font(CYRILLIC_FONT, 20, bold = True)
-        S.cyrillic_25 = S.pygame_instance.font.Font(CYRILLIC_FONT, 25, bold = True)
-        S.cyrillic_30 = S.pygame_instance.font.Font(CYRILLIC_FONT, 30, bold = True)
-        S.cyrillic_40 = S.pygame_instance.font.Font(CYRILLIC_FONT, 40, bold = True)
-        S.cyrillic_60 = S.pygame_instance.font.Font(CYRILLIC_FONT, 60, bold = True)
-        S.cyrillic_120 = S.pygame_instance.font.Font(CYRILLIC_FONT, 120, bold = True)
-
-        S.utf_10 = S.pygame_instance.font.Font(CHINESE_FONT, 10, bold = True)
-        S.utf_15 = S.pygame_instance.font.Font(CHINESE_FONT, 15, bold = True)
-        S.utf_20 = S.pygame_instance.font.Font(CHINESE_FONT, 20, bold = True)
-        S.utf_25 = S.pygame_instance.font.Font(CHINESE_FONT, 25, bold = True)
-        S.utf_30 = S.pygame_instance.font.Font(CHINESE_FONT, 30, bold = True)
-        S.utf_40 = S.pygame_instance.font.Font(CHINESE_FONT, 40, bold = True)
-        S.utf_60 = S.pygame_instance.font.Font(CHINESE_FONT, 60, bold = True)
-        S.utf_120 = S.pygame_instance.font.Font(CHINESE_FONT, 120, bold = True)
+        S.fonts_a = 10
+        S.fonts_b = 500
+        S.fonts_step = 10
+        S.cyrillic_fonts = [S.pygame_instance.font.Font(CYRILLIC_FONT, i, bold = True) for i in range(S.fonts_a, S.fonts_b, S.fonts_step)]
+        S.utf_fonts = [S.pygame_instance.font.Font(CHINESE_FONT, i, bold = True) for i in range(S.fonts_a, S.fonts_b, S.fonts_step)]
 
     def pick_font(S, font_type = ChainUnitType.font_utf, size = 40):
+        fonts_size_idx = (size - S.fonts_a)//S.fonts_step
+
+        if fonts_size_idx < 0:
+            fonts_size_idx = 0
+
         if font_type == ChainUnitType.font_utf:
-            if not size:
-                return S.utf_30
-            elif size <= 15:
-                return S.utf_15
-            elif size <= 20:
-                return S.utf_20
-            elif size <= 25:
-                return S.utf_25
-            elif size <= 30:
-                return S.utf_30
-            elif size <= 40:
-                return S.utf_40
-            elif size <= 60:
-                return S.utf_60
-            else:
-                return S.utf_120
+            if fonts_size_idx >= len(S.utf_fonts):
+                fonts_size_idx = len(S.utf_fonts) - 1
+
+            return S.utf_fonts[fonts_size_idx]
+
         else:
-            if not size:
-                return S.cyrillic_30
-            elif size <= 15:
-                return S.cyrillic_15
-            elif size <= 20:
-                return S.cyrillic_20
-            elif size <= 25:
-                return S.cyrillic_25
-            elif size <= 30:
-                return S.cyrillic_30
-            elif size <= 40:
-                return S.cyrillic_40
-            elif size <= 60:
-                return S.cyrillic_60
-            else:
-                return S.cyrillic_120
+            if fonts_size_idx >= len(S.cyrillic_fonts):
+                fonts_size_idx = len(S.cyrillic_fonts) - 1
+
+            return S.cyrillic_fonts[fonts_size_idx]
+
+    def draw_hints(S, line):
+        circles = line.produce_hints()
+
+        if not circles:
+            return
+
+        for circle in circles:
+            x, y, r, w, col = circle
+            S.pygame_instance.draw.circle(S.display_instance,
+                              col,
+                              (x, y),
+                               r, width = w)
 
     def draw_line(S, line):
         geometries = line.produce_geometries()
@@ -504,17 +621,40 @@ class ChainedDrawer():
 
             S.display_instance.blit(text, textRect)
 
+        S.draw_hints(line) 
+
     def display_keys(S, keys, line):
         if line.done:
             return
+
         options_x1 = W//2-250
         options_y1 = 325
-        options_w = 200
-        options_h = 50
-        options_x_corners = [W//2-250-options_w//2, W//2-250-options_w//2, W//2-250-options_w//2,
-                             W//2+250-options_w//2, W//2+250-options_w//2, W//2+250-options_w//2]
-        options_y_corners = [H//2-80-options_h//2, H//2-options_h//2, H//2+80-options_h//2,
-                             H//2-80-options_h//2, H//2-options_h//2, H//2+80-options_h//2]
+        options_w = 250
+        options_h = 75
+
+        options_x_corners = [W//2-W//5-options_w//2+100,
+                             W//2-W//5-options_w//2+50,
+                             W//2-W//5-options_w//2,
+                             W//2-W//5-options_w//2+50,
+                             W//2-W//5-options_w//2+100,
+
+                             W//2+W//5-options_w//2-100,
+                             W//2+W//5-options_w//2-50,
+                             W//2+W//5-options_w//2,
+                             W//2+W//5-options_w//2-50,
+                             W//2+W//5-options_w//2-100]
+
+        options_y_corners = [1*H//12-options_h//2+H//4,
+                             2*H//12-options_h//2+H//4,
+                             3*H//12-options_h//2+H//4,
+                             4*H//12-options_h//2+H//4,
+                             5*H//12-options_h//2+H//4,
+
+                             1*H//12-options_h//2+H//4,
+                             2*H//12-options_h//2+H//4,
+                             3*H//12-options_h//2+H//4,
+                             4*H//12-options_h//2+H//4,
+                             5*H//12-options_h//2+H//4]
 
         for i, (x1, y1) in enumerate(zip(options_x_corners, options_y_corners)):
             key_state = keys[i]
@@ -522,7 +662,7 @@ class ChainedDrawer():
 
             color = (255,255,255)
             if key_state == "up":
-                color = colors.col_bt_down if LAST_EVENT == "POSITIVE" else colors.col_error
+                color = colors.col_bt_down if LAST_EVENT == "POSITIVE" else colors.col_error if LAST_EVENT == "ERROR" else colors.dark_red
             elif key_state == "down":
                 color = colors.col_bt_pressed if LAST_EVENT == "POSITIVE" else colors.col_active_lighter
             else:
@@ -545,12 +685,25 @@ class KeyboardChainModel():
         S.down = 'down'
         S.pressed = 'pressed'
         S.mapping = OrderedDict()
-        S.mapping[S.pygame_instance.K_e]         = S.up
+        # S.mapping[S.pygame_instance.K_e]         = S.up
+        # S.mapping[S.pygame_instance.K_d]         = S.up
+        # S.mapping[S.pygame_instance.K_c]         = S.up
+        # S.mapping[S.pygame_instance.K_i]         = S.up
+        # S.mapping[S.pygame_instance.K_k]         = S.up
+        # S.mapping[S.pygame_instance.K_COMMA]     = S.up
+        S.mapping[S.pygame_instance.K_g]         = S.up
+        S.mapping[S.pygame_instance.K_f]         = S.up
         S.mapping[S.pygame_instance.K_d]         = S.up
-        S.mapping[S.pygame_instance.K_c]         = S.up
-        S.mapping[S.pygame_instance.K_i]         = S.up
+        S.mapping[S.pygame_instance.K_s]         = S.up
+        S.mapping[S.pygame_instance.K_a]         = S.up
+
+        S.mapping[S.pygame_instance.K_h]         = S.up
+        S.mapping[S.pygame_instance.K_j]         = S.up
         S.mapping[S.pygame_instance.K_k]         = S.up
-        S.mapping[S.pygame_instance.K_COMMA]     = S.up
+        S.mapping[S.pygame_instance.K_l]         = S.up
+        S.mapping[S.pygame_instance.K_SEMICOLON]         = S.up
+
+
 
         S.keys = [S.up for _ in range(6)]
 
@@ -603,10 +756,12 @@ class ChainedProcessor():
                                            S.producer.chains,
                                            S.pygame_instance, S.W, S.H)
         S.ui_ref.constant_variation = S.active_entity.constant_variation
+        S.ui_ref.chain_no = int(S.active_entity.features_chain.chain_no)
         S.ui_ref.set_image(S.active_entity.chained_feature.ask_for_image())
         S.ui_ref.randomize()
         S.ui_ref.global_progress = S.producer.chains.get_chains_progression()
         S.ui_ref.tiling = S.active_entity.main_title
+        S.ui_ref.co_variate()
         S.ui_ref.show_less = False
 
     def add_line(S):
@@ -619,10 +774,12 @@ class ChainedProcessor():
                                            S.pygame_instance, S.W, S.H)
 
         S.ui_ref.constant_variation = S.active_entity.constant_variation
+        S.ui_ref.chain_no = int(S.active_entity.features_chain.chain_no)
         S.ui_ref.set_image(S.active_entity.chained_feature.ask_for_image())
         S.ui_ref.randomize()
         S.ui_ref.global_progress = S.producer.chains.get_chains_progression()
         S.ui_ref.tiling = S.active_entity.main_title
+        S.ui_ref.co_variate()
         S.ui_ref.bg_color = colors.col_black
         S.ui_ref.show_less = False
         S.time_elapsed_cummulative = 0
@@ -658,7 +815,7 @@ class ChainedProcessor():
             return 0
 
 
-    def process_inputs(S, time_elapsed = 0):
+    def process_inputs(S):
         key_states = S.control.get_keys()
         if S.active_entity:
             S.drawer.display_keys(key_states, S.active_entity)
@@ -675,6 +832,12 @@ class ChainedProcessor():
                 S.ui_ref.set_image(S.active_entity.chained_feature.attached_image)
                 S.ui_ref.show_less = True
 
+        pressed_mouse = S.pygame_instance.mouse.get_pressed()
+        if S.active_entity and any(pressed_mouse):
+            S.active_entity.register_mouse(pressed_mouse)
+        elif S.active_entity:
+            S.active_entity.register_idle_mouse()
+
 
 
     def is_burning(S):
@@ -683,11 +846,11 @@ class ChainedProcessor():
     def get_burning_features_list(S):
         return S.producer.get_burning_features_list()
 
-    def tick(S, beat_time, time_elapsed):
+    def tick(S, time_elapsed):
 
         S.time_elapsed_cummulative += time_elapsed
 
-        S.process_inputs(time_elapsed)
+        S.process_inputs()
         S.redraw()
 
         feedback = S.get_feedback()
