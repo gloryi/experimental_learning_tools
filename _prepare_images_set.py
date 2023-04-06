@@ -4,20 +4,22 @@ import json
 from collections import defaultdict
 
 images_dirs = []
-#images_dirs.append("/home/gloryi/Pictures/Windows 10 Spotlight")
-#images_dirs.append("/home/gloryi/Pictures/FlickrSets")
+# images_dirs.append("/home/gloryi/Pictures/Windows 10 Spotlight")
+images_dirs.append("/home/gloryi/Pictures/FlickrSets")
 images_dirs.append("/home/gloryi/Pictures/MovieShots")
 images_dirs.append("/home/gloryi/Pictures/OldPhotos")
 images_dirs.append("/home/gloryi/Pictures/Windows 10 Spotlight")
 
 sets_dir = os.path.join(os.getcwd(), "learning_sets")
-#set_dir = os.path.join(sets_dir, "personal_set")
-set_dir = os.path.join(sets_dir, "test_set")
+# set_dir = os.path.join(sets_dir, "personal_set")
+# set_dir = os.path.join(sets_dir, "test_set")
+set_dir = os.path.join(sets_dir, "python_modules")
 
-#set_dir = "/mnt/X/WORKSHOP/Scripts/stocks_learning_git/experimental_learning_tools"
+# set_dir = "/mnt/X/WORKSHOP/Scripts/stocks_learning_git/experimental_learning_tools"
 
-TO_EXTRACT = 250
+TO_EXTRACT = 500
 TARGET_NAME = os.path.join(set_dir, "images_mapping.json")
+
 
 def extract_images_from_root(root_dir):
     images = []
@@ -26,6 +28,7 @@ def extract_images_from_root(root_dir):
             if ".png" or ".jpg" in f:
                 images.append(os.path.join(_r, f))
     return images
+
 
 images = []
 for directory in images_dirs:
@@ -43,7 +46,7 @@ mapping_to_data = defaultdict(list)
 
 for I, i in enumerate(range(0, len(images_prepared), 5)):
     for j in range(5):
-        mapping_to_data[I].append(images_prepared[i+j])
+        mapping_to_data[I].append(images_prepared[i + j])
 
 with open(TARGET_NAME, "w") as jsonfile:
     json.dump(mapping_to_data, jsonfile, indent=4)

@@ -1,22 +1,19 @@
 0,罗,gauze
 0,兰,orchid,elegant,graceful
 0,尼,Buddhist nun
-0,刘,kill,surname,destroy
+0,刘,kill,destroy
 0,伊,he,she,this,that
 1,勒,strangle,tighten
 1,俄,soon,Russian,sudden(ly)
 1,洛,city
-1,宋,surname,Song dynasty
-1,杨,willow,aspen,poplar,surname
-2,朱,cinnabar,surname,vermilion
+1,宋,Song dynasty
+1,杨,willow,aspen,poplar
+2,朱,cinnabar,vermilion
 2,埃,dirt,fine dust
-2,吴,surname
-2,梅,plums,prunes,surname
+2,梅,plums,prunes
 2,乃,then,really,indeed,namely,after all
-3,赵,surname
-3,蒋,surname
 3,莱,weed,goosefoot
-3,韩,fence,Korea,surname
+3,韩,fence,Korea
 3,曼,long,vast,extended,beautiful
 4,玛,agate,cornelian
 4,弗,not,negative
@@ -31,42 +28,35 @@
 6,凯,triumph,victory,triumphant
 6,乔,tall,lofty,proud,stately
 6,腊,dried meat
-6,彭,surname
 6,凤,male phoenix
 7,帕,veil,wrap,turban,kerchief
 7,邪,wrong,evil,vicious,depraved,perverse
 7,柳,pleasure,willow tree
-7,曹,surname
 7,孟,great,eminent
 8,娜,elegant,graceful,delicate
 8,芳,fragrant,virtuous,beautiful
 8,柏,cedar,cypress
-8,邓,surname
 8,廷,court
 9,澳,bay,inlet,dock,bank
-9,魏,surname
 9,吾,i,my,our,resist,impede
 9,曰,say
-9,韦,surname
-10,沈,sink,surname,submerge,addicted to
+10,沈,sink,submerge,addicted to
 10,阁,chamber,cabinet,pavilion
 10,穆,calm,solemn,majestic,reverent
 10,瑟,massive,dignified
 10,戈,spear,lance,halberd,rad. 62
 11,燕,enjoy,comfort
-11,仲,surname,mediator,go between
-11,卢,hut,black,cottage,surname
-11,吕,surname
+11,仲,mediator,go between
+11,卢,hut,black,cottage
 11,玄,deep,profound,abstruse
-12,冯,surname,gallop,by dint of
+12,冯,gallop,by dint of
 12,敦,esteem,honest,candid,sincere
-12,袁,robe,surname
+12,袁,robe
 12,侯,lord,marquis
 12,肝,liver
 13,兹,now,here,this,time,year
 13,祭,worship,sacrifice to
 13,仆,prone,servant,fall forward
-13,郭,surname
 13,歼,wipe out,kill off,annihilate
 14,契,deed,bond,engrave,contract
 14,莲,lotus,paradise,water lily
@@ -74,13 +64,13 @@
 14,浩,great,vast,numerous,abundant
 14,妖,weird,strange
 15,侍,serve,servant,samurai,attendant,attend upon
-15,汪,vast,deep,surname,extensive
+15,汪,vast,deep,extensive
 15,尿,urine,urinate
 15,翰,pen,pencil
 15,芬,aroma,perfume,fragrance
 16,萧,dejected
-16,柯,stalk,bough,surname,axe-handle
-16,葛,surname,edible bean
+16,柯,stalk,bough,axe-handle
+16,葛,edible bean
 16,鸿,vast
 16,鹰,falcon
 17,茨,caltrop,thatching
@@ -96,13 +86,12 @@
 19,於,in,at,on
 19,卿,noble
 19,囊,bag,sack,purse,put in bag
-19,贾,buy,trade,surname,merchant
-19,鹿,deer,surname
+19,贾,buy,trade,merchant
+19,鹿,deer
 20,锡,tin,bestow,confer,stannum
 20,璇,star
-20,潘,surname
 20,赐,give,appoint
-20,鲍,abalone,surname,dried fish
+20,鲍,abalone,dried fish
 21,佐,aid,assist,second,subordinate
 21,禧,happiness
 21,匠,artisan,workman,craftsman
@@ -112,10 +101,9 @@
 22,尉,officer
 22,後,rear,behind,after,descendents
 22,陀,steep bank
-22,谭,surname
 23,亨,smoothly,no trouble,progressing
 23,甫,man,begin,great,father
-23,浦,shore,surname
+23,浦,shore
 23,裸,bare,nude,strip,undress
 23,碧,jade,blue,green
 24,屠,butcher,massacre,slaughter
@@ -132,7 +120,6 @@
 26,菩,herb
 26,狄,surnam
 26,痴,dumb,silly,foolish,stupid
-26,蔡,surname
 27,脊,spine,ridge,backbone
 27,弓,bow,curved,arched
 27,喃,mumble,chattering,keep talking
@@ -149,14 +136,14 @@
 29,淫,lewd,obscene,licentious
 29,撰,write,compose,compile
 30,玫,rose
-30,姚,handsome,elegant,surname
+30,姚,handsome,elegant
 30,躯,body
 30,吏,magistrate
 30,猿,ape
 31,寨,stockade,outpost,brothel,stronghold
 31,惶,fearful,afraid,anxious,nervous
 31,逸,flee,escape,break loose
-31,茅,reeds,grass,rushes,surname
+31,茅,reeds,grass,rushes
 31,窑,kiln
 32,涅,slime,blacken,black mud
 32,蒲,vine,type of rush
@@ -173,7 +160,7 @@
 34,螺,conch,spiral,spiral shell
 34,轩,high,wide,carriage,balcony
 34,龟,cuckold
-35,姜,surname,ginger
+35,姜,ginger
 35,琳,gem
 35,斋,study
 35,彪,tiger,tiger-like
@@ -189,11 +176,11 @@
 37,坎,pit,hole,trap,snare,crisis
 37,轿,palanquin,sedan-chair
 38,棚,tent,shed,booth,awning
-38,邱,hill,mound,grave,surname
+38,邱,hill,mound,grave
 38,溢,full,overflow,brim over
 38,栖,perch,stay,roost
 38,喀,vomit
-39,阎,surname,village gate
+39,阎,village gate
 39,芦,rushes,reeds
 39,祷,pray,beg,plead,prayer,entreat
 39,熙,bright,splendid,glorious
@@ -202,21 +189,20 @@
 40,瑰,rose,fabulous
 40,焚,burn
 40,韵,rhyme,vowel
-40,豹,leopard,panther,surname
+40,豹,leopard,panther
 41,怡,joy,harmony,be glad,pleasure
 41,哟,ah
 41,焉,then,thereupon
 41,宛,seem,as if,crooked
-41,詹,surname,verbose
+41,詹,verbose
 42,毙,kill
 42,骇,scare,shock,terrify,frighten
-42,桓,surname
 42,驴,ass,donkey
 42,靖,calm,pacify,appease,peaceful
 43,汝,you
 43,冀,wish,hope for
 43,荆,cane,thorns,my wife,brambles
-43,崔,high,lofty,surname,towering
+43,崔,high,lofty,towering
 43,雁,wild goose
 44,珊,coral
 44,彦,elegant
@@ -236,7 +222,7 @@
 47,甸,crops,govern
 47,贱,mean,low,cheap,worthless
 47,囚,prisoner,convict,confine
-47,栗,surname,chestnuts
+47,栗,chestnuts
 47,魁,chief,best,leader,monstrous
 48,逾,go over,exceed,pass over
 48,黛,black
@@ -272,7 +258,7 @@
 54,丫,forked,bifurcation
 54,姬,beauty
 54,诏,decree,proclaim
-54,钮,knob,button,surname
+54,钮,knob,button
 55,棺,coffin
 55,耿,bright,shining,have guts
 55,懈,idle,remiss,relaxed
@@ -316,14 +302,14 @@
 63,蓉,hibiscus,Chengdu,Sichuan
 63,樱,cherry
 63,嗡,airplanes
-63,娥,good,surname,be beautiful
+63,娥,good,be beautiful
 63,蚕,silkworms
 64,澜,waves,ripples,overflowing
 64,杏,apricot,almond
 64,绥,soothe,pacify,appease
 64,冶,smelt,cast,found,fuse metals
 64,倏,hastily,suddenly,abruptly
-65,聂,whisper,surname
+65,聂,whisper
 65,婉,amiable,congenial,restrained
 65,鳍,fin
 65,匿,hide
@@ -333,13 +319,12 @@
 66,秉,grasp,hold,bundle,authority
 66,矢,vow,arrow,dart,swear
 66,啪,syllable
-67,邵,surname
 67,缸,crock,cistern,earthen jug
 67,驯,tame,docile,obedient
 67,缆,hawser,cable
 67,晌,noon,midday,moment
 68,贮,store,hoard,stockpile
-68,隋,surname,Sui dynasty
+68,隋,Sui dynasty
 68,虔,reverent
 68,琐,petty,trifling,troublesome
 68,碟,plate,small dish
@@ -349,7 +334,7 @@
 69,虾,shrimp,prawn
 69,簿,register,notebook
 70,擒,catch,seize,arrest,capture
-70,枣,dates,jujubes,surname,date tree
+70,枣,dates,jujubes,date tree
 70,嘎,bad,malevolent
 70,苑,park,pasture,garden,mansion
 70,牟,make,get,low,seek,barley
@@ -357,20 +342,19 @@
 71,赎,buy,redeem,ransome,atone for
 71,屯,camp,village,hamlet,station
 71,灼,burn,broil,bright,cauterize
-71,裘,surname,fur garments
+71,裘,fur garments
 72,砰,bang!
 72,棘,thorns,brambles,jujube tree
 72,碱,lye,salt,alkali,alkaline
-72,毋,not,do not,surname,rad. 80
+72,毋,not,do not,rad. 80
 72,俏,like,pretty,similar,resemble
 73,黯,dark,black,sullen,dreary
 73,粟,grain
 73,粪,dung,shit,manure,excrement,night soil
 73,尹,govern,oversee,director
 73,癫,mad,crazy,mania,insan,madness
-74,廖,surname
 74,缕,thread,precise,detailed
-74,窦,hole,surname,burrow,corrupt
+74,窦,hole,burrow,corrupt
 74,簇,swarm,cluster
 74,棱,edge,angle
 75,叩,ask,bow,knock,kowtow
@@ -481,7 +465,6 @@
 96,靴,boots
 96,捂,resist
 96,疮,tumor,boil,sore,wound
-96,郝,surname
 96,苛,small,petty,harsh,rigorous
 97,秽,dirty,unclean,immoral,obscene
 97,茜,madder,reeds
@@ -497,7 +480,6 @@
 99,婿,husband,son-in-law
 99,寥,few,empty,scarce,deserted
 99,槐,locust tree
-99,裴,surname
 100,祀,worship,to sacrifice
 100,埔,plain,port,arena,market
 100,絮,waste cotton
@@ -508,7 +490,6 @@
 101,饵,bait,bait,entice,dumplings
 101,茄,eggplant
 101,琪,type of jade
-102,邹,surname
 102,瑚,coral
 102,殆,dangerous,perilous,endanger
 102,噜,verbose,mumbling,talkative
@@ -583,7 +564,7 @@
 116,幌,curtain
 116,踉,hop,jump,urgently,hurriedly
 116,葫,bottle-gourd
-117,俞,surname,consent,approve
+117,俞,consent,approve
 117,匕,spoon,dirk,ladle,knife
 117,嗤,sneer,snort,laugh at,ridicule
 117,孵,hatch,sit on eggs
@@ -620,7 +601,6 @@
 123,嘀,backbite
 124,膳,meals,board,provisions
 124,踌,smug,falter,hesitate
-124,瞿,surname
 124,闽,a river,a tribe
 124,豚,suffle,small pig
 125,掺,mix,blend,adulterate
@@ -698,7 +678,7 @@
 139,攸,far,distant
 139,翎,wing,plume,feather
 139,堑,moat,pit,trench,cavity
-140,檀,surname,hardwood,sandalwood
+140,檀,hardwood,sandalwood
 140,寅,to respect,reverence
 140,磊,great
 140,驭,drive,ride,manage,control
@@ -713,7 +693,7 @@
 142,筝,kite
 142,幡,flag,pennant,banner,streamer
 142,霹,thunder
-143,竺,India,bamboo,surname
+143,竺,India,bamboo
 143,烙,brand,burn
 143,毗,help,assist,adjoin,connect
 143,鸠,pigeon,collect,assemble
@@ -768,7 +748,6 @@
 153,揖,bow,salute,yield,defer to
 153,觑,watch,peep at,spy on
 153,憔,haggard,emaciated,be worn-out
-154,羌,surname
 154,诲,teach,urge,instruct,encourage
 154,砾,gravel,pebbles
 154,撩,raise,leave,lift up,depart
@@ -810,7 +789,7 @@
 161,籽,seed,pip,pit,stone
 162,愫,honest,sincere,guileless
 162,暨,and,reach,attain,confines
-162,敖,ramble,surname,leisurely,play about
+162,敖,ramble,leisurely,play about
 162,赘,unnecessary,superfluous
 162,抉,choose,gouge,select,pluck out
 163,淤,mud,clog up,silt up,sediment
@@ -895,9 +874,9 @@
 178,擂,rub,grind,triturate
 179,苯,benzene,luxuriant
 179,诃,curse,abuse,scold loudly
-179,铎,bell,surname
-179,荀,plant,surname
-179,驹,colt,sun,fleet,swift,surname
+179,铎,bell
+179,荀,plant
+179,驹,colt,sun,fleet,swift
 180,攫,seize,snatch away,catch with
 180,憬,rouse,awaken
 180,踵,heel,visit,follow,call on
@@ -999,7 +978,7 @@
 199,懵,dull,stupid,ignorant
 199,镰,sickle
 200,寐,sleep,be asleep
-200,褚,bag,pad,stuff,valise,surname
+200,褚,bag,pad,stuff,valise
 200,攥,grip,grasp,(coll.) hold
 200,涧,brook
 200,蝙,bat
@@ -1068,7 +1047,7 @@
 213,讷,mumble,stammer
 213,扈,escort,retinue,insolent
 213,蜈,centipede
-214,翟,surname,plumes
+214,翟,plumes
 214,藕,lotus root
 214,蓓,bud
 214,鋆,gold
@@ -1169,7 +1148,7 @@
 233,捋,to rub,to pluck
 233,涓,brook,pure,stream,select
 234,荪,iris,flower
-234,娄,surname,to wear
+234,娄,to wear
 234,麝,musk deer
 234,蚤,flea,louse
 234,搪,evade,parry,block,ward off
@@ -1235,7 +1214,7 @@
 246,榕,banyan tree
 247,鞑,tatars
 247,袤,length,longitude,lengthwise
-247,谌,sincere,surname,faithful
+247,谌,sincere,faithful
 247,醺,get drunk
 247,秆,straw
 248,徨,doubtful,irresolute,vacillating
@@ -1243,7 +1222,6 @@
 248,翡,jade,emerald,kingfisher
 248,缨,tassel,bother,to annoy,a chin strap
 248,锹,shovel
-249,嵇,surname
 249,髻,topknot
 249,辎,dray
 249,痣,spots,moles,birthmark
@@ -1295,7 +1273,7 @@
 258,椿,father
 259,锭,slab,cake,spindle,tablet
 259,罔,net,libel,deceive,negative
-259,锺,cup,glass,goblet,surname
+259,锺,cup,glass,goblet
 259,匍,crawl
 259,祗,respect,revere,look up to
 260,锰,manganese
@@ -1371,7 +1349,7 @@
 274,箴,needle,probe,admon
 274,嗥,roar,wail,bark,yelp,call out
 274,褴,ragged,tattered,threadbare
-274,蓟,circium,surname,thistles
+274,蓟,circium,thistles
 274,圩,dike,embankment
 275,孪,twins
 275,杳,dark,deep,obscure,mysterious
@@ -1454,7 +1432,7 @@
 290,臊,rank,fetid,rancid,frowzy,bashful
 290,酚,phenol
 291,纾,loosen,relax,relieve,extricate
-291,晁,dawn,morning,surname
+291,晁,dawn,morning
 291,孛,comet
 291,炀,roast,melt,flame,scorch
 291,憩,rest,take rest
@@ -1546,7 +1524,7 @@
 309,芪,celery
 309,龌,narrow,small,dirty
 309,挞,flog,whip,chastise
-309,嬴,to win,surname
+309,嬴,to win
 309,苻,kind of herb
 310,嘁,ashamed
 310,恸,grief,mourn,sadness,be moved
@@ -1578,7 +1556,6 @@
 315,潢,lake,pond
 315,遛,stroll,take walk
 315,柚,pomelo,grapefruit
-316,郏,surname
 316,荻,reed
 316,藜,pigweed
 316,镳,bit,ride,bridle
@@ -1589,10 +1566,10 @@
 317,搽,rub,smear,wipe,anoint
 317,濡,wet,damp,immerse,moisten
 318,寮,hut,shanty,shack
-318,佗,he,other,a load,surname
+318,佗,he,other,a load
 318,诜,inquire,question,numerous
 318,視,see,look at,inspect,observe
-318,偻,humpback,surname
+318,偻,humpback
 319,夯,burden,lift up,heavy load
 319,闱,gate,door
 319,谖,lie,forget,cheat,deceive
@@ -1669,7 +1646,6 @@
 333,馥,scent,aroma,fragrance
 333,梏,fetters,handcuffs,manacles
 334,讣,obituary
-334,邝,surname
 334,鲟,sturgeon
 334,剜,cut,cut out,pick out,scoop out
 334,绉,crepe,crape,creases,wrinkles
@@ -1693,7 +1669,7 @@
 338,铂,platinum
 338,馏,distill
 338,阈,threshold,confined,separated
-339,麋,elk,surname
+339,麋,elk
 339,宥,forgive,pardon,indulge
 339,妍,beautiful,handsome,seductive
 339,铤,ingots,hurry
@@ -1715,12 +1691,12 @@
 342,忝,ashamed,disgraced
 343,咤,scold,roar,bellow,shout at
 343,迤,wind
-343,贲,surname,energetic,forge ahead
+343,贲,energetic,forge ahead
 343,胪,display
 343,鍪,an iron pan,a metal cap
 344,蔫,calm,faded,withered,decayed
 344,刈,mow,reap,cut off,sickle
-344,僖,joy,delight,surname,gladness
+344,僖,joy,delight,gladness
 344,咿,laugh
 344,鹌,quail
 345,茏,tall grass,water-weeds
@@ -1735,7 +1711,6 @@
 346,濯,rinse,wash out,cleanse
 347,盥,wash
 347,砺,sharpen,whetstone
-347,佘,surname
 347,谶,hint,omen,prophecy
 347,楂,a raft,to hew
 348,翦,cut,clip,scissors,annhilate
@@ -1820,7 +1795,7 @@
 363,渚,islet
 364,轭,yoke,collar
 364,鹬,snipe,kingfisher
-364,黃,yellow,surname
+364,黃,yellow
 364,膘,fat,rump
 364,邛,a mound,in distress
 365,痨,consumption
@@ -1864,7 +1839,7 @@
 372,诓,lie,cheat,swindle
 372,錾,chisel
 373,淬,dye,soak,temper,alter,change
-373,隗,high,lofty,surname
+373,隗,high,lofty
 373,悌,brotherly,respectful
 373,槭,maple
 373,邈,far,remote,slight,distant
@@ -1872,7 +1847,7 @@
 374,蹴,kick,leap,solemn,tread on
 374,砒,arsenic
 374,痈,sore,ulcer,abscess,carbuncle
-374,镏,distil,surname,lutetium
+374,镏,distil,lutetium
 375,羯,wether,deer skin
 375,豕,a pig,boar
 375,鲂,bream
@@ -1963,7 +1938,7 @@
 392,祇,(used for
 392,佝,rickets
 392,翕,agree
-393,遴,select,choose,surname
+393,遴,select,choose
 393,郛,suburbs
 393,較,more,compare
 393,驗,test,verify,examine,inspect
@@ -2006,7 +1981,6 @@
 401,潸,weep
 401,跏,squat
 401,鲶,sheat
-401,苌,surname
 401,抻,pull
 402,琰,gem,jewel
 402,鹚,cormorant
@@ -2023,7 +1997,7 @@
 404,萸,dogwood
 404,稔,harvest,to know,ripe grain
 404,穰,lush,abundant
-405,谯,tower,surname
+405,谯,tower
 405,芗,aromatic
 405,菸,to fade
 405,葩,flowers
@@ -2057,7 +2031,6 @@
 411,醪,unclear wine
 411,鲛,shark
 411,媪,old woman
-411,邬,surname
 412,殇,die young
 412,嫠,a widow
 412,肼,hydrazine
@@ -2181,7 +2154,6 @@
 436,诎,bend,stoop,crouch,to yield
 436,獐,roebuck
 436,鳏,widower,huge fish,bachelor
-436,郴,surname
 436,幂,cover-cloth
 437,箝,tongs,pliers,tweezers,pincers
 437,疝,hernia,rupture
@@ -2265,7 +2237,6 @@
 452,凼,ditch,pool
 453,苴,sackcloth
 453,颛,good,honest,simple,respectful
-453,厍,surname
 453,匚,box
 453,徉,rove,wonder,stray,hesitating
 454,氡,radon
@@ -2419,7 +2390,7 @@
 483,荽,coriander
 483,怫,sorry,anxious,depressed
 484,窀,to bury
-484,缯,surname,silk fabrics
+484,缯,silk fabrics
 484,倬,large,clear,distinct,noticeable
 484,摭,pick up,gather
 484,帔,a skirt
@@ -2433,7 +2404,6 @@
 486,葭,reed,flute,bulrush,whistle
 486,衽,lapel
 486,鳢,snakehead
-487,嫘,surname
 487,罟,net,snare
 487,钌,ruthenium
 487,愦,confused,troubled
@@ -2492,7 +2462,6 @@
 498,窳,dirty,weak,a flaw,useless,cracked
 498,虮,nits,louse eggs
 498,蚰,millipede
-498,邰,surname
 499,捩,snap,tear
 499,蹉,error,slip,mistake,failure
 499,莪,artemisia
@@ -2513,7 +2482,6 @@
 502,隱,hide,hidden,secret,conceal
 502,堞,plate
 502,逑,pair,unite,match,collect
-503,逯,surname
 503,畀,to give
 503,運,luck,ship,fortune,transport
 503,鲃,a bonito,(same as
@@ -2665,9 +2633,9 @@
 532,吣,vomit
 533,羼,mix,confuse,interpolate
 533,骘,stallion,promote
-533,赉,give,confer,present,surname
+533,赉,give,confer,present
 533,镓,gallium
-533,璩,surname,jade ring,earrings
+533,璩,jade ring,earrings
 534,鸸,swallow
 534,涠,still water
 534,溲,soak,urinate,drench
@@ -2727,7 +2695,6 @@
 545,钽,tantalum
 545,脹,swell,expand,inflate
 545,遺,lose,omit
-545,鄹,surname
 546,菡,buds,lotus buds
 546,杌,hence,sterility
 546,阚,peep,roar,glance,growl
@@ -2747,10 +2714,9 @@
 549,顧,look at,look back,look after
 549,辂,a chariot,carriage
 549,欷,sob,sigh
-549,麴,yeast,leaven,surname
+549,麴,yeast,leaven
 550,戢,to cease,store up,to put away
 550,誤,err,interfere
-550,芈,surname
 550,燠,warm,warmth
 550,耜,plow
 551,顸,stupid,large face,flat face
@@ -2904,7 +2870,7 @@
 580,沔,flood,overflowing
 580,彖,a hog,a hedgehog,a porcupine
 581,車,cart,vehicle
-581,陳,plead,exhibit,display,surname
+581,陳,plead,exhibit,display
 581,雜,mix,mixed,mingle,blended
 581,驚,frighten,startle,surprise
 581,龍,dragon
@@ -3031,7 +2997,6 @@
 606,瘗,bury,inter
 606,麿,I
 606,檗,tree
-606,鼂,surname
 606,詳,detailed,complete,thorough
 607,際,border,boundary,juncture
 607,褔,complex,double
@@ -3058,7 +3023,7 @@
 611,蕞,tiny,little,small,petty
 611,喈,music,melody
 611,戋,small,tiny,narrow,little
-612,郤,crack,opening,surname
+612,郤,crack,opening
 612,聍,earwax
 612,铷,rubidium
 612,硏,grind
@@ -3094,7 +3059,7 @@
 618,埸,a dike,a border,a limit,a frontier,a boundary
 618,蒹,reed
 619,瞍,blind
-619,铫,surname,a spear,large hoe
+619,铫,a spear,large hoe
 619,蒐,seek,collect,gather,assemble,spring hunt
 619,蹻,brave,sandals
 619,幞,turban
@@ -3142,7 +3107,7 @@
 628,礙,block,deter,hinder,obstruct
 628,華,flowery,Chinese,illustrious
 628,號,mark,sign,symbol,number
-628,談,talk,surname
+628,談,talk
 629,費,fee,expenses
 629,顏,face
 629,飯,food,meal,cooked rice
@@ -3164,7 +3129,6 @@
 632,釆,distinguish
 632,鲕,roe
 633,頗,very,rather
-633,郄,surname
 633,埘,roost
 633,薤,shallots,scallion
 633,鲞,dried fish
@@ -3212,7 +3176,7 @@
 642,銀,cash,silver,money,wealth
 642,汆,to boil,to parboil
 642,硃,cinnabar,a red mole
-642,仝,same,together,surname
+642,仝,same,together
 643,揸,seize,carry,handful,to grasp
 643,忭,pleased,delighted
 643,妤,fair,beautiful,handsome
@@ -3269,7 +3233,7 @@
 653,駮,join,argue,transfer,variegated
 653,筴,pincers,to divine
 654,贳,loan,borrow,pardon
-654,贶,give,grant,bestow,surname
+654,贶,give,grant,bestow
 654,堠,battlements
 654,屦,tread on
 654,驵,noble steed
@@ -3322,7 +3286,7 @@
 664,聖,holy,sage,sacred
 664,衝,rush against
 664,訊,ask,inquire,examine,reproach
-664,馬,horse,surname
+664,馬,horse
 665,誖,obstinate,perverse,disorderly
 665,鰨,sole
 665,睒,to peep,to shine,glittering,to glance at
@@ -3359,7 +3323,7 @@
 671,禿,bald,bare,stripped
 671,貧,poor,needy
 672,買,buy,bribe,purchase,persuade
-672,賈,buy,trade,surname,merchant
+672,賈,buy,trade,merchant
 672,緣,hem,fate,cause,karma,margin
 672,誘,guide,entice,induce,persuade
 672,賦,tax,give,army,endow,diffuse
@@ -3412,7 +3376,7 @@
 682,頂,top,peak,very
 682,飢,hunger,hungry,starving,a famine
 682,驅,expel,drive away
-682,魚,fish,surname
+682,魚,fish
 683,鳉,name of fish
 683,黴,mold,fungi,mildew,bacteria
 683,祼,libation
@@ -3593,7 +3557,7 @@
 718,禎,lucky,good omen,auspicious
 718,禦,defend,resist
 718,稟,report to,petition
-719,竇,hole,surname,burrow,corrupt
+719,竇,hole,burrow,corrupt
 719,編,knit,weave,arrange,compile
 719,縿,streamer
 719,舊,old,past,former,ancient
@@ -3618,7 +3582,7 @@
 723,縫,sew,mend
 723,肅,reverently,pay respects
 723,鉏,hoe,eradicate,eliminate
-724,麹,yeast,leaven,surname
+724,麹,yeast,leaven
 724,蔔,radish
 724,繐,fine cloth
 724,眥,eye sockets
@@ -3647,7 +3611,6 @@
 729,隄,dike,embankment
 729,簰,bamboo raft
 729,蓏,melon
-729,薳,surname
 730,遡,formerly,go upstream
 730,錞,instrument
 730,齧,bite,gnaw,erode,wear down
@@ -3663,7 +3626,6 @@
 732,鴿,dove,pigeon
 732,纘,continue,succeed,carry on
 732,胵,(Cant.)
-733,蔣,surname
 733,蛯,shrimp
 733,讞,judge,to decide,decision,a verdict
 733,餈,rice cake
@@ -3811,7 +3773,7 @@
 762,鈣,calcium
 762,鍛,temper,refine,forge metal
 762,鐵,iron,firm,solid,strong
-762,閻,surname,village gate
+762,閻,village gate
 762,隂,shady,dark,cold,secret,mysterious
 763,頌,laud,ode,hymn,acclaim
 763,頰,jaw,cheeks
@@ -3944,7 +3906,7 @@
 788,萊,weed,goosefoot
 788,葢,cover,hide,protect
 789,蔥,leeks,onions,scallions
-789,藍,blue,surname
+789,藍,blue
 789,藘,madder
 789,藝,art,craft,talent,ability
 789,蘿,turnip
@@ -3963,7 +3925,6 @@
 792,輩,class,lifetime,generation
 792,辭,words,speech,phrase,expression
 792,遜,humble,yield,modest
-793,鄧,surname
 793,釡,pot,kettle,cauldron
 793,鍍,plate,coat,gild
 793,鎖,lock,chains,padlock,shackles
@@ -3973,7 +3934,7 @@
 794,願,want,wish,desire,ambition
 794,餁,cooked food
 794,餵,to feed,to raise
-795,馮,surname,gallop,by dint of
+795,馮,gallop,by dint of
 795,馳,hurry
 795,駛,sail,fast,drive,pilot,quick
 795,騎,mount,cavalry
@@ -3998,7 +3959,6 @@
 799,鰷,minnow
 799,盩,callus
 799,盻,glare,stare
-800,禢,surname
 800,竏,kiloliter
 800,筈,arrow end
 800,篴,whistle,bamboo flute
@@ -4021,7 +3981,7 @@
 804,簥,a large pipe,a farm tool
 804,籲,appeal,request,implore
 804,縢,bind,cord,tie up,restrain
-804,繒,surname,silk fabrics
+804,繒,silk fabrics
 804,胔,rotten meat
 805,胾,minced meat
 805,莻,late
@@ -4063,7 +4023,6 @@
 812,詵,inquire,question,numerous
 812,譔,write,eulogize,compose
 812,豭,boar,male pig
-813,趙,surname
 813,圊,rest room
 813,醃,salt,pickle,marinate
 813,録,copy
@@ -4173,7 +4132,7 @@
 834,聵,deaf
 834,脵,rump,thighs,share,haunches
 834,臄,palate
-835,莊,villa,village,hamlet,surname
+835,莊,villa,village,hamlet
 835,莢,pods
 835,莵,dodder,creeper
 835,蓷,motherwort
@@ -4194,7 +4153,7 @@
 838,謨,plan,plan,scheme,be without
 838,譫,talkative
 839,貛,badger
-839,賓,guest,submit,visitor,surname
+839,賓,guest,submit,visitor
 839,賞,reward,grant,bestow,appreciate
 839,趯,jump
 839,跔,to limp,numb feet
@@ -4266,7 +4225,7 @@
 853,磑,grind,stone mill,break apart
 853,窎,deep,distant
 853,詒,bequeath
-853,荘,villa,village,hamlet,surname
+853,荘,villa,village,hamlet
 853,蒻,rushes
 854,蔴,hemp,sesame
 854,裛,damp,a book bag
@@ -4287,7 +4246,7 @@
 857,碔,1/2 pr stone
 857,礮,a gun
 857,祘,to calculate
-857,禤,surname Xuan
+857,禤 Xuan
 858,秌,(same as
 858,稬,sticky,glutinous
 858,稲,rice plant
@@ -4350,11 +4309,9 @@
 869,輀,hearse
 870,迋,travel,go to,scare,deceive
 870,逓,deliver,hand over,substitute
-870,鄺,surname
 870,鈪,bangle
 870,尜,a child toy
 871,鐐,fetters
-871,轷,surname
 871,鞄,leather bag
 871,鯀,giant fish
 871,鼪,weasel
@@ -4362,7 +4319,7 @@
 872,籣,bow case
 872,禔,peace,happiness
 872,襛,fine clothes
-872,賚,give,confer,present,surname
+872,賚,give,confer,present
 873,魳,a barracuda
 873,鵄,variant of
 873,穵,,gouge,dig out,deep hollow
@@ -4411,7 +4368,6 @@
 882,蓗,a plant,five-fold
 882,蕋,flower buds
 882,薐,spinach
-882,藺,surname
 882,蘓,thyme,revive,soviet,resurrect
 883,蝍,a centipede
 883,蝨,louse,bed bug
@@ -4469,7 +4425,7 @@
 893,耡,hoe
 893,艩,tholepin
 894,苅,mow,reap,cut off,sickle
-894,蔿,surname,place name
+894,蔿,place name
 894,薆,to cover,to hide,to conceal
 894,薗,park,garden,orchard
 894,蚿,millipede
@@ -4484,7 +4440,6 @@
 896,赑,strong
 896,蹧,to spoil,to ruin
 897,躿,tall
-897,郟,surname
 897,鄑,kick
 897,釪,an alms bowl
 897,鋺,a metal bowl
@@ -4522,7 +4477,7 @@
 904,賂,bribe
 904,輽,vehicle
 904,釦,button,clasp,buckle,engrave
-904,鈕,knob,button,surname
+904,鈕,knob,button
 905,鏽,rust,corrode
 905,鐲,bracelet,armband,small bell
 905,颱,taiphoon
@@ -4632,7 +4587,7 @@
 926,闡,explain,clarify,elucidate
 926,陻,dam,bury,mound,small hill
 926,霂,drizzle,fine rain
-926,韓,fence,Korea,surname
+926,韓,fence,Korea
 927,頊,grieved,anxious
 927,頋,to care for
 927,頓,bow,pause,stop,kowtow,arrange
@@ -4702,7 +4657,7 @@
 940,纍,bind,link,join,wind about
 940,肧,embryo
 940,豊,lush,plenty,abundant,bountiful
-940,賁,surname,energetic,forge ahead
+940,賁,energetic,forge ahead
 941,輘,a car-rut
 941,邏,patrol,watch,inspect
 941,雘,ochre
@@ -4720,7 +4675,7 @@
 943,騍,mother horse
 944,龎,big,huge,messy,disorderly
 944,竈,furnace
-944,聶,whisper,surname
+944,聶,whisper
 944,蕒,a plant name
 944,説,speak
 945,鑰,key,lock

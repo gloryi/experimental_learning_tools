@@ -4,13 +4,14 @@ import os
 import time
 
 from config import PROGRESSION_FILE, IMAGES_MAPPING_FILE
-from config import TEST
+from config import TEST, BURNING_SIZE
 
-class ChainUnitType():
+
+class ChainUnitType:
     type_key = "type_key"
     type_feature = "type_feature"
-    mode_open =  "mode_open"
-    mode_question =  "mode_question"
+    mode_open = "mode_open"
+    mode_question = "mode_question"
     mode_active_question = "mode_active_question"
     mode_hidden = "mode_hidden"
     mode_highligted = "mode_highligted"
@@ -22,18 +23,21 @@ class ChainUnitType():
     font_utf = "font_utf"
     font_short_utf = "font_short_utf"
 
-class ChainUnit():
-    def __init__(S,
-                 text,
-                 type = None,
-                 mode = None,
-                 position = None,
-                 order_no = None,
-                 extra = None,
-                 preferred_position = None,
-                 feature_options = False,
-                 hint = False,
-                 font = ChainUnitType.font_utf):
+
+class ChainUnit:
+    def __init__(
+        S,
+        text,
+        type=None,
+        mode=None,
+        position=None,
+        order_no=None,
+        extra=None,
+        preferred_position=None,
+        feature_options=False,
+        hint=False,
+        font=ChainUnitType.font_utf,
+    ):
 
         S.text = text
         S.type = type
@@ -45,10 +49,13 @@ class ChainUnit():
         S.hint = hint
         S.feature_options = feature_options
 
-class ChainedFeature():
+
+class ChainedFeature:
     def __init__(S, entity, features):
         S.entity = entity
-        S.features = [_[:20] for _ in features]
+        S.features = [_[:20].lower() for _ in features]
+        S.info = ""
+        S.original_len = 1
         S.hints = [False for _ in range(10)]
         S.feature_level = 0
         S.feature_errors = []
@@ -57,9 +64,7 @@ class ChainedFeature():
         S.rised = False
         S.review = False
         S.attached_image = ""
-        S.basic_timing_per_level = {0:45,
-                                   1:25,
-                                   2:25}
+        S.basic_timing_per_level = {0: 45, 1: 30, 2: 30}
 
     def set_mode(S, unit_type):
 
@@ -72,10 +77,7 @@ class ChainedFeature():
 
     def ask_for_image(S):
         if S.attached_image and S.feature_level < 2:
-            #if len(S.attached_image) <= 2:
             return S.attached_image
-            #else:
-                #return S.attached_image[0::2]
         else:
             return None
 
@@ -90,20 +92,40 @@ class ChainedFeature():
 
     def check_hints(S):
         hints_set = True
+        if S.review:
+            return True
         for i in range(len(S.features)):
             if not S.hints[i]:
                 hints_set = False
         return hints_set
 
+    def recount_hints(S):
+        if not S.check_hints():
+            S.feature_level = 0
+            S.decreased = True
+
+    def try_set_random_entity(S):
+        if S.review:
+            S.entity = "["+random.choice(S.features)+"]"
+
     def get_context(S):
-       features = [ChainUnit(_, ChainUnitType.type_feature,
-                                 S.set_mode(ChainUnitType.type_feature),
-                                 ChainUnitType.position_features, i,
-                                  preferred_position = i,
-                                 feature_options = S.review,
-                                hint = S.hints[i],
-                                 extra = S.set_extra(ChainUnitType.type_feature)) for (i,_) in enumerate(S.features)]
-       return features
+        '''Both get features, and tick-like method'''
+        S.try_set_random_entity()
+        features = [
+            ChainUnit(
+                _,
+                ChainUnitType.type_feature,
+                S.set_mode(ChainUnitType.type_feature),
+                ChainUnitType.position_features,
+                i,
+                preferred_position=i,
+                feature_options=S.review,
+                hint=S.hints[i],
+                extra=S.set_extra(ChainUnitType.type_feature),
+            )
+            for (i, _) in enumerate(S.features)
+        ]
+        return features
 
     def register_error(S, error_index):
         if error_index < len(S.feature_errors):
@@ -114,7 +136,6 @@ class ChainedFeature():
         if hint_index < len(S.hints):
             S.hints[hint_index] = [hint_x_rel, hint_y_rel]
 
-
     def decrease_errors(S):
         if S.cummulative_error > 1:
             S.cummulative_error //= 2
@@ -124,28 +145,31 @@ class ChainedFeature():
         for i in range(len(S.feature_errors)):
             error = S.feature_errors[i]
             if error > 1:
-                S.feature_errors[i]//=2
+                S.feature_errors[i] //= 2
             else:
                 S.feature_errors[i] = 0
-
 
     def get_main_title(S):
         return S.entity
 
-    def register_progress(S, is_solved = False):
+    def register_progress(S, is_solved=False):
         timing = S.basic_timing_per_level[S.feature_level]
         level = S.feature_level
         if is_solved:
             if level != 0:
-                S.basic_timing_per_level[S.feature_level] = timing +2 if timing < 30 else 30
+                S.basic_timing_per_level[S.feature_level] = (
+                    timing + 2 if timing < 40 else 40
+                )
 
             S.feature_level = level + 1 if level < 2 else 2
             S.rised = True
             S.decreased = False
         else:
             if level != 0:
-                S.basic_timing_per_level[S.feature_level] = timing -2 if timing > 20 else 20
-            S.feature_level = level -1 if level > 0 else 0
+                S.basic_timing_per_level[S.feature_level] = (
+                    timing - 2 if timing > 25 else 25
+                )
+            S.feature_level = level - 1 if level > 0 else 0
             S.decreased = True
             S.rised = False
 
@@ -164,14 +188,15 @@ class ChainedFeature():
         return f"{S.entity} | progress = {S.feature_level} | errors = {S.cummulative_error}"
 
 
-class FeaturesChain():
-    def __init__(S, chain_no, features, is_review_requires = True):
+class FeaturesChain:
+    def __init__(S, chain_no, features, is_review_requires=True):
         S.chain_no = chain_no
         S.features = features
 
         if is_review_requires:
             S.features.append(S.create_review_chain(S.features))
             S.features[-1].review = True
+            S.features[-1].original_len = len(S.features[-1].features)
 
         S.progression_level = 0
         S.errors_mapping = [[0 for _ in range(10)] for j in range(5)]
@@ -200,45 +225,63 @@ class FeaturesChain():
         for feature, feature_errors in zip(S.features, S.errors_mapping):
             feature.feature_errors = feature_errors
             feature.cummulative_error = sum(feature_errors)
-        S.max_error = max([max(feature.feature_errors, default=0) for feature in S.features], default=0)
-        S.cummulative_error = sum(sum(feature.feature_errors) for feature in S.features)
+        S.max_error = max(
+            [max(feature.feature_errors, default=0) for feature in S.features],
+            default=0,
+        )
+        S.cummulative_error = sum(sum(feature.feature_errors)
+                                  for feature in S.features)
 
     def set_hints(S, hints_mapping):
         S.hints_mapping = hints_mapping
+        all_hints_set = True
         for feature, feature_hints in zip(S.features, S.hints_mapping):
             feature.hints = feature_hints
 
-    def update_errors(S, register_new = False):
+    def update_errors(S, register_new=False):
         if register_new:
             S.fresh_errors += 1
 
         for error_index, (feature, _) in enumerate(zip(S.features, S.errors_mapping)):
             S.errors_mapping[error_index] = feature.feature_errors
-        S.max_error = max([max(feature.feature_errors, default = 0) for feature in S.features], default=0)
-        S.cummulative_error = sum(sum(feature.feature_errors) for feature in S.features)
+        S.max_error = max(
+            [max(feature.feature_errors, default=0) for feature in S.features],
+            default=0,
+        )
+        S.cummulative_error = sum(sum(feature.feature_errors)
+                                  for feature in S.features)
 
-    def get_worst_features(S, features_no = 1):
-        sorted_by_mistake = sorted(S.features,key = lambda _ : _.cummulative_error, reverse = True)
+    def update_hints(S):
+        for hint_index, (feature, _) in enumerate(zip(S.features, S.hints_mapping)):
+            S.hints_mapping[hint_index] = feature.hints
+
+    def get_worst_features(S, features_no=1):
+        sorted_by_mistake = sorted(
+            S.features, key=lambda _: _.cummulative_error, reverse=True
+        )
         return sorted_by_mistake[:features_no]
-
 
     def initialize_images(S, images_list):
         for i, feature in enumerate(images_list):
-            i2 = (i+1)%len(images_list)
-            #print(i, i2, len(images_list))
+            i2 = (i + 1) % len(images_list)
+            # print(i, i2, len(images_list))
             if i < len(S.features):
-                S.features[i].attached_image = [images_list[i], images_list[i2]]
+                S.features[i].attached_image = [
+                    images_list[i], images_list[i2]]
             else:
                 break
 
-        #for image, feature in zip(images_list, S.features):
-            #feature.attached_image = image
+        # for image, feature in zip(images_list, S.features):
+        # feature.attached_image = image
         S.features[-1].attached_image = images_list
 
     def get_next_feature(S):
+        S.features[S.active_position].recount_hints()
+
         level = S.features[S.active_position].feature_level
         is_fallback = S.features[S.active_position].decreased
         is_up = S.features[S.active_position].rised
+
         if level == 0 and is_fallback:
             return S.features[S.active_position]
         if level == 1:
@@ -248,6 +291,7 @@ class FeaturesChain():
 
         S.features[S.active_position].deselect()
         S.active_position += 1
+
         if S.active_position >= len(S.features):
             S.active_position = 0
             if S.fresh_errors <= 3:
@@ -262,11 +306,13 @@ class FeaturesChain():
             S.fresh_errors = 0
 
             return None
+
         S.features[S.active_position].select()
+        S.features[S.active_position].recount_hints()
         return S.features[S.active_position]
 
 
-class ChainedModel():
+class ChainedModel:
     def __init__(S, chains):
         S.chains = chains
         S.active_chain = None
@@ -275,6 +321,8 @@ class ChainedModel():
         S.mistakes_trigger = False
         S.mistakes_chain = []
         S.burning_chain = []
+        S.chain_alter_notify = False
+        S.skip_first_alter = True
 
         is_restored = S.restore_results(PROGRESSION_FILE)
 
@@ -297,9 +345,10 @@ class ChainedModel():
                 chain.last_review_urge = chain.last_review_urge - 1
 
         if S.old_limit:
-            S.chains.sort(key = lambda _ : _.progression_level + _.last_review_urge * 0.25)
+            S.chains.sort(key=lambda _: _.progression_level +
+                          _.last_review_urge * 0.25)
         else:
-            S.chains.sort(key = lambda _ : _.progression_level)
+            S.chains.sort(key=lambda _: _.progression_level)
             if not S.new_limit:
 
                 S.old_limit = 2
@@ -311,31 +360,39 @@ class ChainedModel():
         if not S.active_chain:
             return
 
-        worst_features = S.active_chain.get_worst_features(features_no = 2)
+        worst_features = S.active_chain.get_worst_features(features_no=2)
 
         for feature in worst_features:
             if feature.cummulative_error == 0 or feature in S.mistakes_chain:
                 continue
             S.mistakes_chain.append(feature)
 
-        S.mistakes_chain.sort(key = lambda _ : _.cummulative_error, reverse = True)
+        S.mistakes_chain.sort(key=lambda _: _.cummulative_error, reverse=True)
 
     def change_active_chain(S):
+        if not S.skip_first_alter:
+            S.chain_alter_notify = True
+        else:
+            S.skip_first_alter = False
 
         S.add_mistake_chains()
 
         S.resample()
 
-
         if S.mistakes_trigger:
             S.mistakes_trigger = False
 
             if len(S.mistakes_chain) > 5:
-                mistakes_to_work, S.mistakes_chain = S.mistakes_chain[:5], S.mistakes_chain[5:]
+                mistakes_to_work, S.mistakes_chain = (
+                    S.mistakes_chain[:5],
+                    S.mistakes_chain[5:],
+                )
 
                 for mistake in mistakes_to_work:
                     mistake.decrease_errors()
-                S.active_chain =  FeaturesChain(-1, mistakes_to_work, is_review_requires = False)
+                S.active_chain = FeaturesChain(
+                    -1, mistakes_to_work, is_review_requires=False
+                )
                 return
 
         S.active_chain = S.chains[0]
@@ -353,11 +410,12 @@ class ChainedModel():
         while len(options) < 10:
             try:
                 if sample.type == ChainUnitType.type_feature:
-                    random_chain = random.choice(random.choice(S.chains).features)
+                    random_chain = random.choice(
+                        random.choice(S.chains).features)
 
                     if random_chain.review:
                         continue
-                    
+
                     if sample.feature_options:
                         selected = random_chain.entity
                     else:
@@ -388,21 +446,29 @@ class ChainedModel():
         return next_feature
 
     def is_burning(S):
-        return len(S.burning_chain) >= 25
+        return len(S.burning_chain) >= BURNING_SIZE
 
     def get_burning_features_list(S):
         features_list = []
-        S.burning_chain = random.sample(S.burning_chain, 25)
+        #S.burning_chain = random.sample(S.burning_chain, BURNING_SIZE)
         for feature in S.burning_chain:
             features_list.append([feature.entity])
-            features_list[-1] += [feature.features[0], feature.features[1]]
+            if isinstance(feature.attached_image, list):
+                features_list[-1] += feature.features[:feature.original_len] + [feature.attached_image[0]]
+            else:
+                features_list[-1] += feature.features[:feature.original_len] + [feature.attached_image]
         S.burning_chain = []
         return features_list
 
     def dump_results(S, progression_file):
         backup = {}
         for chain in S.chains:
-            backup[chain.chain_no] = [chain.progression_level, chain.last_review_urge, chain.errors_mapping, chain.hints_mapping]
+            backup[chain.chain_no] = [
+                chain.progression_level,
+                chain.last_review_urge,
+                {"errors": chain.errors_mapping},
+                {"hints": chain.hints_mapping},
+            ]
 
         with open(progression_file, "w") as current_progress:
             json.dump(backup, current_progress, indent=2)
@@ -422,14 +488,24 @@ class ChainedModel():
     def restore_results(S, progression_file):
         if os.path.exists(progression_file):
             progress = {}
-            with open(progression_file) as saved_prgress:
+            with open(progression_file, encoding="UTF-8") as saved_prgress:
                 progress = json.load(saved_prgress)
+
             if progress:
                 for chain in S.chains:
                     if chain.chain_no not in progress:
-                        errors_mapping = [[0 for _ in range(10)] for j in range(5)]
-                        hints_mapping = [[False for _ in range(10) for j in range(5)]]
-                        progress[chain.chain_no] = [0, 0, chain.errors_mapping, chain.hints_mapping]
+                        print(f"chain {chain.chain_no} not in progress")
+                        errors_mapping = [
+                            [0 for _ in range(10)] for j in range(5)]
+                        hints_mapping = [
+                            [False for _ in range(10) for j in range(5)]]
+
+                        progress[chain.chain_no] = [
+                            0,
+                            0,
+                            {"errors": chain.errors_mapping},
+                            {"hints": chain.hints_mapping},
+                        ]
 
                     chain.progression_level = progress[chain.chain_no][0]
                     chain.last_review_urge = progress[chain.chain_no][1]
@@ -440,28 +516,40 @@ class ChainedModel():
                     errors_mapping = []
                     hints_mapping = []
 
-                    if len(progress[chain.chain_no]) == 2:
-                        errors_mapping = [[0 for _ in range(10)] for j in range(5)]
+                    # ERROR 1
+                    outdated_format = (
+                        len(progress[chain.chain_no]) != 4
+                        or not isinstance(progress[chain.chain_no][2], dict)
+                        or not isinstance(progress[chain.chain_no][3], dict)
+                    )
+                    if outdated_format or "errors" not in progress[chain.chain_no][2]:
+                        print(f"errors not in {chain.chain_no}")
+                        errors_mapping = [
+                            [0 for _ in range(10)] for j in range(5)]
                     else:
-                        errors_mapping = progress[chain.chain_no][2]
+                        errors_mapping = progress[chain.chain_no][2]["errors"]
 
-                    if len(progress[chain.chain_no]) <= 3:
-                        hints_mapping = [[False for _ in range(10)] for j in range(5)]
+                    if outdated_format or "hints" not in progress[chain.chain_no][3]:
+                        print(f"hints not in {chain.chain_no}")
+                        hints_mapping = [
+                            [False for _ in range(10)] for j in range(5)]
                     else:
-                        hints_mapping = progress[chain.chain_no][3]
+                        hints_mapping = progress[chain.chain_no][3]["hints"]
 
                     chain.set_errors(errors_mapping)
                     chain.set_hints(hints_mapping)
 
             return True
-        else:
-            return False
+        return False
 
     def get_chains_progression(S):
-        minimal_level = min(S.chains, key = lambda _ : _.progression_level).progression_level
-        mastered = len(list(filter(lambda _: _.progression_level > minimal_level, S.chains)))
+        minimal_level = min(
+            S.chains, key=lambda _: _.progression_level
+        ).progression_level
+        mastered = len(
+            list(filter(lambda _: _.progression_level > minimal_level, S.chains))
+        )
         return f"{minimal_level}x {mastered}/{len(S.chains)}"
-
 
     def get_active_chain(S):
 

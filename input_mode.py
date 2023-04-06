@@ -74,13 +74,9 @@ class ChainedsProducer:
         for key, group in groupby(list(_ for _ in data_extractor), key=lambda _: _[0]):
             features = []
             for item in group:
-                interactive = list(_ for _ in item if "***" not in _)
-                info = list(_ for _ in item if "***" in _)
-                info = info[0] if len(info) > 0 else ""
-                entity, *key_features = interactive[1:]
+                entity, *key_features = item[1:]
                 features.append(ChainedFeature(entity, key_features))
                 features[-1].original_len = len(key_features)
-                features[-1].info = info.replace("***", "")
 
             for i1 in range(len(features)):
                 i2 = (i1 + 1) % len(features)
@@ -183,11 +179,6 @@ class ChainedEntity:
 
         S.options = None
         S.active_question = None
-
-        S.keyboard_input = ""
-        S.input_mode = False
-        #S.input_mode = True
-
         S.questions_queue = S.extract_questions()
         S.constant_variation = random.randint(0, 10)
 
@@ -195,19 +186,10 @@ class ChainedEntity:
         S.idle_coursor_y = None
         S.hint_circles_queue = []
 
-
         if S.questions_queue:
-            #if re.search(r"[^\x00-\x7F]", S.active_question.text):
-            for_input = list(_ for _ in S.chained_feature.features if not re.search(r"[^\x00-\x7F]", _))
-            total_inp_len = len("".join(for_input))/5
-            # 10 symbols per se
-            print(total_inp_len)
-            if total_inp_len > 4:
-                S.time_estemated = S.chained_feature.get_timing() / (
-                    total_inp_len*2 )
-            else:
-                S.time_estemated = S.chained_feature.get_timing() / (
-                    len(S.questions_queue) + 1 )
+            S.time_estemated = S.chained_feature.get_timing() / (
+                len(S.questions_queue) + 1
+            )
             S.done = False
         else:
             # S.time_estemated = S.chained_feature.get_timing() / (len(S.context)//2 +1)
@@ -221,12 +203,6 @@ class ChainedEntity:
             S.active_question = questions[0]
             S.active_question.mode = ChainUnitType.mode_active_question
             S.generate_options()
-
-            if re.search(r"[^\x00-\x7F]", S.active_question.text):
-                S.input_mode = False
-            else:
-                S.input_mode = True
-
         return questions
 
     def generate_options(S):
@@ -256,23 +232,14 @@ class ChainedEntity:
             LAST_EVENT = "POST_POSITIVE"
             NEW_EVENT = True
 
-        S.keyboard_input = ""
-
         S.order_in_work += 1
         if S.questions_queue:
             S.questions_queue.pop(0)
             S.active_question.mode = ChainUnitType.mode_open
 
-
         if S.questions_queue:
             S.active_question.mode = ChainUnitType.mode_open
             S.active_question = S.questions_queue[0]
-
-            if re.search(r"[^\x00-\x7F]", S.active_question.text):
-                S.input_mode = False
-            else:
-                S.input_mode = True
-
             S.generate_options()
         else:
             S.delete_options()
@@ -284,8 +251,6 @@ class ChainedEntity:
         global LAST_EVENT
         global NEW_EVENT
         LAST_EVENT = "ERROR"
-
-        S.keyboard_input = ""
 
         if not S.locked:
             NEW_EVENT = True
@@ -325,61 +290,16 @@ class ChainedEntity:
         S.idle_coursor_x = mouse_position[0]
         S.idle_coursor_y = mouse_position[1]
 
-    def check_keyboard_input(S):
-        if S.active_question:
-            if S.keyboard_input.lower().strip() == S.active_question.text.lower().strip():
-                S.match_correct()
-            else:
-                S.match_error()
-
-
-    def process_keyboard_input(S, keyboard):
-
-        if any(keyboard):
-            key_states = [_[0] for _ in keyboard if _[1]=="pressed" and not (_[0] == "lshift" or _[1]=="rshift")]
-            down_keys = [_[0] for _ in keyboard if _[1]=="down"]
-
-            if not key_states:
-                return
-
-            if key_states[0] == "backspace":
-                if S.keyboard_input:
-                    S.keyboard_input = S.keyboard_input[:-1]
-                    return
-
-            elif key_states[0] == "return":
-                S.check_keyboard_input()
-
-            else:
-                shift = False
-                if "lshift" in down_keys or "rshift" in down_keys:
-                    shift = True
-
-                new_key = key_states[0]
-                if shift:
-                    shift_mapping = {a:b for (a,b) in zip("1234567890-=qwertyuiop[]\\asdfghjkl;\'zxcvbnm,./ ",
-                                                          "!@#$%^&*()_+QWERTYUIOP{}|ASDFGHJKL:\"ZXCVBNM<>? ")}
-                    new_key = shift_mapping[new_key]
-                    S.keyboard_input += new_key
-                else:
-                    S.keyboard_input += new_key
-
-
-
-    def register_keys(S, key_states, keys_extended, time_percent, time_based=False):
+    def register_keys(S, key_states, time_percent, time_based=False):
         S.time_perce_active = time_percent
         if S.active_question and not time_based:
             S.time_perce_reserved = time_percent
-
-            if S.input_mode:
-                S.process_keyboard_input(keys_extended)
-            else:
-                for i, key in enumerate(key_states):
-                    if key:
-                        if S.options[i] == S.active_question.text:
-                            S.match_correct()
-                        else:
-                            S.match_error()
+            for i, key in enumerate(key_states):
+                if key:
+                    if S.options[i] == S.active_question.text:
+                        S.match_correct()
+                    else:
+                        S.match_error()
 
         elif time_based and not S.active_question:
             time_p = time_percent
@@ -398,6 +318,8 @@ class ChainedEntity:
 
             pair_to_show = int(time_p / pair_perce)
             S.order_in_work = pair_to_show
+            # print(S.order_in_work)
+            # print(S.context[S.order_in_work].order_no)
 
     def produce_geometries(S):
         graphical_objects = []
@@ -556,7 +478,6 @@ class ChainedEntity:
                     font=set_font(ctx),
                     font_size=set_size(ctx) * 3,
                     rect=None,
-                    morph = False
                 )
             )
 
@@ -608,7 +529,7 @@ class ChainedEntity:
                 else 40
             )
 
-        if S.options and not S.input_mode:
+        if S.options:
             for i, (x1, y1) in enumerate(zip(options_x_corners, options_y_corners)):
                 xc, yc = x1 + options_w / 2, y1 + options_h / 2
 
@@ -660,93 +581,6 @@ class ChainedEntity:
                     rect=None,
                 )
             )
-        large_notion_w = 250
-        large_notion_h = 200
-        large_notions_x_corners = [W // 2]
-        large_notions_y_corners = [H // 2 - H//4]
-        large_notion_col = validate_color(interpolate(colors.feature_text_col, colors.col_bg_lighter, sin(S.time_perce_active*(pi*2*4))))
-        for i, (x1, y1) in enumerate(
-            zip(large_notions_x_corners, large_notions_y_corners)
-        ):
-            if not S.chained_feature.info:
-                break
-            xc, yc = x1, y1
-
-            tlen = len(S.chained_feature.info)
-            graphical_objects.append(
-                WordGraphical(
-                    S.chained_feature.info,
-                    xc,
-                    yc,
-                    large_notion_col,
-                    bg_color=None,
-                    font_size=300
-                    if tlen == 1
-                    else 250
-                    if tlen == 2
-                    else 200
-                    if tlen == 3
-                    else 150
-                    if tlen < 5
-                    else 100
-                    if tlen < 10
-                    else 50,
-                    font=ChainUnitType.font_utf
-                    if re.findall(r"[\u4e00-\u9fff]+", S.chained_feature.info)
-                    else ChainUnitType.font_cyrillic,
-                    rect=None,
-                )
-            )
-
-
-        ## KEYBOARD INPUT INITIAL
-        index = S.order_in_work
-
-        def set_size(_):
-            return (
-                15
-                if len(_) >= 15
-                else 25
-                if len(_) >= 10
-                else 30
-                if len(_) >= 5
-                else 40
-            )
-        if not S.done:
-            if index < len(S.context) and index >= 0 and S.context[index].hint:
-                rel_x, rel_y = S.context[index].hint
-                abs_x, abs_y = rel_x * W, rel_y * H
-
-            else:
-                abs_x, abs_y = out_positions[index]
-
-            large_notion_w = 250
-            large_notion_h = 200
-            large_notions_x_corners = [abs_x]
-            large_notions_y_corners = [abs_y]
-
-            large_notion_col = validate_color(interpolate(colors.feature_text_col, colors.col_bg_lighter, sin(S.time_perce_active*(pi*2*4))))
-            for i, (x1, y1) in enumerate(
-                zip(large_notions_x_corners, large_notions_y_corners)
-            ):
-                xc, yc = x1, y1
-
-                tlen = len(S.keyboard_input)
-                graphical_objects.append(
-                    WordGraphical(
-                        S.keyboard_input,
-                        xc,
-                        yc,
-                        large_notion_col,
-                        bg_color=None,
-                        font_size = set_size(S.keyboard_input),
-                        font=ChainUnitType.font_utf
-                        if re.findall(r"[\u4e00-\u9fff]+", S.keyboard_input)
-                        else ChainUnitType.font_cyrillic,
-                        rect=None,
-                    )
-                )
-
 
         return graphical_objects
 
@@ -814,7 +648,6 @@ class WordGraphical:
         font_size=None,
         rect=[],
         transparent=False,
-        morph = True
     ):
         S.rect = rect
         S.text = text
@@ -825,7 +658,6 @@ class WordGraphical:
         S.font = font
         S.font_size = font_size
         S.transparent = transparent
-        S.morph = morph
 
 
 class ChainedDrawer:
@@ -838,11 +670,11 @@ class ChainedDrawer:
         S.fonts_b = 500
         S.fonts_step = 10
         S.cyrillic_fonts = [
-            S.pygame_instance.font.Font(CYRILLIC_FONT, i)
+            S.pygame_instance.font.Font(CYRILLIC_FONT, i, bold=True)
             for i in range(S.fonts_a, S.fonts_b, S.fonts_step)
         ]
         S.utf_fonts = [
-            S.pygame_instance.font.Font(CHINESE_FONT, i)
+            S.pygame_instance.font.Font(CHINESE_FONT, i, bold=True)
             for i in range(S.fonts_a, S.fonts_b, S.fonts_step)
         ]
 
@@ -863,11 +695,6 @@ class ChainedDrawer:
                 fonts_size_idx = len(S.cyrillic_fonts) - 1
 
             return S.cyrillic_fonts[fonts_size_idx]
-
-    def draw_keyboard_input(S, line):
-        key_input_text = line.keyboard_input
-
-
 
     def draw_hints(S, line):
         circles = line.produce_hints()
@@ -891,7 +718,7 @@ class ChainedDrawer:
 
         for geometry in geometries:
             message = geometry.text
-            if not re.findall(r"[\u5e00-\u9fff]+", message) and geometry.morph:
+            if not re.findall(r"[\u5e00-\u9fff]+", message):
                 message = morfer.morf_text(message)
             font = S.pick_font(geometry.font, geometry.font_size)
 
@@ -919,7 +746,7 @@ class ChainedDrawer:
         S.draw_hints(line)
 
     def display_keys(S, keys, line):
-        if line.done or line.input_mode:
+        if line.done:
             return
 
         options_x1 = W // 2 - 250
@@ -986,88 +813,29 @@ class ChainedDrawer:
 ######################################
 # SIX MODE CONTROLLER
 ######################################
-class KeyboardRawModel:
+
+
+class KeyboardChainModel:
     def __init__(S, pygame_instance):
         S.pygame_instance = pygame_instance
-
-        S.keys_mapping = {}
-        S.keys_mapping["q"] = S.pygame_instance.K_q 
-        S.keys_mapping["w"] = S.pygame_instance.K_w 
-        S.keys_mapping["e"] = S.pygame_instance.K_e 
-        S.keys_mapping["r"] = S.pygame_instance.K_r 
-        S.keys_mapping["t"] = S.pygame_instance.K_t 
-        S.keys_mapping["y"] = S.pygame_instance.K_y 
-        S.keys_mapping["u"] = S.pygame_instance.K_u 
-        S.keys_mapping["i"] = S.pygame_instance.K_i 
-        S.keys_mapping["o"] = S.pygame_instance.K_o 
-        S.keys_mapping["p"] = S.pygame_instance.K_p 
-        S.keys_mapping["a"] = S.pygame_instance.K_a 
-        S.keys_mapping["s"] = S.pygame_instance.K_s 
-        S.keys_mapping["d"] = S.pygame_instance.K_d 
-        S.keys_mapping["f"] = S.pygame_instance.K_f 
-        S.keys_mapping["g"] = S.pygame_instance.K_g 
-        S.keys_mapping["h"] = S.pygame_instance.K_h 
-        S.keys_mapping["j"] = S.pygame_instance.K_j 
-        S.keys_mapping["k"] = S.pygame_instance.K_k 
-        S.keys_mapping["l"] = S.pygame_instance.K_l 
-        S.keys_mapping["z"] = S.pygame_instance.K_z 
-        S.keys_mapping["x"] = S.pygame_instance.K_x 
-        S.keys_mapping["c"] = S.pygame_instance.K_c 
-        S.keys_mapping["v"] = S.pygame_instance.K_v 
-        S.keys_mapping["b"] = S.pygame_instance.K_b 
-        S.keys_mapping["n"] = S.pygame_instance.K_n 
-        S.keys_mapping["m"] = S.pygame_instance.K_m 
-        S.keys_mapping[" "] = S.pygame_instance.K_SPACE
-        S.keys_mapping["return"] = S.pygame_instance.K_RETURN
-        S.keys_mapping["backspace"] = S.pygame_instance.K_BACKSPACE
-        S.keys_mapping["rshift"] = S.pygame_instance.K_RSHIFT
-        S.keys_mapping["lshift"] = S.pygame_instance.K_LSHIFT
-        S.keys_mapping["\t"] = S.pygame_instance.K_TAB
-        S.keys_mapping["!"] = S.pygame_instance.K_EXCLAIM
-        S.keys_mapping["\""] = S.pygame_instance.K_QUOTEDBL
-        S.keys_mapping["\'"] = S.pygame_instance.K_QUOTE
-        S.keys_mapping["#"] = S.pygame_instance.K_HASH
-        S.keys_mapping["$"] = S.pygame_instance.K_DOLLAR
-        S.keys_mapping["%"] = S.pygame_instance.K_AMPERSAND
-        S.keys_mapping["("] = S.pygame_instance.K_LEFTPAREN
-        S.keys_mapping[")"] = S.pygame_instance.K_RIGHTPAREN
-        S.keys_mapping["*"] = S.pygame_instance.K_ASTERISK
-        S.keys_mapping["+"] = S.pygame_instance.K_PLUS
-        S.keys_mapping[","] = S.pygame_instance.K_COMMA
-        S.keys_mapping["-"] = S.pygame_instance.K_MINUS
-        S.keys_mapping["."] = S.pygame_instance.K_PERIOD
-        S.keys_mapping["/"] = S.pygame_instance.K_SLASH
-        S.keys_mapping["0"] = S.pygame_instance.K_0
-        S.keys_mapping["1"] = S.pygame_instance.K_1
-        S.keys_mapping["2"] = S.pygame_instance.K_2
-        S.keys_mapping["3"] = S.pygame_instance.K_3
-        S.keys_mapping["4"] = S.pygame_instance.K_4
-        S.keys_mapping["5"] = S.pygame_instance.K_5
-        S.keys_mapping["6"] = S.pygame_instance.K_6
-        S.keys_mapping["7"] = S.pygame_instance.K_7
-        S.keys_mapping["8"] = S.pygame_instance.K_8
-        S.keys_mapping["9"] = S.pygame_instance.K_9
-        S.keys_mapping[":"] = S.pygame_instance.K_COLON
-        S.keys_mapping[";"] = S.pygame_instance.K_SEMICOLON
-        S.keys_mapping["<"] = S.pygame_instance.K_LESS
-        S.keys_mapping["="] = S.pygame_instance.K_EQUALS
-        S.keys_mapping[">"] = S.pygame_instance.K_GREATER
-        S.keys_mapping["?"] = S.pygame_instance.K_QUESTION
-        S.keys_mapping["@"] = S.pygame_instance.K_AT
-        S.keys_mapping["["] = S.pygame_instance.K_LEFTBRACKET
-        S.keys_mapping["\\"] = S.pygame_instance.K_BACKSLASH
-        S.keys_mapping["]"] = S.pygame_instance.K_RIGHTBRACKET
-        S.keys_mapping["^"] = S.pygame_instance.K_CARET
-        S.keys_mapping["_"] = S.pygame_instance.K_UNDERSCORE
-        S.keys_mapping["`"] = S.pygame_instance.K_BACKQUOTE
-
         S.up = "up"
         S.down = "down"
         S.pressed = "pressed"
         S.mapping = OrderedDict()
-        keys = S.keys_mapping.keys() 
-        for key in keys:
-            S.mapping[S.keys_mapping[key]] = [key, S.up]
+
+        S.mapping[S.pygame_instance.K_g] = S.up
+        S.mapping[S.pygame_instance.K_f] = S.up
+        S.mapping[S.pygame_instance.K_d] = S.up
+        S.mapping[S.pygame_instance.K_s] = S.up
+        S.mapping[S.pygame_instance.K_a] = S.up
+
+        S.mapping[S.pygame_instance.K_h] = S.up
+        S.mapping[S.pygame_instance.K_j] = S.up
+        S.mapping[S.pygame_instance.K_k] = S.up
+        S.mapping[S.pygame_instance.K_l] = S.up
+        S.mapping[S.pygame_instance.K_SEMICOLON] = S.up
+
+        S.keys = [S.up for _ in range(6)]
 
     def process_button(S, current_state, new_state):
         if current_state == S.up and new_state == S.down:
@@ -1086,21 +854,13 @@ class KeyboardRawModel:
 
     def get_inputs(S):
         keys = S.pygame_instance.key.get_pressed()
-        #keys = {}
-        #  for event in S.pygame_instance.event.get():
-            #  if event.type == S.pygame_instance.KEYDOWN:
-                #  print(event.key, event.unicode)
-                #  print()
-#
         for control_key in S.mapping:
             if keys[control_key]:
-                S.mapping[control_key][1] = S.process_button(
-                    S.mapping[control_key][1], S.down
+                S.mapping[control_key] = S.process_button(
+                    S.mapping[control_key], S.down
                 )
             else:
-                S.mapping[control_key][1] = S.process_button(
-                    S.mapping[control_key][1], S.up
-                )
+                S.mapping[control_key] = S.process_button(S.mapping[control_key], S.up)
 
     def get_keys(S):
         S.get_inputs()
@@ -1126,7 +886,7 @@ class ChainedProcessor:
         S.chain_alter_notify = False
 
         S.drawer = ChainedDrawer(pygame_instance, display_instance, W, H)
-        S.control_ex = KeyboardRawModel(pygame_instance)
+        S.control = KeyboardChainModel(pygame_instance)
         S.active_line = None
         S.pygame_instance = pygame_instance
         S.display_instance = display_instance
@@ -1185,6 +945,12 @@ class ChainedProcessor:
     def redraw(S):
         S.drawer.draw_line(S.active_entity)
 
+    def get_pressed(S, key_states):
+        def mark_pressed(_):
+            return True if _ == "pressed" else False
+
+        return [mark_pressed(_) for _ in key_states]
+
     def get_feedback(S):
         global NEW_EVENT
         if LAST_EVENT == "POSITIVE" and NEW_EVENT:
@@ -1204,53 +970,20 @@ class ChainedProcessor:
         else:
             return 0
 
-    def get_pressed(S, key_states):
-        def mark_pressed(_):
-            return True if _ == "pressed" else False
-
-        return [mark_pressed(_) for _ in key_states]
-
-    def reduce_keys(S, key_states):
-        active_keys = ["g","f","d","s","a","h","j","k","l",";"]
-        reduced = []
-        for selector in active_keys:
-            key_exists = False
-            for key in key_states:
-                if key[0]==selector:
-                    reduced.append(key[1])
-                    key_exists = True
-                    break
-            if not key_exists:
-                reduced.append("up")
-
-        #reduced = list(key_states[_][1] for _ in active_keys)
-        return reduced
-
-    def filter_keys(s, key_states):
-        return list(_ for _ in key_states if _[1] == "pressed")
-
-    def filter_up_keys(s, key_states):
-        return list(_ for _ in key_states if _[1] != "up")
-
     def process_inputs(S):
-        #key_states = S.control.get_keys()
-        key_states = S.filter_up_keys(S.control_ex.get_keys())
-        reduced = S.reduce_keys(S.filter_keys(key_states))
-
+        key_states = S.control.get_keys()
         if S.active_entity:
-            S.drawer.display_keys(reduced, S.active_entity)
+            S.drawer.display_keys(key_states, S.active_entity)
 
-        pressed_keys = S.get_pressed(reduced)
-        #keys_extended = S.control_ex.get_keys()
+        pressed_keys = S.get_pressed(key_states)
 
-        if S.active_entity and any(key_states):
+        if S.active_entity and any(pressed_keys):
             S.active_entity.register_keys(
-                pressed_keys, key_states, S.time_elapsed_cummulative / S.active_beat_time
+                pressed_keys, S.time_elapsed_cummulative / S.active_beat_time
             )
         elif S.active_entity:
             S.active_entity.register_keys(
                 pressed_keys,
-                key_states,
                 S.time_elapsed_cummulative / S.active_beat_time,
                 time_based=True,
             )

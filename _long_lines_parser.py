@@ -14,11 +14,10 @@ while lines:
     if len(line) < 300:
         line += lines.pop(0)
 
-    if len(line)>=300:
+    if len(line) >= 300:
         out_lines.append(line)
         line = ""
 
 print(out_lines[-3])
 print(out_lines[-2])
 print(out_lines[-1])
-

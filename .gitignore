@@ -13,6 +13,10 @@ action_affirmations.csv
 controller_features/
 # TODO later change to submodule 
 burner/
+$learning
+$XDG_STATE_HOME
+learning_sets/
+!learning_sets/hsk_set/
 
 # C extensions
 *.so
