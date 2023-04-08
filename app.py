@@ -2,7 +2,6 @@ from ui_elements import UpperLayout
 import pygame
 from time_utils import global_timer, Counter, Progression
 from feature_chain_mode import ChainedProcessor
-from input_mode import ChainedProcessor as InputProcessor
 from config import (
     TEST_LANG_DATA,
     W,
@@ -13,7 +12,7 @@ from config import (
     BURNER_APP,
     BURNER_FILE,
 )
-from config import HAPTIC_CORRECT_CMD, HAPTIC_ERROR_CMD, TEST
+from config import HAPTIC_FEEDBACK, TEST
 from colors import white, hex_to_rgb
 import colors
 from text_morfer import textMorfer
@@ -38,6 +37,9 @@ quadra_phase = "INHALE"
 def clip_color(_):
     return 0 if _ <= 0 else 255 if _ >= 255 else int(_)
 
+
+def inter_simple(v1, v2, p):
+    return v1 + (v2 - v1) * p
 
 def inter_color(v1, v2, p):
     return clip_color(v1 + (v2 - v1) * p)
@@ -76,40 +78,28 @@ trans_surface_2.fill((40, 0, 40))
 delta_timer = global_timer(pygame)
 upper_stats = UpperLayout(pygame, display_surface)
 new_line_counter = Counter(upper_stats)
-quadra_timer = Counter(bpm=15)
+quadra_timer = Counter(bpm=10)
 morfer_timer = Counter(bpm=12)
 pause_counter = Counter(bpm=1 / 5)
 # pause_counter = Counter(bpm=1)
 wait_extra_time = False
 
 timer_1m = Counter(bpm=1)
-haptic_timer = Counter(bpm=15)
+haptic_timer = Counter(bpm=60)
 disable_haptic = False
 timer_dropped = False
 
 tokens_1m = []
 tokens_key = pygame.K_k
 
-if len(sys.argv) <= 1:
-    game = ChainedProcessor(
-        pygame,
-        display_surface,
-        upper_stats,
-        "hanzi chineese",
-        TEST_LANG_DATA,
-        (60 * 1000) / BPM,
-    )
-else:
-    game = InputProcessor(
-        pygame,
-        display_surface,
-        upper_stats,
-        "hanzi chineese",
-        TEST_LANG_DATA,
-        (60 * 1000) / BPM,
-    )
-
-
+game = ChainedProcessor(
+    pygame,
+    display_surface,
+    upper_stats,
+    "hanzi chineese",
+    TEST_LANG_DATA,
+    (60 * 1000) / BPM,
+)
 
 progression = Progression(new_line_counter, upper_stats)
 
@@ -174,8 +164,8 @@ for time_delta in delta_timer:
 
         if timer_dropped:
             if haptic_timer.is_tick(time_delta):
-                if HAPTIC_ERROR_CMD and not disable_haptic:
-                    subprocess.Popen(["bash", HAPTIC_ERROR_CMD])
+                if HAPTIC_FEEDBACK and not disable_haptic:
+                    HAPTIC_FEEDBACK(higher_freq  = 40000, duration=500)
 
         if quadra_timer.is_tick(time_delta):
             if quadra_phase == "INHALE":
@@ -227,6 +217,12 @@ for time_delta in delta_timer:
             (H // 2 - 50) * quadra_w_perce2 + 50,
             width=3,
         )
+
+        if not timer_dropped:
+            if haptic_timer.is_tick(time_delta):
+                if HAPTIC_FEEDBACK and not disable_haptic:
+                    inter_freq = int(inter_simple(0, 65000, quadra_w_perce1))
+                    HAPTIC_FEEDBACK(higher_freq  = inter_freq)
 
         display_surface.blit(trans_surface_2, (0, 0))
 
@@ -416,26 +412,12 @@ for time_delta in delta_timer:
         interpolate(quadra_col_1, quadra_col_2, quadra_timer.get_percent()),
         (W // 2 - ((W // 2) * (quadra_w_perce1)), H - 20, (W) * quadra_w_perce1, 20),
     )
-    #
-    # pygame.draw.rect(display_surface,
-    #                   interpolate(quadra_col_1, quadra_col_2, quadra_timer.get_percent()**2),
-    #                   (W//2 - ((W//2)*(quadra_w_perce2)),
-    #                    H - 20,
-    #                    (W)*quadra_w_perce2,
-    #                    20), width=4)
 
     pygame.draw.rect(
         display_surface,
         interpolate(quadra_col_1, quadra_col_2, quadra_timer.get_percent()),
         (W // 2 - ((W // 2) * (quadra_w_perce1)), 0, (W) * quadra_w_perce1, 20),
     )
-
-    # pygame.draw.rect(display_surface,
-    #                   interpolate(quadra_col_1, quadra_col_2, quadra_timer.get_percent()**2),
-    #                   (W//2 - ((W//2)*(quadra_w_perce2)),
-    #                    0,
-    #                    (W)*quadra_w_perce2,
-    #                    20),width=4)
 
     # VERTICAL
     pygame.draw.rect(
@@ -450,14 +432,11 @@ for time_delta in delta_timer:
         (0, H // 2 - ((H // 2) * (quadra_w_perce1)), 40, (H) * quadra_w_perce1),
     )
 
-    # pygame.draw.rect(display_surface,
-    #                   interpolate(quadra_col_1, quadra_col_2, quadra_timer.get_percent()**2),
-    #                    (0,
-    #                   H//2 - ((H//2)*(quadra_w_perce2)),
-    #                    20,
-    #                    (H)*quadra_w_perce2),width=4)
+    if haptic_timer.is_tick(time_delta):
+        if HAPTIC_FEEDBACK and not disable_haptic:
+            inter_freq = int(inter_simple(0, 65000, quadra_w_perce1))
+            HAPTIC_FEEDBACK(higher_freq  = inter_freq)
 
-    # display_surface.blit(trans_surface, (W//2-H//2,0))
 
     pygame.display.update()
 

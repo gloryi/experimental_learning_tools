@@ -9,7 +9,6 @@ from utils import raw_extracter
 from learning_model import ChainedFeature, FeaturesChain, ChainedModel, ChainUnitType
 from config import W, H, CYRILLIC_FONT, CHINESE_FONT
 from config import META_SCRIPT, META_MINOR, META_ACTION
-from config import HAPTIC_CORRECT_CMD, HAPTIC_ERROR_CMD
 from config import META_ACTION_STACK
 from colors import col_wicked_darker
 from colors import col_active_darker
@@ -1190,16 +1189,12 @@ class ChainedProcessor:
         if LAST_EVENT == "POSITIVE" and NEW_EVENT:
             S.ui_ref.bg_color = colors.dark_green
 
-            if random.randint(0, 10) > 8 and HAPTIC_CORRECT_CMD:
-                subprocess.Popen(["bash", HAPTIC_CORRECT_CMD])
 
             NEW_EVENT = False
             return 1
         elif LAST_EVENT == "ERROR" and NEW_EVENT:
             NEW_EVENT = False
             S.ui_ref.bg_color = colors.dark_red
-            if random.randint(0, 10) > 8 and HAPTIC_ERROR_CMD:
-                subprocess.Popen(["bash", HAPTIC_ERROR_CMD])
             return -1
         else:
             return 0

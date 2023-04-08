@@ -1,4 +1,5 @@
 import os
+import subprocess
 import random
 from time import time
 from collections import OrderedDict
@@ -6,7 +7,7 @@ from collections import OrderedDict
 TEST = True
 TEST = False
 PREPR = False
-#  REPR = True
+#PREPR = True
 
 sets_prefix = os.path.join(os.getcwd(), "learning_sets")
 
@@ -25,9 +26,10 @@ if not PREPR and not TEST:
     LEARNING_FOLDERS.append(locate_set("hsk_set"))
     LEARNING_FOLDERS.append(locate_set("hsk_rad"))
 
-    LEARNING_FOLDERS.append(locate_set("hanzi_2"))
+    #LEARNING_FOLDERS.append(locate_set("hanzi_2"))
     LEARNING_FOLDERS.append(locate_set("hsk_34"))
-    LEARNING_FOLDERS.append(locate_set("hsk_pin"))
+    #LEARNING_FOLDERS.append(locate_set("hsk_pin"))
+
 #
     # LEARNING_FOLDERS.append(locate_set("hsk_5"))
     # LEARNING_FOLDERS.append(locate_set("hsk_6"))
@@ -57,9 +59,13 @@ META_ACTION_STACK["*** PERM ***"] = []
 META_ACTION_STACK["*** OUT ***"] = []
 META_SCRIPT = os.path.join(LEARNING_SET_FOLDER, "context.csv")
 
-HAPTIC_FEEDBACK_CMD = os.path.join(os.getcwd(), "controller_features", "example.sh")
-HAPTIC_ERROR_CMD = os.path.join(os.getcwd(), "controller_features", "error.sh")
-HAPTIC_CORRECT_CMD = os.path.join(os.getcwd(), "controller_features", "correct.sh")
+HAPTIC_PATH = "/home/gloryi/Documents/SpecialFiles/xbox_haptic/haptic_ultimate"
+DEVICE_NAME = "/dev/input/by-id/usb-Microsoft_Controller_7EED82417161-event-joystick"
+
+def HAPTIC_FEEDBACK(lower_freq=500, higher_freq=50000, duration=995):
+    command = " ".join([HAPTIC_PATH, DEVICE_NAME,
+                        str(lower_freq), str(higher_freq), str(duration)])
+    subprocess.Popen(command, shell=True)
 
 BURNER_APP = os.path.join(os.getcwd(), "burner", "app.py")
 BURNER_FILE = os.path.join(os.getcwd(), "burner", "data_to_burn.csv")
