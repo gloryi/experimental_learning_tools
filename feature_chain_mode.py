@@ -187,6 +187,9 @@ class ChainedEntity:
         S.input_mode = False
         #S.input_mode = True
 
+        S.reinput_positive_keyboard = False
+        S.drop = False
+
         S.questions_queue = S.extract_questions()
         S.constant_variation = random.randint(0, 10)
 
@@ -196,20 +199,19 @@ class ChainedEntity:
 
 
         if S.questions_queue:
-            #if re.search(r"[^\x00-\x7F]", S.active_question.text):
+
             for_input = list(_ for _ in S.chained_feature.features if not re.search(r"[^\x00-\x7F]", _))
             total_inp_len = len("".join(for_input))/5
             # 10 symbols per se
-            print(total_inp_len)
             if total_inp_len > 4:
                 S.time_estemated = S.chained_feature.get_timing() / (
                     total_inp_len*2 )
             else:
                 S.time_estemated = S.chained_feature.get_timing() / (
                     len(S.questions_queue) + 1 )
+            
             S.done = False
         else:
-            # S.time_estemated = S.chained_feature.get_timing() / (len(S.context)//2 +1)
             S.time_estemated = S.chained_feature.get_timing() / (len(S.context) + 1)
 
     def extract_questions(S):
@@ -236,7 +238,7 @@ class ChainedEntity:
         S.options = ["" for _ in range(10)]
 
     def register_answers(S):
-        is_solved = len(S.questions_queue) == 0 and not S.locked
+        is_solved = (len(S.questions_queue) == 0 and not S.locked) or S.reinput_positive_keyboard
         S.chained_feature.register_progress(is_solved=is_solved)
         return is_solved
 
@@ -277,6 +279,20 @@ class ChainedEntity:
             S.delete_options()
             S.active_question = None
             S.done = True
+
+            if S.reinput_positive_keyboard:
+                S.drop = True
+                return
+            
+            if S.time_perce_reserved <= 0.5:
+                S.reinput_positive_keyboard = True
+                S.context = sorted(S.chained_feature.get_context(), key=lambda _: _.order_no)
+                S.questions_queue = S.extract_questions()
+                S.active_question = S.questions_queue[0]
+                S.generate_options()
+                S.locked = True
+                S.done = False
+                
             S.order_in_work = 0
 
     def match_error(S):
@@ -1264,6 +1280,11 @@ class ChainedProcessor:
 
     def get_burning_features_list(S):
         return S.producer.get_burning_features_list()
+
+    def is_dropped(S):
+        if S.active_entity and S.active_entity.drop:
+            return True
+        return False
 
     def tick(S, time_elapsed):
 

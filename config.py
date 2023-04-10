@@ -5,7 +5,7 @@ from time import time
 from collections import OrderedDict
 
 TEST = True
-TEST = False
+#  TEST = False
 PREPR = False
 #PREPR = True
 
@@ -26,9 +26,9 @@ if not PREPR and not TEST:
     LEARNING_FOLDERS.append(locate_set("hsk_set"))
     LEARNING_FOLDERS.append(locate_set("hsk_rad"))
 
-    LEARNING_FOLDERS.append(locate_set("hanzi_2"))
-    LEARNING_FOLDERS.append(locate_set("hsk_34"))
-    LEARNING_FOLDERS.append(locate_set("hsk_pin"))
+    #  LEARNING_FOLDERS.append(locate_set("hanzi_2"))
+    #  LEARNING_FOLDERS.append(locate_set("hsk_34"))
+    #  LEARNING_FOLDERS.append(locate_set("hsk_pin"))
 
 #
     # LEARNING_FOLDERS.append(locate_set("hsk_5"))

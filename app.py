@@ -359,6 +359,12 @@ for time_delta in delta_timer:
         next_tick_time, meta, meta_minor = game.add_line()
         new_line_counter.modify_bpm(next_tick_time)
 
+    if game.is_dropped():
+        new_line_counter.drop_elapsed()
+        next_tick_time, meta, meta_minor = game.add_line()
+        new_line_counter.modify_bpm(next_tick_time)
+
+
         # pyautogui.moveTo(SCREEN_X_0//2+W//64, SCREEN_Y_0 + H//2, H//2)
 
     upper_stats.redraw()
