@@ -20,15 +20,15 @@ if not PREPR and not TEST:
     # LEARNING_FOLDERS.append(locate_set("latvian_set"))
 
     #  LEARNING_FOLDERS.append(locate_set("python_modules"))
-    LEARNING_FOLDERS.append(locate_set("vim_shortcuts"))
+    #  LEARNING_FOLDERS.append(locate_set("vim_shortcuts"))
 
     LEARNING_FOLDERS.append(locate_set("hanzi_set"))
     LEARNING_FOLDERS.append(locate_set("hsk_set"))
     LEARNING_FOLDERS.append(locate_set("hsk_rad"))
 
-    #LEARNING_FOLDERS.append(locate_set("hanzi_2"))
+    LEARNING_FOLDERS.append(locate_set("hanzi_2"))
     LEARNING_FOLDERS.append(locate_set("hsk_34"))
-    #LEARNING_FOLDERS.append(locate_set("hsk_pin"))
+    LEARNING_FOLDERS.append(locate_set("hsk_pin"))
 
 #
     # LEARNING_FOLDERS.append(locate_set("hsk_5"))

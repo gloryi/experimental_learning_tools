@@ -78,7 +78,7 @@ trans_surface_2.fill((40, 0, 40))
 delta_timer = global_timer(pygame)
 upper_stats = UpperLayout(pygame, display_surface)
 new_line_counter = Counter(upper_stats)
-quadra_timer = Counter(bpm=10)
+quadra_timer = Counter(bpm=15)
 morfer_timer = Counter(bpm=12)
 pause_counter = Counter(bpm=1 / 5)
 # pause_counter = Counter(bpm=1)
@@ -323,8 +323,6 @@ for time_delta in delta_timer:
             else:
                 tokens_key = pygame.K_k
             tokens_1m.append("*")
-            if HAPTIC_CORRECT_CMD and not disable_haptic:
-                subprocess.Popen(["bash", HAPTIC_CORRECT_CMD])
             if len(tokens_1m) > 5:
                 tokens_1m = []
 

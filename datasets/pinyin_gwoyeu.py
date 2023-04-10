@@ -462,19 +462,32 @@ def process_word(word):
     #tone = 1 if "1" in key else 2 if "2" in key else 3 if "3" in key else 4
     #key = key.lower().replace(str(tone),"")
 
-    related = relation[key]
-    return  related[tone]
+    if key in relation:
+        related = relation[key]
+        return  related[tone]
+    else:
+        print(key)
+        return key
 
-infile = "/mnt/X/WORKSHOP/Scripts/chained_learning/learning_sets/hsk_set/features.csv"
+def validate_word(word):
+    pinyin_letters = ""
+    pinyin_letters+="ĀāĒēĪīŌōŪūÜü"
+    pinyin_letters+="ÁáÉéÍíÓóÚúǗǘ"
+    pinyin_letters+="ǍǎĚěǏǐǑǒǓǔǙǚ"
+    pinyin_letters+="ÀàÈèÌìÒòÙùǛǜ"
+    for letter in pinyin_letters:
+        if letter in word:
+            return True
+    return False
+
+infile = "/mnt/X/WORKSHOP/Scripts/chained_learning/learning_sets/hsk_rad/features.csv"
 features = csv_to_list(infile)
 for feature in features:
-    print(feature)
-    key = feature[2]
-    converted = " ".join(process_word(word) for word in key.split(" "))
-    #  tone = 1 if "1" in key else 2 if "2" in key else 3 if "3" in key else 4
-    #  key = key.lower().replace(str(tone),"")
-    #  related = relation[key]
-    feature[2] = converted
-    print(feature)
+    for i, test_word in enumerate(feature):
+        if not validate_word(test_word):
+            continue
+        key = feature[i]
+        converted = " ".join(process_word(word) for word in key.split(" "))
+        feature[i] = converted
 
 list_to_csv(infile, features)
