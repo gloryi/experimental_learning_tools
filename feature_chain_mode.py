@@ -175,8 +175,12 @@ class ChainedEntity:
         S.error = False
 
         S.feedback = None
+
         S.done = True
         S.locked = False
+        S.tries = 3
+
+
         S.time_perce_reserved = 0.0
         S.time_perce_active = 0.0
 
@@ -188,6 +192,7 @@ class ChainedEntity:
         #S.input_mode = True
 
         S.reinput_positive_keyboard = False
+        S.reinput_positive_mouse = False
         S.drop = False
 
         S.questions_queue = S.extract_questions()
@@ -256,6 +261,7 @@ class ChainedEntity:
         else:
             LAST_EVENT = "POST_POSITIVE"
             NEW_EVENT = True
+            S.tries = 3
 
         S.keyboard_input = ""
 
@@ -292,6 +298,8 @@ class ChainedEntity:
                 S.generate_options()
                 S.locked = True
                 S.done = False
+            #  else:
+            #      S.reinput_positive_mouse = True
                 
             S.order_in_work = 0
 
@@ -308,6 +316,13 @@ class ChainedEntity:
             S.features_chain.update_errors(register_new=True)
 
         S.locked = True
+
+        if S.locked:
+            S.tries -= 1
+            if S.tries == 1:
+                S.input_mode = False
+            if S.tries == 0:
+                S.drop = True
 
     def register_mouse(S, mouse_poses):
 
@@ -333,6 +348,12 @@ class ChainedEntity:
                 S.chained_feature.register_hint(S.context[index].order_no, rel_x, rel_y)
                 S.context[index].hint = [rel_x, rel_y]
                 S.features_chain.update_hints()
+        
+        if mouse_poses[RMB]:
+            S.drop = True
+            #  index = S.order_in_work
+            #  if index < len(S.context) and S.context[index].hint:
+            #      S.order_in_work += 1
 
     def register_idle_mouse(S):
 
@@ -351,7 +372,7 @@ class ChainedEntity:
     def process_keyboard_input(S, keyboard):
 
         if any(keyboard):
-            key_states = [_[0] for _ in keyboard if _[1]=="pressed" and not (_[0] == "lshift" or _[1]=="rshift")]
+            key_states = [_[0] for _ in keyboard if _[1]=="pressed" and not (_[0] == "lshift" or _[0]=="rshift" or _[0]=="backspace" or _[0]=="\t")]
             down_keys = [_[0] for _ in keyboard if _[1]=="down"]
 
             if not key_states:
@@ -412,7 +433,9 @@ class ChainedEntity:
             pair_perce = 1 / (n_pairs + 1)
 
             pair_to_show = int(time_p / pair_perce)
-            S.order_in_work = pair_to_show
+
+            if not S.reinput_positive_mouse:
+                S.order_in_work = pair_to_show
 
     def produce_geometries(S):
         graphical_objects = []
@@ -770,6 +793,17 @@ class ChainedEntity:
         index = S.order_in_work
 
         # if S.locked:
+        if S.done or S.reinput_positive_mouse:
+            if (
+                index >= 0
+                and index < len(S.context)
+                and S.idle_coursor_x
+                and S.idle_coursor_y
+            ):
+                hints.append(
+                    [S.idle_coursor_x, S.idle_coursor_y, H // 25, 3, colors.col_bg_lighter]
+                )
+
 
         if not S.done:
             if index < len(S.context) and index >= 0 and S.context[index].hint:
@@ -778,20 +812,8 @@ class ChainedEntity:
                 hints.append([abs_x, abs_y, H // 20, 3, colors.feature_bg])
             return hints
 
-        if not S.done:
-            return []
-
         index -= 1
 
-        if (
-            index >= 0
-            and index < len(S.context)
-            and S.idle_coursor_x
-            and S.idle_coursor_y
-        ):
-            hints.append(
-                [S.idle_coursor_x, S.idle_coursor_y, H // 25, 3, colors.col_bg_lighter]
-            )
 
         if index < len(S.context) and index >= 0 and S.context[index].hint:
             rel_x, rel_y = S.context[index].hint
@@ -881,8 +903,6 @@ class ChainedDrawer:
 
     def draw_keyboard_input(S, line):
         key_input_text = line.keyboard_input
-
-
 
     def draw_hints(S, line):
         circles = line.produce_hints()
