@@ -372,7 +372,7 @@ class ChainedEntity:
     def process_keyboard_input(S, keyboard):
 
         if any(keyboard):
-            key_states = [_[0] for _ in keyboard if _[1]=="pressed" and not (_[0] == "lshift" or _[0]=="rshift" or _[0]=="backspace" or _[0]=="\t")]
+            key_states = [_[0] for _ in keyboard if _[1]=="pressed" and not (_[0] == "lshift" or _[0]=="rshift" or _[0]=="\t")]
             down_keys = [_[0] for _ in keyboard if _[1]=="down"]
 
             if not key_states:

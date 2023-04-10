@@ -5,9 +5,9 @@ from time import time
 from collections import OrderedDict
 
 TEST = True
-#  TEST = False
+TEST = False
 PREPR = False
-#PREPR = True
+PREPR = True
 
 sets_prefix = os.path.join(os.getcwd(), "learning_sets")
 
