@@ -189,6 +189,7 @@ class ChainedEntity:
 
         S.keyboard_input = ""
         S.input_mode = False
+        S.forgive_typo = True
         #S.input_mode = True
 
         S.reinput_positive_keyboard = False
@@ -258,6 +259,7 @@ class ChainedEntity:
         if not S.locked:
             LAST_EVENT = "POSITIVE"
             NEW_EVENT = True
+            S.forgive_typo = True
         else:
             LAST_EVENT = "POST_POSITIVE"
             NEW_EVENT = True
@@ -303,12 +305,16 @@ class ChainedEntity:
                 
             S.order_in_work = 0
 
-    def match_error(S):
+    def match_error(S, minor_error = False):
         global LAST_EVENT
         global NEW_EVENT
         LAST_EVENT = "ERROR"
 
         S.keyboard_input = ""
+
+        if S.forgive_typo and minor_error and not S.locked:
+            S.forgive_typo = False
+            return
 
         if not S.locked:
             NEW_EVENT = True
@@ -366,7 +372,12 @@ class ChainedEntity:
             if S.keyboard_input.lower().strip() == S.active_question.text.lower().strip():
                 S.match_correct()
             else:
-                S.match_error()
+                unique_letters_inp = len(set(S.keyboard_input.lower()))
+                unique_letters_ans = len(set(S.active_question.text.lower()))
+                if abs(unique_letters_inp - unique_letters_ans) <= 2:
+                    S.match_error(minor_error = True)
+                else:
+                    S.match_error(minor_error = False)
 
 
     def process_keyboard_input(S, keyboard):
@@ -676,7 +687,7 @@ class ChainedEntity:
             tlen = len(S.chained_feature.entity)
             graphical_objects.append(
                 WordGraphical(
-                    S.chained_feature.entity,
+                    S.chained_feature.entity + ("+" if S.forgive_typo else ""),
                     xc,
                     yc,
                     large_notion_col,
