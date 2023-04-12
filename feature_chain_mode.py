@@ -794,7 +794,7 @@ class ChainedEntity:
                         yc,
                         large_notion_col,
                         bg_color=None,
-                        font_size = set_size(S.keyboard_input),
+                        font_size = set_size(S.keyboard_input)*2,
                         font=ChainUnitType.font_utf
                         if re.findall(r"[\u4e00-\u9fff]+", S.keyboard_input)
                         else ChainUnitType.font_cyrillic,

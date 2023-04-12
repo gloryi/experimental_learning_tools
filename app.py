@@ -13,6 +13,7 @@ from config import (
     BURNER_FILE,
 )
 from config import HAPTIC_FEEDBACK, TEST
+from config import INTERPRETER_ALIAS 
 from colors import white, hex_to_rgb
 import colors
 from text_morfer import textMorfer
@@ -300,7 +301,7 @@ for time_delta in delta_timer:
                     writer = csv.writer(burning_file)
                     writer.writerows(burning_list)
 
-                subprocess.Popen(["python3", BURNER_APP])
+                subprocess.Popen([INTERPRETER_ALIAS, BURNER_APP])
                 burner_casted = True
                 disable_haptic = True
 

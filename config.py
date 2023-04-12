@@ -7,8 +7,9 @@ from collections import OrderedDict
 TEST = True
 TEST = False
 PREPR = False
-PREPR = True
+#  PREPR = True
 
+INTERPRETER_ALIAS = "python3.11"
 sets_prefix = os.path.join(os.getcwd(), "learning_sets")
 
 def locate_set(_):
@@ -42,7 +43,9 @@ else:
 random.seed(time())
 LEARNING_SET_FOLDER = random.choice(LEARNING_FOLDERS)
 
-META_MINOR = os.path.join(os.getcwd(), "datasets", "semantical_affirmations.csv")
+META_MINOR = os.path.join(
+    "/home/gloryi/Documents/SpecialFiles", "semantical_affirmations.csv"
+)
 
 TEST_LANG_DATA = os.path.join(LEARNING_SET_FOLDER, "features.csv")
 PROGRESSION_FILE = os.path.join(LEARNING_SET_FOLDER, "saved_progress.json")

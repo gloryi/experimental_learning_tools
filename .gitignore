@@ -9,7 +9,6 @@ personal_set/
 *.py[cod]
 *$py.class
 hsk_csv-master/
-action_affirmations.csv
 controller_features/
 # TODO later change to submodule 
 burner/
