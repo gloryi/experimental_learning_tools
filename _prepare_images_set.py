@@ -13,11 +13,11 @@ images_dirs.append("/home/gloryi/Pictures/Windows 10 Spotlight")
 sets_dir = os.path.join(os.getcwd(), "learning_sets")
 # set_dir = os.path.join(sets_dir, "personal_set")
 # set_dir = os.path.join(sets_dir, "test_set")
-set_dir = os.path.join(sets_dir, "python_modules")
+set_dir = os.path.join(sets_dir, "python_codes_2")
 
 # set_dir = "/mnt/X/WORKSHOP/Scripts/stocks_learning_git/experimental_learning_tools"
 
-TO_EXTRACT = 500
+TO_EXTRACT = 6000
 TARGET_NAME = os.path.join(set_dir, "images_mapping.json")
 
 

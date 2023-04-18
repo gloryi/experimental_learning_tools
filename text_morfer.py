@@ -380,3 +380,24 @@ class textMorfer:
         )
         # text = "".join(_ if random.randint(0,20)<19 else zalgo.zalgo().zalgofy(_) for _ in text)
         return text
+
+def replace_common_words(phrase):
+    phrase = phrase.replace("objects", "OBJS")
+    phrase = phrase.replace("the", "TH")
+    phrase = phrase.replace("The", "TH")
+    phrase = phrase.replace("useful", "UFL")
+    phrase = phrase.replace("with", "WTH")
+    phrase = phrase.replace("this", "THS")
+    phrase = phrase.replace("all", "AL")
+    phrase = phrase.replace("Create", "CRT")
+    phrase = phrase.replace("child", "CHLD")
+    phrase = phrase.replace("for", "FR")
+    phrase = phrase.replace("attriubutes", "ATTR")
+    phrase = phrase.replace("and", "&")
+    phrase = phrase.replace("default", "DFLT")
+    phrase = phrase.replace("will", "WLL")
+    phrase = phrase.replace("same", "SME")
+    phrase = phrase.replace("type", "TY")
+    phrase = phrase.replace("class", "CLS")
+    phrase = phrase.replace("dictionary", "DICT")
+    return phrase

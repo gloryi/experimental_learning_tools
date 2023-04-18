@@ -53,7 +53,9 @@ class ChainUnit:
 class ChainedFeature:
     def __init__(S, entity, features):
         S.entity = entity
-        S.features = [_[:20].lower() for _ in features]
+        # TODO COMMON ABBREVATIONS
+        S.features = [_ if ">DICT>" not in _ else _.replace(">DICT>","")[:50] for _ in features ]
+        S.code_mode = False
         S.info = ""
         S.original_len = 1
         S.hints = [False for _ in range(10)]

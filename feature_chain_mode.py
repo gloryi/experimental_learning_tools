@@ -1,5 +1,5 @@
 import subprocess
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from itertools import groupby
 import random
 import re
@@ -67,17 +67,45 @@ class ChainedsProducer:
 
         return meta
 
+    def pre_process_code(S, line_with_code):
+        line_with_code = list(filter(lambda _ : _!="#CODE#", line_with_code))
+        for i, item in enumerate(line_with_code):
+            if "!DBSP" in item:
+                item = item.replace("!DBSP", "")
+            if "!COMA" in item:
+                item = item.replace("!COMA", ",")
+            if "!TAB" in item:
+                item = item.replace("!TAB", "")
+            line_with_code[i] = item
+        return line_with_code
+
+
+
     def prepare_data(S):
         data_extractor = raw_extracter(S.csv_path)
         chains = []
+        freq_dict = defaultdict(int)
         for key, group in groupby(list(_ for _ in data_extractor), key=lambda _: _[0]):
             features = []
             for item in group:
+                code_mode = False
+                if "#CODE#" in item:
+                    code_mode = True
+                    item = S.pre_process_code(item)
+
                 interactive = list(_ for _ in item if "***" not in _)
                 info = list(_ for _ in item if "***" in _)
                 info = info[0] if len(info) > 0 else ""
                 entity, *key_features = interactive[1:]
+
+                for phrase in key_features:
+                    if ">DICT>" in phrase:
+                        simple_words = phrase.replace(">DICT>","").split()
+                        for word in simple_words:
+                            freq_dict[word]+=1
+
                 features.append(ChainedFeature(entity, key_features))
+                features[-1].code_mode = code_mode
                 features[-1].original_len = len(key_features)
                 features[-1].info = info.replace("***", "")
 
@@ -102,6 +130,14 @@ class ChainedsProducer:
                             ].features[:extra_len]
 
             chains.append(FeaturesChain(key, features))
+
+        ordered = []
+        for word in freq_dict:
+            if freq_dict[word]>50:
+                ordered.append([word, freq_dict[word]])
+        ordered.sort(key = lambda _ : _[1])
+        for ordr in ordered:
+            print(ordr)
 
         return ChainedModel(chains)
 
@@ -188,9 +224,14 @@ class ChainedEntity:
         S.active_question = None
 
         S.keyboard_input = ""
+        S.new_action_registered = False
+        S.time_perce_idle = 0
+
         S.input_mode = False
         S.forgive_typo = True
         S.extra_life = False
+        S.extra_life_used = False
+        S.code_mode = S.chained_feature.code_mode
         #S.input_mode = True
 
         S.reinput_positive_keyboard = False
@@ -261,7 +302,7 @@ class ChainedEntity:
             LAST_EVENT = "POSITIVE"
             NEW_EVENT = True
             S.forgive_typo = True
-            if S.order_in_work >= 2 and not S.extra_life:
+            if S.order_in_work >= 2 and not S.extra_life and not S.extra_life_used:
                 S.extra_life = True
         else:
             LAST_EVENT = "POST_POSITIVE"
@@ -316,8 +357,10 @@ class ChainedEntity:
         S.keyboard_input = ""
 
         if S.extra_life and not S.locked:
+            S.extra_life_used = True
             S.extra_life = False
             return
+
         if S.forgive_typo and minor_error and not S.locked:
             S.forgive_typo = False
             return
@@ -378,13 +421,46 @@ class ChainedEntity:
             if S.keyboard_input.lower().strip() == S.active_question.text.lower().strip():
                 S.match_correct()
             else:
-                unique_letters_inp = len(set(S.keyboard_input.lower()))
-                unique_letters_ans = len(set(S.active_question.text.lower()))
-                if abs(unique_letters_inp - unique_letters_ans) <= 1:
+                unique_letters_inp = set(S.keyboard_input.lower())
+                unique_letters_ans = set(S.active_question.text.lower())
+                if len(unique_letters_ans - unique_letters_inp)  <= 1:
                     S.match_error(minor_error = True)
                 else:
                     S.match_error(minor_error = False)
 
+
+    def process_code_input(S, reference):
+
+        len_border = min(len(S.keyboard_input), len(reference))
+        reference_modified = ""
+
+        if len(S.keyboard_input) < len(reference):
+
+            if not S.keyboard_input:
+                return reference[:2]
+
+            for i, (l1, l2) in enumerate(zip(S.keyboard_input, reference)):
+                if l1==l2:
+                    reference_modified = reference[:i+1] + "#" + reference[i+2:i+4] if i+2 < len(reference) else reference[-1]
+                else:
+                    reference_modified = reference[:i] + "#"
+                    break
+
+        else:
+            S.keyboard_input = S.keyboard_input[:len(reference)]
+            reference_modified = "_"*len(S.keyboard_input)+"!!!"
+
+        return reference_modified
+
+        #  print(reference)
+        #  S.keyboard_input = S.keyboard_input[:len_border]
+        #
+        #  for pos, (letter_1, letter_2) in zip(S.keyboard_input, reference):
+        #      if letter_1 != letter_2:
+        #          S.keyboard_input = S.keyboard_input[:pos]
+        #          return "_"*(pos+1) + reference[pos+1:]
+        #
+        #  return reference
 
     def process_keyboard_input(S, keyboard):
 
@@ -417,9 +493,24 @@ class ChainedEntity:
                 else:
                     S.keyboard_input += new_key
 
+                S.new_action_registered = True
 
 
     def register_keys(S, key_states, keys_extended, time_percent, time_based=False):
+
+        # IDLE
+        S.time_perce_idle += time_percent - S.time_perce_active
+        if S.new_action_registered:
+            S.time_perce_idle = 0
+            S.new_action_registered = False
+
+        # IDLE FOR SPEED TYPING
+        if S.code_mode:
+            if S.time_perce_idle >= 0.008:
+                if S.keyboard_input:
+                    S.keyboard_input = S.keyboard_input[:-1]
+                S.time_perce_idle = 0
+
         S.time_perce_active = time_percent
         if S.active_question and not time_based:
             S.time_perce_reserved = time_percent
@@ -445,7 +536,6 @@ class ChainedEntity:
                     1.0 - S.time_perce_reserved
                 )
 
-            # n_pairs = len(S.context)/2
             n_pairs = len(S.context)
             pair_perce = 1 / (n_pairs + 1)
 
@@ -453,6 +543,8 @@ class ChainedEntity:
 
             if not S.reinput_positive_mouse:
                 S.order_in_work = pair_to_show
+
+
 
     def produce_geometries(S):
         graphical_objects = []
@@ -482,7 +574,7 @@ class ChainedEntity:
             )
 
         def get_text(_):
-            return _.text if S.done or _.mode == ChainUnitType.mode_open else "???"
+            return _.text if S.done or _.mode == ChainUnitType.mode_open or (S.code_mode and not S.done) else "???"
 
         def get_y_position(_):
             return (
@@ -502,7 +594,8 @@ class ChainedEntity:
 
         def set_size(_):
             return (
-                10
+                30 if S.code_mode
+                else 10
                 if len(_.text) >= 15
                 else 20
                 if len(_.text) >= 10
@@ -564,7 +657,7 @@ class ChainedEntity:
 
             cx, cy = ctx_x + ctx_w / 2, ctx_y + ctx_h / 2
 
-            if order_delta > 0:
+            if order_delta > 0 or (order_delta==0 and S.code_mode and not S.done):
 
                 if int(S.features_chain.chain_no) % 2:
                     pos_no = ctx.order_no
@@ -574,8 +667,6 @@ class ChainedEntity:
                         rel_x, rel_y = ctx.hint
                         ctx_x, ctx_y = rel_x * W, rel_y * H
 
-                    if ctx.order_no >= len(out_positions):
-                        ctx_y += ctx.order_no // len(out_positions) * 100
                 else:
                     pos_no = ctx_len - 1 - ctx.order_no
                     pos_no %= len(out_positions)
@@ -583,9 +674,6 @@ class ChainedEntity:
                     if ctx.hint:
                         rel_x, rel_y = ctx.hint
                         ctx_x, ctx_y = rel_x * W, rel_y * H
-
-                    if ctx.order_no >= len(out_positions):
-                        ctx_y += ctx.order_no // len(out_positions) * 100
 
                 cx, cy = ctx_x, ctx_y
                 cx, cy = ctx_x - ctx_w // 4, ctx_y - ctx_h
@@ -598,18 +686,26 @@ class ChainedEntity:
                 ctx_y += int(H * 0.05 / 2)
                 cy += int(H * 0.05 / 2)
 
-            if order_delta <= 0:
+            if order_delta <= 0 and not S.code_mode:
                 continue
+
+            if order_delta < 0 and S.code_mode:
+                continue
+
+            text = get_text(ctx)
+            if S.code_mode and order_delta == 0:
+                text = S.process_code_input(text)
+                cy -= 40
 
             graphical_objects.append(
                 WordGraphical(
-                    get_text(ctx),
+                    text,
                     cx,
                     cy,
                     set_color(ctx),
                     None,
                     font=set_font(ctx),
-                    font_size=set_size(ctx) * 3,
+                    font_size=set_size(ctx) * (3 if not S.code_mode else 2),
                     rect=None,
                     morph = False
                 )
@@ -654,7 +750,8 @@ class ChainedEntity:
         # set_size = lambda _ : 30 if not re.search(u'[\u4e00-\u9fff]', _) else 40
         def set_size(_):
             return (
-                15
+                30 if S.code_mode
+                else 15
                 if len(_) >= 15
                 else 25
                 if len(_) >= 10
@@ -757,16 +854,6 @@ class ChainedEntity:
         ## KEYBOARD INPUT INITIAL
         index = S.order_in_work
 
-        def set_size(_):
-            return (
-                15
-                if len(_) >= 15
-                else 25
-                if len(_) >= 10
-                else 30
-                if len(_) >= 5
-                else 40
-            )
         if not S.done:
             if index < len(S.context) and index >= 0 and S.context[index].hint:
                 rel_x, rel_y = S.context[index].hint
@@ -1239,7 +1326,11 @@ class ChainedProcessor:
 
     def get_feedback(S):
         global NEW_EVENT
-        if LAST_EVENT == "POSITIVE" and NEW_EVENT:
+        if LAST_EVENT == "POST_POSITIVE" and NEW_EVENT:
+            S.ui_ref.bg_color = colors.col_correct
+            NEW_EVENT = False
+            return 0
+        elif LAST_EVENT == "POSITIVE" and NEW_EVENT:
             S.ui_ref.bg_color = colors.dark_green
 
 

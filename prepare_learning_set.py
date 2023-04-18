@@ -8,7 +8,7 @@ sets_dir = os.path.join(os.getcwd(), "learning_sets")
 # set_dir = os.path.join(sets_dir, "personal_set")
 # set_dir = os.path.join(sets_dir, "test_set")
 #  set_dir = os.path.join(sets_dir, "vim_shortcuts")
-set_dir = os.path.join(sets_dir, "python_modules")
+set_dir = os.path.join(sets_dir, "python_codes_2")
 
 update_file = os.path.join(set_dir, "raw_features.csv")
 
